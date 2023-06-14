@@ -45,3 +45,4 @@ include(":extensions:control-plane:provision:provision-gcs")
 // data plane
 include(":extensions:data-plane:data-plane-google-storage")
 include(":version-catalog")
+include("launcher")

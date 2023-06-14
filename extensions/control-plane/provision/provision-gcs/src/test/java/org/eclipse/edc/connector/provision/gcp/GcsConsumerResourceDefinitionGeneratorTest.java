@@ -9,12 +9,13 @@
  *
  *  Contributors:
  *       ZF Friedrichshafen AG - Initial API and Implementation
- *       SAP SE - refactoring
  *
  */
 
 package org.eclipse.edc.connector.provision.gcp;
 
+import org.eclipse.edc.connector.provision.gcp.GcsConsumerResourceDefinitionGenerator;
+import org.eclipse.edc.connector.provision.gcp.GcsResourceDefinition;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.policy.model.Policy;
@@ -60,6 +61,18 @@ public class GcsConsumerResourceDefinitionGeneratorTest {
     void generate_noDataRequestAsParameter() {
         var policy = Policy.Builder.newInstance().build();
         assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> generator.generate(null, policy));
+    }
+
+    @Test
+    void generate_noPolicyAsParameter() {
+        var destination = DataAddress.Builder.newInstance().type(GcsStoreSchema.TYPE)
+                .property(GcsStoreSchema.LOCATION, "test-location")
+                .property(GcsStoreSchema.STORAGE_CLASS, "test-storage-class")
+                .build();
+        var asset = Asset.Builder.newInstance().build();
+        var dr = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+
+        assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> generator.generate(dr, null));
     }
 
     @Test

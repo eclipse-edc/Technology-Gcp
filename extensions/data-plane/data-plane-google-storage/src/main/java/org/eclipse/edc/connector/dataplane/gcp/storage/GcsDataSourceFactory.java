@@ -19,6 +19,8 @@ import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSourceDataA
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
 import org.eclipse.edc.connector.dataplane.util.validation.ValidationRule;
+import org.eclipse.edc.gcp.common.GcpCredentials;
+import org.eclipse.edc.gcp.common.GcpServiceAccountCredentials;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -32,10 +34,13 @@ public class GcsDataSourceFactory implements DataSourceFactory {
     private final ValidationRule<DataAddress> validation = new GcsSourceDataAddressValidationRule();
     private final Monitor monitor;
 
-    public GcsDataSourceFactory(Monitor monitor) {
-        this.monitor = monitor;
-    }
+    private final GcpCredentials gcpCredential;
+    private String projectId;
 
+    public GcsDataSourceFactory(Monitor monitor, GcpCredentials gcpCredential) {
+        this.monitor = monitor;
+        this.gcpCredential = gcpCredential;
+    }
 
     @Override
     public boolean canHandle(DataFlowRequest request) {
@@ -59,7 +64,15 @@ public class GcsDataSourceFactory implements DataSourceFactory {
         if (validationResult.failed()) {
             throw new EdcException(String.join(", ", validationResult.getFailureMessages()));
         }
+
+        var sourceDataAddress = request.getSourceDataAddress();
+        var tokenKeyName = sourceDataAddress.getKeyName();
+        var serviceAccountKeyName = sourceDataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
+        var serviceAccountValue = sourceDataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
+        var gcpServiceAccountCredentials = new GcpServiceAccountCredentials(tokenKeyName, serviceAccountKeyName, serviceAccountValue);
+        var googleCredentials = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentials);
         var storageClient = StorageOptions.newBuilder()
+                .setCredentials(googleCredentials)
                 .build().getService();
 
         var source = request.getSourceDataAddress();
@@ -70,7 +83,6 @@ public class GcsDataSourceFactory implements DataSourceFactory {
                 .blobName(source.getProperty(GcsStoreSchema.BLOB_NAME))
                 .monitor(monitor)
                 .build();
-
     }
 
 }
