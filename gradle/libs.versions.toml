@@ -3,7 +3,7 @@ format.version = "1.1"
 
 [versions]
 googleCloudIamAdmin = "3.14.0"
-googleCloudIamCredentials = "2.18.0"
+googleCloudIamCredentials = "2.19.0"
 googleCloudStorage = "2.22.3"
 edc = "0.1.1-SNAPSHOT"
 mockito = "5.2.0"
