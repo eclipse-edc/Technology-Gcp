@@ -5,7 +5,7 @@ format.version = "1.1"
 googleCloudIamAdmin = "3.14.0"
 googleCloudIamCredentials = "2.18.0"
 googleCloudStorage = "2.22.4"
-edc = "0.1.3-SNAPSHOT-SNAPSHOT"
+edc = "0.1.3-SNAPSHOT"
 mockito = "5.2.0"
 failsafe = "3.3.1"
 
