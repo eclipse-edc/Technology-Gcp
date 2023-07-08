@@ -2,41 +2,39 @@
 format.version = "1.1"
 
 [versions]
+edc = "0.1.4-SNAPSHOT"
+failsafe = "3.3.1"
 googleCloudIamAdmin = "3.14.0"
 googleCloudIamCredentials = "2.18.0"
 googleCloudStorage = "2.22.4"
 googleCloudSecretManager = "2.20.0"
 googleCloudCore = "2.20.0"
-edc = "0.1.4-SNAPSHOT"
-mockito = "5.2.0"
-failsafe = "3.3.1"
-
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
-edc-core-dataPlane-util ={ module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
-edc-core-dataplane ={ module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
+edc-core-dataplane = { module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
+edc-core-dataplane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
+edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 edc-spi-catalog = { module = "org.eclipse.edc:catalog-spi", version.ref = "edc" }
 edc-spi-contract = { module = "org.eclipse.edc:contract-spi", version.ref = "edc" }
-edc-spi-policy = { module = "org.eclipse.edc:policy-spi", version.ref = "edc" }
 edc-spi-core = { module = "org.eclipse.edc:core-spi", version.ref = "edc" }
+edc-spi-dataplane = { module = "org.eclipse.edc:data-plane-spi", version.ref = "edc" }
+edc-spi-policy = { module = "org.eclipse.edc:policy-spi", version.ref = "edc" }
 edc-spi-transfer = { module = "org.eclipse.edc:transfer-spi", version.ref = "edc" }
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
-edc-spi-dataplane = { module = "org.eclipse.edc:data-plane-spi", version.ref = "edc" }
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
 edc-util = { module = "org.eclipse.edc:util", version.ref = "edc" }
-edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
 
 # third-party dependencies
 failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }
 failsafe-okhttp = { module = "dev.failsafe:failsafe-okhttp", version.ref = "failsafe" }
 
 # Google dependencies
+googlecloud-core = { module = "com.google.cloud:google-cloud-core", version.ref = "googleCloudCore"}
 googlecloud-iam-admin = { module = "com.google.cloud:google-iam-admin", version.ref = "googleCloudIamAdmin" }
 googlecloud-iam-credentials = { module = "com.google.cloud:google-cloud-iamcredentials", version.ref = "googleCloudIamCredentials" }
-googlecloud-storage = { module = "com.google.cloud:google-cloud-storage", version.ref = "googleCloudStorage" }
 googlecloud-secretmanager = { module = "com.google.cloud:google-cloud-secretmanager", version.ref = "googleCloudSecretManager"}
-googlecloud-core = { module = "com.google.cloud:google-cloud-core", version.ref = "googleCloudCore"}
+googlecloud-storage = { module = "com.google.cloud:google-cloud-storage", version.ref = "googleCloudStorage" }
 
 [bundles]
 
