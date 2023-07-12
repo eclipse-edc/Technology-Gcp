@@ -42,19 +42,6 @@ import static org.mockito.Mockito.when;
 
 @TestInstance(Lifecycle.PER_CLASS)
 class GcpSecretManagerVaultTest {
-
-    class TestStatusCode implements StatusCode {
-        @Override
-        public Integer getTransportCode() {
-            return Integer.valueOf(0);
-        }
-
-        @Override
-        public Code getCode() {
-            return Code.OK;
-        }
-    }
-
     private static final String TEST_REGION = "europe-west3";
     private static final String TEST_PROJECT = "project";
     private static final String VALID_KEY = "test";
@@ -111,8 +98,8 @@ class GcpSecretManagerVaultTest {
 
     @BeforeEach
     void instantiateMocksAndVault() {
-        monitor = mock(Monitor.class);
-        secretClient = mock(SecretManagerServiceClient.class);
+        monitor = mock();
+        secretClient = mock();
         vault = new GcpSecretManagerVault(monitor, TEST_PROJECT, TEST_REGION, secretClient);
     }
 
@@ -271,6 +258,18 @@ class GcpSecretManagerVaultTest {
         }
 
         return keyBuilder.toString();
+    }
+
+    private class TestStatusCode implements StatusCode {
+        @Override
+        public Integer getTransportCode() {
+            return Integer.valueOf(0);
+        }
+
+        @Override
+        public Code getCode() {
+            return Code.OK;
+        }
     }
 }
 

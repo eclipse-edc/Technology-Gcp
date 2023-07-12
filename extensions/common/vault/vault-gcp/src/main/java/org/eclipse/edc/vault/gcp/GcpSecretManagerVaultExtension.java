@@ -30,7 +30,6 @@ import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Objects;
 
 import static org.eclipse.edc.util.string.StringUtils.isNullOrEmpty;
 
@@ -70,7 +69,7 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
         var saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, null);
 
         // TODO support multi-region replica.
-        var region = getMandatorySetting(context, VAULT_REGION);
+        var region = context.getConfig().getString(VAULT_REGION);
         context.getMonitor().info("GCP Secret Manager vault extension: region selected " + region);
         try {
             GcpSecretManagerVault vault = null;
@@ -89,12 +88,5 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
         } catch (IOException ioException) {
             throw new EdcException("Cannot create vault", ioException);
         }
-    }
-
-    // TODO implement a common implementation in org.eclipse.edc.spi.system.ServiceExtension to be shared?
-    private String getMandatorySetting(ServiceExtensionContext context, String setting) {
-        var value = context.getSetting(setting, null);
-        Objects.requireNonNull(value, "Setting '" + setting + "' is not provided");
-        return value;
     }
 }
