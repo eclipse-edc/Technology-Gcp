@@ -28,8 +28,10 @@ import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Objects;
 
-import static org.eclipse.edc.util.configuration.ConfigurationFunctions.propOrEnv;
 import static org.eclipse.edc.util.string.StringUtils.isNullOrEmpty;
 
 /**
@@ -57,7 +59,7 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        String project = context.getSetting(VAULT_PROJECT, null);
+        var project = context.getSetting(VAULT_PROJECT, null);
         if (isNullOrEmpty(project)) {
             project = ServiceOptions.getDefaultProjectId();
             context.getMonitor().info("GCP Secret Manager vault extension: project loaded from default config " + project);
@@ -65,10 +67,10 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
             context.getMonitor().info("GCP Secret Manager vault extension: project loaded from settings " + project);
         }
 
-        String saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, null);
+        var saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, null);
 
         // TODO support multi-region replica.
-        String region = getMandatorySetting(context, VAULT_REGION);
+        var region = getMandatorySetting(context, VAULT_REGION);
         context.getMonitor().info("GCP Secret Manager vault extension: region selected " + region);
         try {
             GcpSecretManagerVault vault = null;
@@ -77,26 +79,22 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
                 vault = GcpSecretManagerVault.createWithDefaultSettings(context.getMonitor(), project, region);
             } else {
                 context.getMonitor().info("Creating GCP Secret Manager vault extension with Service Account credentials from file " + saccountFile);
-                vault = GcpSecretManagerVault.createWithServiceAccountCredentials(context.getMonitor(), project, region, saccountFile);
+                var credentialDataStream = Files.newInputStream(Paths.get(saccountFile));
+                vault = GcpSecretManagerVault.createWithServiceAccountCredentials(context.getMonitor(), project, region, credentialDataStream);
+                credentialDataStream.close();
             }
             context.registerService(Vault.class, vault);
             context.registerService(PrivateKeyResolver.class, new VaultPrivateKeyResolver(vault));
             context.registerService(CertificateResolver.class, new VaultCertificateResolver(vault));
-        } catch (IOException ioex) {
-            throw new EdcException("cannot create vault " + ioex);
+        } catch (IOException ioException) {
+            throw new EdcException("Cannot create vault", ioException);
         }
     }
 
     // TODO implement a common implementation in org.eclipse.edc.spi.system.ServiceExtension to be shared?
     private String getMandatorySetting(ServiceExtensionContext context, String setting) {
         var value = context.getSetting(setting, null);
-        if (isNullOrEmpty(value)) {
-            value = propOrEnv(setting, null);
-            if (isNullOrEmpty(value)) {
-                throw new EdcException("setting '" + setting + "' is not provided");
-            }
-        }
+        Objects.requireNonNull(value, "Setting '" + setting + "' is not provided");
         return value;
     }
 }
-

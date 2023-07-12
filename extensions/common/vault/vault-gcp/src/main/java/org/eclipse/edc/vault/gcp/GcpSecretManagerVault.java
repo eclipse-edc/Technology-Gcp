@@ -26,7 +26,6 @@ import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceSettings;
 import com.google.cloud.secretmanager.v1.SecretName;
 import com.google.cloud.secretmanager.v1.SecretPayload;
-import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.cloud.secretmanager.v1.SecretVersionName;
 import com.google.protobuf.ByteString;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -34,8 +33,8 @@ import org.eclipse.edc.spi.result.Result;
 import org.eclipse.edc.spi.security.Vault;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Vault extension implemented with GCP Secret Manager.
@@ -51,6 +50,16 @@ public class GcpSecretManagerVault implements Vault {
     private static final String LATEST_VERSION_ALIAS = "latest"; // alias for the latest version of a Secret
     private static final int MAX_KEY_LENGTH = 255; // maximum Secret Manager key length
     private static final int HASH_LENGTH = 8; // Object.hashCode() returns int, which is 32 bit, in hex results in 8 char
+
+    /** Messages used for exception handling. */
+    private static final String SECRET_NOT_FOUND_MSG = "Secret not found or has no version ";
+    private static final String RUNTIME_ERROR_MSG = "Runtime error ";
+    private static final String EXCEPTION_MSG = "Exception ";
+    private static final String SECRET_ALREADY_EXISTING_MSG = "Secret already exists ";
+    private static final String RESOLVE_SECRET_FUNCTION = "resolving secret";
+    private static final String STORE_SECRET_FUNCTION = "storing secrect";
+    private static final String DELETE_SECRET_FUNCTION = "deleting secrect";
+
 
     /**
      * Factory helper constructing Vault object with default GCP credentials.
@@ -71,13 +80,13 @@ public class GcpSecretManagerVault implements Vault {
      * @param monitor monitor object for logging.
      * @param project GCP project name.
      * @param region replica location for secrects created by the vault.
-     * @param filePath path of the JSON file with service account credentials.
+     * @param credentialDataStream stream to service account credentials data.
      * @return the created Vault object backed by Secret Manager.
      * @throws IOException if the creation of the Vault in GCP fails.
      */
-    public static GcpSecretManagerVault createWithServiceAccountCredentials(Monitor monitor, String project, String region, String filePath) throws IOException {
-        // TODO add proxy support
-        var serviceAccountCredentials = ServiceAccountCredentials.fromStream(new FileInputStream(filePath));
+    public static GcpSecretManagerVault createWithServiceAccountCredentials(Monitor monitor, String project, String region, InputStream credentialDataStream) throws IOException {
+        // TODO add proxy support.
+        var serviceAccountCredentials = ServiceAccountCredentials.fromStream(credentialDataStream);
         var settings = SecretManagerServiceSettings.newBuilder()
                     .setCredentialsProvider(FixedCredentialsProvider.create(serviceAccountCredentials))
                     .build();
@@ -110,21 +119,21 @@ public class GcpSecretManagerVault implements Vault {
     public @Nullable String resolveSecret(String key) {
         try {
             key = sanitizeKey(key);
-            SecretVersionName secretVersionName = SecretVersionName.of(project, key, LATEST_VERSION_ALIAS);
+            var secretVersionName = SecretVersionName.of(project, key, LATEST_VERSION_ALIAS);
             AccessSecretVersionResponse response;
             synchronized (vaultLock) {
                 response = secretManagerServiceClient.accessSecretVersion(secretVersionName);
             }
             String payload = response.getPayload().getData().toStringUtf8();
             return payload;
-        } catch (NotFoundException nfex) {
-            monitor.debug("Secret not found or has no version: " + key);
+        } catch (NotFoundException notFoundException) {
+            handleException(RESOLVE_SECRET_FUNCTION, SECRET_NOT_FOUND_MSG + key + ": ", notFoundException);
             return null;
-        } catch (RuntimeException rex) {
-            monitor.severe("Runtime error while resolving secret " + key + ": " + rex.getMessage(), rex);
+        } catch (RuntimeException runtimeException) {
+            handleException(RESOLVE_SECRET_FUNCTION, RUNTIME_ERROR_MSG + key + ": ", runtimeException);
             return null;
-        } catch (Exception ex) {
-            monitor.debug("Exception while resolving secret " + key + ": " + ex.getMessage(), ex);
+        } catch (Exception exception) {
+            handleException(RESOLVE_SECRET_FUNCTION, EXCEPTION_MSG + key, exception);
             return null;
         }
     }
@@ -141,7 +150,7 @@ public class GcpSecretManagerVault implements Vault {
     public Result<Void> storeSecret(String key, String value) {
         try {
             key = sanitizeKey(key);
-            Secret secret =
+            var secret =
                     Secret.newBuilder()
                     .setReplication(
                         Replication.newBuilder()
@@ -154,27 +163,23 @@ public class GcpSecretManagerVault implements Vault {
                         .build())
                     .build();
 
-            ProjectName parent = ProjectName.of(project);
+            var parent = ProjectName.of(project);
             synchronized (vaultLock) {
-                Secret createdSecret = secretManagerServiceClient.createSecret(parent, key, secret);
+                var createdSecret = secretManagerServiceClient.createSecret(parent, key, secret);
 
-                SecretPayload payload =
+                var payload =
                         SecretPayload.newBuilder().setData(ByteString.copyFromUtf8(value)).build();
-                SecretVersion addedVersion = secretManagerServiceClient.addSecretVersion(createdSecret.getName(), payload);
+                var addedVersion = secretManagerServiceClient.addSecretVersion(createdSecret.getName(), payload);
             }
             return Result.success();
-        } catch (AlreadyExistsException aeex) {
-            monitor.debug("Secret already exists " + key);
-            return Result.failure("Secret already exists " + key);
-        } catch (NotFoundException nfex) {
-            monitor.debug("Secret not found or has no version: " + key);
-            return Result.failure("Secret not found or has no version: " + key);
-        } catch (RuntimeException rex) {
-            monitor.severe("Runtime error while storing secret " + key + ": " + rex.getMessage(), rex);
-            return Result.failure(rex.getMessage());
-        } catch (Exception ex) {
-            monitor.debug("Exception while storing secret " + key + ": " + ex.getMessage(), ex);
-            return Result.failure(ex.getMessage());
+        } catch (AlreadyExistsException alreadyExistsException) {
+            return handleException(STORE_SECRET_FUNCTION, SECRET_ALREADY_EXISTING_MSG + key, alreadyExistsException);
+        } catch (NotFoundException notFoundException) {
+            return handleException(STORE_SECRET_FUNCTION, SECRET_NOT_FOUND_MSG + key, notFoundException);
+        } catch (RuntimeException runtimeException) {
+            return handleException(STORE_SECRET_FUNCTION, RUNTIME_ERROR_MSG + key, runtimeException);
+        } catch (Exception exception) {
+            return handleException(STORE_SECRET_FUNCTION, EXCEPTION_MSG + key, exception);
         }
     }
 
@@ -188,20 +193,17 @@ public class GcpSecretManagerVault implements Vault {
     public Result<Void> deleteSecret(String key) {
         try {
             key = sanitizeKey(key);
-            SecretName name = SecretName.of(project, key);
+            var name = SecretName.of(project, key);
             synchronized (vaultLock) {
                 secretManagerServiceClient.deleteSecret(name);
             }
             return Result.success();
-        } catch (NotFoundException nfex) {
-            monitor.debug("Secret not found or has no version: " + key);
-            return Result.failure("Secret not found or has no version: " + key);
-        } catch (RuntimeException rex) {
-            monitor.severe("Runtime error while deleting secret " + key + ": " + rex.getMessage(), rex);
-            return Result.failure(rex.getMessage());
-        } catch (Exception ex) {
-            monitor.debug("Exception while deleting secret " + key + ": " + ex.getMessage(), ex);
-            return Result.failure(ex.getMessage());
+        } catch (NotFoundException notFoundException) {
+            return handleException(DELETE_SECRET_FUNCTION, SECRET_NOT_FOUND_MSG + key, notFoundException);
+        } catch (RuntimeException runtimeException) {
+            return handleException(DELETE_SECRET_FUNCTION, RUNTIME_ERROR_MSG + key, runtimeException);
+        } catch (Exception exception) {
+            return handleException(DELETE_SECRET_FUNCTION, EXCEPTION_MSG + key, exception);
         }
     }
 
@@ -248,5 +250,14 @@ public class GcpSecretManagerVault implements Vault {
         }
 
         return key;
+    }
+
+    private Result<Void> handleException(String function, String message, Exception exception) {
+        if (exception.getClass() == RuntimeException.class) {
+            monitor.severe(message, exception);
+        } else {
+            monitor.debug(message, exception);
+        }
+        return Result.failure("(" + function + ")" + message + ": " + exception.getMessage());
     }
 }
