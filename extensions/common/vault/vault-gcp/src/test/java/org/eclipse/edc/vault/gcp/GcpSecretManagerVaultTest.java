@@ -65,9 +65,9 @@ class GcpSecretManagerVaultTest {
                         .build())
                     .build();
 
-    private ArrayList<Character> validChars = new ArrayList<Character>();
-    private ArrayList<Character> invalidChars = new ArrayList<Character>();
-    private Random randGen = new Random();
+    private final ArrayList<Character> validChars = new ArrayList<Character>();
+    private final ArrayList<Character> invalidChars = new ArrayList<Character>();
+    private final Random randGen = new Random();
 
     @BeforeAll
     void init() {
