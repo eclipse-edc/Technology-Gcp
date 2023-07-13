@@ -22,8 +22,4 @@ dependencies {
     implementation(libs.edc.util)
     implementation(libs.googlecloud.core)
     implementation(libs.googlecloud.secretmanager)
-    implementation(libs.google.jimfs)
-    implementation("com.google.api:gax-grpc:1.64.0")
-
-    testImplementation("com.google.api:gax-grpc:1.64.0")
 }
