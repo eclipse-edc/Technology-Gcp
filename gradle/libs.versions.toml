@@ -9,7 +9,6 @@ googleCloudIamCredentials = "2.18.0"
 googleCloudStorage = "2.22.4"
 googleCloudSecretManager = "2.20.0"
 googleCloudCore = "2.20.0"
-googleJimfs = "2.0-SNAPSHOT"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
@@ -36,7 +35,6 @@ googlecloud-iam-admin = { module = "com.google.cloud:google-iam-admin", version.
 googlecloud-iam-credentials = { module = "com.google.cloud:google-cloud-iamcredentials", version.ref = "googleCloudIamCredentials" }
 googlecloud-secretmanager = { module = "com.google.cloud:google-cloud-secretmanager", version.ref = "googleCloudSecretManager"}
 googlecloud-storage = { module = "com.google.cloud:google-cloud-storage", version.ref = "googleCloudStorage" }
-google-jimfs = { module = "com.google.jimfs:jimfs", version.ref = "googleJimfs"}
 
 [bundles]
 
