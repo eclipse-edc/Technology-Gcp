@@ -18,7 +18,6 @@ import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.rpc.AlreadyExistsException;
 import com.google.api.gax.rpc.NotFoundException;
 import com.google.auth.oauth2.ServiceAccountCredentials;
-import com.google.cloud.secretmanager.v1.AccessSecretVersionResponse;
 import com.google.cloud.secretmanager.v1.ProjectName;
 import com.google.cloud.secretmanager.v1.Replication;
 import com.google.cloud.secretmanager.v1.Secret;
@@ -45,7 +44,6 @@ public class GcpSecretManagerVault implements Vault {
     private final String project;
     private final String region;
     private final SecretManagerServiceClient secretManagerServiceClient;
-    private final Object vaultLock;
 
     private static final String LATEST_VERSION_ALIAS = "latest"; // alias for the latest version of a Secret
     private static final int MAX_KEY_LENGTH = 255; // maximum Secret Manager key length
@@ -106,7 +104,6 @@ public class GcpSecretManagerVault implements Vault {
         this.project = project;
         this.region = region;
         this.secretManagerServiceClient = secretClient;
-        this.vaultLock = new Object();
     }
 
     /**
@@ -120,10 +117,7 @@ public class GcpSecretManagerVault implements Vault {
         try {
             key = sanitizeKey(key);
             var secretVersionName = SecretVersionName.of(project, key, LATEST_VERSION_ALIAS);
-            AccessSecretVersionResponse response;
-            synchronized (vaultLock) {
-                response = secretManagerServiceClient.accessSecretVersion(secretVersionName);
-            }
+            var response = secretManagerServiceClient.accessSecretVersion(secretVersionName);
             String payload = response.getPayload().getData().toStringUtf8();
             return payload;
         } catch (NotFoundException notFoundException) {
@@ -164,13 +158,9 @@ public class GcpSecretManagerVault implements Vault {
                     .build();
 
             var parent = ProjectName.of(project);
-            synchronized (vaultLock) {
-                var createdSecret = secretManagerServiceClient.createSecret(parent, key, secret);
-
-                var payload =
-                        SecretPayload.newBuilder().setData(ByteString.copyFromUtf8(value)).build();
-                var addedVersion = secretManagerServiceClient.addSecretVersion(createdSecret.getName(), payload);
-            }
+            var createdSecret = secretManagerServiceClient.createSecret(parent, key, secret);
+            var payload = SecretPayload.newBuilder().setData(ByteString.copyFromUtf8(value)).build();
+            var addedVersion = secretManagerServiceClient.addSecretVersion(createdSecret.getName(), payload);
             return Result.success();
         } catch (AlreadyExistsException alreadyExistsException) {
             return handleException(STORE_SECRET_FUNCTION, SECRET_ALREADY_EXISTING_MSG + key, alreadyExistsException);
@@ -194,9 +184,7 @@ public class GcpSecretManagerVault implements Vault {
         try {
             key = sanitizeKey(key);
             var name = SecretName.of(project, key);
-            synchronized (vaultLock) {
-                secretManagerServiceClient.deleteSecret(name);
-            }
+            secretManagerServiceClient.deleteSecret(name);
             return Result.success();
         } catch (NotFoundException notFoundException) {
             return handleException(DELETE_SECRET_FUNCTION, SECRET_NOT_FOUND_MSG + key, notFoundException);
