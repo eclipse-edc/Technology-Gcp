@@ -8,7 +8,7 @@ googleCloudIamAdmin = "3.14.0"
 googleCloudIamCredentials = "2.18.0"
 googleCloudStorage = "2.22.4"
 googleCloudSecretManager = "2.20.0"
-googleCloudCore = "2.20.0"
+googleCloudCore = "2.21.1"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
