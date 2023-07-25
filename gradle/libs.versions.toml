@@ -6,7 +6,7 @@ edc = "0.2.1-SNAPSHOT"
 failsafe = "3.3.1"
 googleCloudIamAdmin = "3.14.0"
 googleCloudIamCredentials = "2.18.0"
-googleCloudStorage = "2.22.4"
+googleCloudStorage = "2.25.0"
 googleCloudSecretManager = "2.20.0"
 googleCloudCore = "2.20.0"
 
