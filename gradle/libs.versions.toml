@@ -7,7 +7,7 @@ failsafe = "3.3.1"
 googleCloudIamAdmin = "3.18.0"
 googleCloudIamCredentials = "2.23.0"
 googleCloudStorage = "2.26.0"
-googleCloudSecretManager = "2.20.0"
+googleCloudSecretManager = "2.23.0"
 googleCloudCore = "2.22.0"
 
 [libraries]
