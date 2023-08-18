@@ -61,11 +61,6 @@ public class GcsDataSinkFactory implements DataSinkFactory {
     }
 
     @Override
-    public @NotNull Result<Boolean> validate(DataFlowRequest request) {
-        return validateRequest(request).map(it -> true);
-    }
-
-    @Override
     public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
         var destination = request.getDestinationDataAddress();
         return validation.apply(destination);
@@ -84,8 +79,8 @@ public class GcsDataSinkFactory implements DataSinkFactory {
 
         return GcsDataSink.Builder.newInstance()
                 .storageClient(storageClient)
-                .bucketName(destination.getProperty(GcsStoreSchema.BUCKET_NAME))
-                .blobName(destination.getProperty(GcsStoreSchema.BLOB_NAME))
+                .bucketName(destination.getStringProperty(GcsStoreSchema.BUCKET_NAME))
+                .blobName(destination.getStringProperty(GcsStoreSchema.BLOB_NAME))
                 .requestId(request.getId())
                 .executorService(executorService)
                 .monitor(monitor)

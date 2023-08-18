@@ -43,11 +43,6 @@ public class GcsDataSourceFactory implements DataSourceFactory {
     }
 
     @Override
-    public @NotNull Result<Boolean> validate(DataFlowRequest request) {
-        return validateRequest(request).map(it -> true);
-    }
-
-    @Override
     public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
         var source = request.getSourceDataAddress();
         return validation.apply(source);
@@ -66,8 +61,8 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
         return GcsDataSource.Builder.newInstance()
                 .storageClient(storageClient)
-                .bucketName(source.getProperty(GcsStoreSchema.BUCKET_NAME))
-                .blobName(source.getProperty(GcsStoreSchema.BLOB_NAME))
+                .bucketName(source.getStringProperty(GcsStoreSchema.BUCKET_NAME))
+                .blobName(source.getStringProperty(GcsStoreSchema.BLOB_NAME))
                 .monitor(monitor)
                 .build();
 
