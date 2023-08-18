@@ -61,8 +61,8 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
         return GcsDataSource.Builder.newInstance()
                 .storageClient(storageClient)
-                .bucketName(source.getProperty(GcsStoreSchema.BUCKET_NAME))
-                .blobName(source.getProperty(GcsStoreSchema.BLOB_NAME))
+                .bucketName(source.getStringProperty(GcsStoreSchema.BUCKET_NAME))
+                .blobName(source.getStringProperty(GcsStoreSchema.BLOB_NAME))
                 .monitor(monitor)
                 .build();
 
