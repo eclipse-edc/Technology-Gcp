@@ -79,8 +79,8 @@ public class GcsDataSinkFactory implements DataSinkFactory {
 
         return GcsDataSink.Builder.newInstance()
                 .storageClient(storageClient)
-                .bucketName(destination.getProperty(GcsStoreSchema.BUCKET_NAME))
-                .blobName(destination.getProperty(GcsStoreSchema.BLOB_NAME))
+                .bucketName(destination.getStringProperty(GcsStoreSchema.BUCKET_NAME))
+                .blobName(destination.getStringProperty(GcsStoreSchema.BLOB_NAME))
                 .requestId(request.getId())
                 .executorService(executorService)
                 .monitor(monitor)

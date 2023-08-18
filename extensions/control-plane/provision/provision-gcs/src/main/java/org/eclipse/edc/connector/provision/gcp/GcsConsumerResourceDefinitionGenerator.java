@@ -32,8 +32,8 @@ public class GcsConsumerResourceDefinitionGenerator implements ConsumerResourceD
     ResourceDefinition generate(DataRequest dataRequest, Policy policy) {
         var destination = dataRequest.getDataDestination();
         var id = randomUUID().toString();
-        var location = destination.getProperty(GcsStoreSchema.LOCATION);
-        var storageClass = destination.getProperty(GcsStoreSchema.STORAGE_CLASS);
+        var location = destination.getStringProperty(GcsStoreSchema.LOCATION);
+        var storageClass = destination.getStringProperty(GcsStoreSchema.STORAGE_CLASS);
 
         return GcsResourceDefinition.Builder.newInstance().id(id).location(location)
                 .storageClass(storageClass).build();
