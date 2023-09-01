@@ -15,7 +15,6 @@
 package org.eclipse.edc.gcp.storage;
 
 import com.google.api.gax.paging.Page;
-
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -72,6 +71,7 @@ public interface StorageService {
 
     /**
      * Returns the list of Blobs in the bucket
+     *
      * @param bucketName The name of the bucket
      * @return the list of Blob items stored in the bucket
      */

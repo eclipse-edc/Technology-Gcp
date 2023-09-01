@@ -15,7 +15,6 @@
 package org.eclipse.edc.gcp.storage;
 
 import com.google.api.gax.paging.Page;
-
 import com.google.cloud.Binding;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BucketInfo;
@@ -30,15 +29,19 @@ import java.util.Optional;
 
 public class StorageServiceImpl implements StorageService {
 
-    public enum GcpRoles{
+    public enum GcpRoles {
         OBJECT_CREATOR("roles/storage.objectCreator"),
         OBJECT_VIEWER("roles/storage.objectViewer");
 
         private final String role;
 
-        GcpRoles(String role) { this.role = role; }
+        GcpRoles(String role) {
+            this.role = role;
+        }
 
-        public String getValue() { return role; }
+        public String getValue() {
+            return role;
+        }
     }
 
     private final Storage storageClient;
