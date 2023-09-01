@@ -14,10 +14,10 @@
 
 package org.eclipse.edc.gcp.gcp.common;
 
+import org.eclipse.edc.connector.core.vault.InMemoryVault;
 import org.eclipse.edc.gcp.common.GcpCredentials;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccountCredentials;
-import org.eclipse.edc.junit.testfixtures.MockVault;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
@@ -47,7 +47,7 @@ public class GcpCredentialsTest {
 
     @BeforeEach
     public void setUp() {
-        var vault = new MockVault();
+        var vault = new InMemoryVault(mock(Monitor.class));
         var tokenValue = UUID.randomUUID();
         var serviceAccountFileInJson = "{\n" +
                 "  \"type\": \"service_account\",\n" +
