@@ -162,8 +162,8 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         IamService iamService;
         var projectId = getProjectId(provisionedResource.getProjectId());
         var dataAddress = provisionedResource.getDataAddress();
-        String serviceAccountKeyName = dataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
-        String serviceAccountKeyValue = dataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
+        String serviceAccountKeyName = dataAddress.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
+        String serviceAccountKeyValue = dataAddress.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
         if (serviceAccountKeyName != null && serviceAccountKeyValue != null) {
             var gcpServiceAccountCredentials = new GcpServiceAccountCredentials(dataAddress.getKeyName(), serviceAccountKeyName, serviceAccountKeyValue);
             var googleCredentials = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentials);

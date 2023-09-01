@@ -48,11 +48,6 @@ public class GcsDataSourceFactory implements DataSourceFactory {
     }
 
     @Override
-    public @NotNull Result<Boolean> validate(DataFlowRequest request) {
-        return validateRequest(request).map(it -> true);
-    }
-
-    @Override
     public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
         var source = request.getSourceDataAddress();
         return validation.apply(source);
@@ -67,8 +62,8 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
         var sourceDataAddress = request.getSourceDataAddress();
         var tokenKeyName = sourceDataAddress.getKeyName();
-        var serviceAccountKeyName = sourceDataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
-        var serviceAccountValue = sourceDataAddress.getProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
+        var serviceAccountKeyName = sourceDataAddress.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
+        var serviceAccountValue = sourceDataAddress.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
         var gcpServiceAccountCredentials = new GcpServiceAccountCredentials(tokenKeyName, serviceAccountKeyName, serviceAccountValue);
         var googleCredentials = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentials);
         var storageClient = StorageOptions.newBuilder()
@@ -79,8 +74,8 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
         return GcsDataSource.Builder.newInstance()
                 .storageClient(storageClient)
-                .bucketName(source.getProperty(GcsStoreSchema.BUCKET_NAME))
-                .blobName(source.getProperty(GcsStoreSchema.BLOB_NAME))
+                .bucketName(source.getStringProperty(GcsStoreSchema.BUCKET_NAME))
+                .blobName(source.getStringProperty(GcsStoreSchema.BLOB_NAME))
                 .monitor(monitor)
                 .build();
     }

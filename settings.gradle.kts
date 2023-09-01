@@ -36,13 +36,14 @@ dependencyResolutionManagement {
     }
 }
 
-// common modules
+// common extensions
 include(":extensions:common:gcp:gcp-core")
+include(":extensions:common:vault:vault-gcp")
 
-// control plane modules
+// control plane extensions
 include(":extensions:control-plane:provision:provision-gcs")
 
-// data plane
+// data plane extensions
 include(":extensions:data-plane:data-plane-google-storage")
 include(":version-catalog")
 include("launcher")

@@ -20,12 +20,10 @@ dependencies {
     api(libs.edc.spi.dataplane)
     implementation(libs.edc.util)
     implementation(project(":extensions:common:gcp:gcp-core"))
-    implementation(libs.edc.core.dataPlane.util)
+    implementation(libs.edc.core.dataplane.util)
 
     implementation(libs.googlecloud.storage)
 
     testImplementation(libs.edc.core.dataplane)
     testImplementation(libs.edc.junit)
 }
-
-
