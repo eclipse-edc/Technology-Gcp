@@ -14,10 +14,6 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-
-import org.eclipse.edc.connector.provision.gcp.GcsProvisionedResource;
-import org.eclipse.edc.connector.provision.gcp.GcsProvisioner;
-import org.eclipse.edc.connector.provision.gcp.GcsResourceDefinition;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpCredentials;
 import org.eclipse.edc.gcp.common.GcpException;

@@ -15,9 +15,6 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import com.google.cloud.storage.Blob;
-
-import java.util.Iterator;
-
 import com.google.cloud.storage.StorageOptions;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.StatusChecker;
@@ -29,11 +26,11 @@ import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
 import java.util.List;
 
-import static org.eclipse.edc.connector.transfer.spi.types.TransferProcess.Type.PROVIDER;
-
 import static java.lang.String.format;
+import static org.eclipse.edc.connector.transfer.spi.types.TransferProcess.Type.PROVIDER;
 
 public class GcsProvisionerStatusChecker implements StatusChecker {
 
@@ -53,7 +50,7 @@ public class GcsProvisionerStatusChecker implements StatusChecker {
         if (transferProcess.getType() == PROVIDER) {
             // TODO check if PROVIDER process implementation is needed
         }
-        var gcsResourceDefinition = (GcsResourceDefinition) new GcsConsumerResourceDefinitionGenerator().generate(transferProcess.getDataRequest(),null);
+        var gcsResourceDefinition = (GcsResourceDefinition) new GcsConsumerResourceDefinitionGenerator().generate(transferProcess.getDataRequest(), null);
 
         if (resources != null && !resources.isEmpty()) {
             for (var resource : resources) {
@@ -68,8 +65,8 @@ public class GcsProvisionerStatusChecker implements StatusChecker {
     }
 
     private boolean checkBucketTransferComplete(GcsResourceDefinition gcsResourceDefinition) {
-       var bucketName = gcsResourceDefinition.getBucketName();
-        var  testBlobName = bucketName + ".complete";
+        var bucketName = gcsResourceDefinition.getBucketName();
+        var testBlobName = bucketName + ".complete";
 
         var tokenKeyName = gcsResourceDefinition.getTokenKeyName();
         var serviceAccountKeyName = gcsResourceDefinition.getServiceAccountKeyName();
