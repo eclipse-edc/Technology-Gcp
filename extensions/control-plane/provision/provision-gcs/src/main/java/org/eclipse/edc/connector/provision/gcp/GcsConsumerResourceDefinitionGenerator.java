@@ -32,6 +32,7 @@ public class GcsConsumerResourceDefinitionGenerator implements ConsumerResourceD
     public @Nullable
     ResourceDefinition generate(DataRequest dataRequest, Policy policy) {
         Objects.requireNonNull(dataRequest, "dataRequest must always be provided");
+        Objects.requireNonNull(policy, "policy must always be provided");
 
         var destination = dataRequest.getDataDestination();
         var id = randomUUID().toString();
