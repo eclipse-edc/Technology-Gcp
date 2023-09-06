@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Google LLC
+ *  Copyright (c) 2023 Google LLC
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -18,14 +18,8 @@ plugins {
 
 dependencies {
     api(libs.edc.spi.core)
-    api(libs.edc.spi.transfer)
-    api(libs.edc.util)
 
-    implementation(libs.googlecloud.iam.admin)
-    implementation(libs.googlecloud.storage)
-    implementation(libs.googlecloud.iam.credentials)
-
-    testImplementation(libs.edc.core.connector)
+    implementation(libs.edc.util)
+    implementation(libs.googlecloud.core)
+    implementation(libs.googlecloud.secretmanager)
 }
-
-

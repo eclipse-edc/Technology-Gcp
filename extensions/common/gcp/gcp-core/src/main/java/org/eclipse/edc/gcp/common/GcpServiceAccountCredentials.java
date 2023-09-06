@@ -20,9 +20,11 @@ public class GcpServiceAccountCredentials {
     private String serviceAccountValue;
 
     /**
-     * @param vaultTokenKeyName Key name of an entry in the vault containing an access token
+     * Creates credentials dao for GcpServiceAccount
+     *
+     * @param vaultTokenKeyName          Key name of an entry in the vault containing an access token
      * @param vaultServiceAccountKeyName key name of an entry in the vault containing a valid Google Credentials file in json format
-     * @param serviceAccountValue Content of a valid Google Credentials file in json format encoded with base64
+     * @param serviceAccountValue        Content of a valid Google Credentials file in json format encoded with base64
      */
     public GcpServiceAccountCredentials(String vaultTokenKeyName, String vaultServiceAccountKeyName, String serviceAccountValue) {
         this.vaultTokenKeyName = vaultTokenKeyName;
@@ -30,9 +32,15 @@ public class GcpServiceAccountCredentials {
         this.serviceAccountValue = serviceAccountValue;
     }
 
-    public String getVaultTokenKeyName() { return vaultTokenKeyName; }
+    public String getVaultTokenKeyName() {
+        return vaultTokenKeyName;
+    }
 
-    public String getVaultServiceAccountKeyName() { return vaultServiceAccountKeyName; }
+    public String getVaultServiceAccountKeyName() {
+        return vaultServiceAccountKeyName;
+    }
 
-    public String getServiceAccountValue() { return serviceAccountValue; }
+    public String getServiceAccountValue() {
+        return serviceAccountValue;
+    }
 }

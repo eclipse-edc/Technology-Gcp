@@ -38,27 +38,27 @@ public class GcsProvisionedResource extends ProvisionedDataDestinationResource {
     }
 
     public String getBucketName() {
-        return getDataAddress().getProperty(BUCKET_NAME);
+        return getDataAddress().getStringProperty(BUCKET_NAME);
     }
 
     public String getLocation() {
-        return getDataAddress().getProperty(LOCATION);
+        return getDataAddress().getStringProperty(LOCATION);
     }
 
     public String getProjectId() {
-        return getDataAddress().getProperty(PROJECT_ID);
+        return getDataAddress().getStringProperty(PROJECT_ID);
     }
 
     public String getStorageClass() {
-        return getDataAddress().getProperty(STORAGE_CLASS);
+        return getDataAddress().getStringProperty(STORAGE_CLASS);
     }
 
     public String getServiceAccountName() {
-        return getDataAddress().getProperty(SERVICE_ACCOUNT_NAME);
+        return getDataAddress().getStringProperty(SERVICE_ACCOUNT_NAME);
     }
 
     public String getServiceAccountEmail() {
-        return getDataAddress().getProperty(SERVICE_ACCOUNT_EMAIL);
+        return getDataAddress().getStringProperty(SERVICE_ACCOUNT_EMAIL);
     }
 
     @JsonPOJOBuilder(withPrefix = "")

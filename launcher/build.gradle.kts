@@ -5,35 +5,37 @@ plugins {
 }
 
 group = "org.eclipse.edc"
-version = "0.1.1-SNAPSHOT"
-var edc = "0.1.1-SNAPSHOT"
+version = "0.2.2-SNAPSHOT"
+
+val edcVersion = "0.2.2-SNAPSHOT"
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation("org.eclipse.edc:iam-mock:${edc}")
-    implementation("org.eclipse.edc:vault-hashicorp:${edc}")
+    implementation("org.eclipse.edc:iam-mock:${edcVersion}")
+    implementation("org.eclipse.edc:vault-hashicorp:${edcVersion}")
 
 
-    runtimeOnly("org.eclipse.edc:control-plane-core:${edc}")
-    runtimeOnly("org.eclipse.edc:configuration-filesystem:${edc}")
-    runtimeOnly("org.eclipse.edc:auth-tokenbased:${edc}")
+    runtimeOnly("org.eclipse.edc:control-plane-core:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:configuration-filesystem:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:auth-tokenbased:${edcVersion}")
 
-    runtimeOnly("org.eclipse.edc:management-api:${edc}")
-    runtimeOnly("org.eclipse.edc:management-api-configuration:${edc}")
-    runtimeOnly("org.eclipse.edc:dsp:${edc}")
-    runtimeOnly("org.eclipse.edc:jwt-spi:${edc}")
+    runtimeOnly("org.eclipse.edc:management-api:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:management-api-configuration:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:dsp:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:jwt-spi:${edcVersion}")
 
-    runtimeOnly("org.eclipse.edc:data-plane-client:${edc}")
-    runtimeOnly("org.eclipse.edc:data-plane-framework:${edc}")
-    runtimeOnly("org.eclipse.edc:transfer-data-plane:${edc}")
-    runtimeOnly("org.eclipse.edc:data-plane-selector-core:${edc}")
-    runtimeOnly( "org.eclipse.edc:data-plane-selector-client:${edc}")
+    runtimeOnly("org.eclipse.edc:data-plane-client:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:data-plane-framework:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:transfer-data-plane:${edcVersion}")
+    runtimeOnly("org.eclipse.edc:data-plane-selector-core:${edcVersion}")
+    runtimeOnly( "org.eclipse.edc:data-plane-selector-client:${edcVersion}")
 
     runtimeOnly(project(":extensions:control-plane:provision:provision-gcs"))
     runtimeOnly(project(":extensions:data-plane:data-plane-google-storage"))
-    runtimeOnly("org.eclipse.edc:data-plane-http:${edc}")
+    runtimeOnly("org.eclipse.edc:data-plane-http:${edcVersion}")
 
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")

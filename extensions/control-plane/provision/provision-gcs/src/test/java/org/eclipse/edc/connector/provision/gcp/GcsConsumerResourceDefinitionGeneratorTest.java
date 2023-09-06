@@ -14,8 +14,6 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.provision.gcp.GcsConsumerResourceDefinitionGenerator;
-import org.eclipse.edc.connector.provision.gcp.GcsResourceDefinition;
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.policy.model.Policy;

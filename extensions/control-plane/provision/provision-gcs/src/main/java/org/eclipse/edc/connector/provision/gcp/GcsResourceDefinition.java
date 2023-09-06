@@ -102,6 +102,7 @@ public class GcsResourceDefinition extends ResourceDefinition {
             resourceDefinition.tokenKeyName = tokenKeyName;
             return this;
         }
+
         public Builder location(String location) {
             resourceDefinition.location = location;
             return this;

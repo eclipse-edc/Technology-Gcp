@@ -36,7 +36,8 @@ public class GcsDataSink extends ParallelSink {
     private String bucketName;
     private String blobName;
 
-    private GcsDataSink() {}
+    private GcsDataSink() {
+    }
 
     /**
      * Writes data into an Google storage.
@@ -48,8 +49,7 @@ public class GcsDataSink extends ParallelSink {
             try (var input = part.openStream()) {
                 var sinkBlobName = Optional.ofNullable(blobName)
                         .orElseGet(part::name);
-                if(StringUtils.isNullOrBlank(sinkBlobName))
-                {
+                if (StringUtils.isNullOrBlank(sinkBlobName)) {
                     monitor.severe("Blob name has not been provided neither in the asset dataAddress nor in the destinationData address!");
                     return StreamResult.error("An error");
                 }
@@ -71,8 +71,8 @@ public class GcsDataSink extends ParallelSink {
 
     @Override
     protected StreamResult<Void> complete() {
-        var destinationBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, bucketName+".complete")).build();
-        byte[] completeData = { };
+        var destinationBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, bucketName + ".complete")).build();
+        byte[] completeData = {};
         InputStream completeDataStream = new ByteArrayInputStream(completeData);
         try (var writer = storageClient.writer(destinationBlobInfo)) {
             ByteStreams.copy(completeDataStream, Channels.newOutputStream(writer));
