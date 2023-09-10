@@ -26,6 +26,7 @@ import static org.eclipse.edc.gcp.storage.GcsStoreSchema.LOCATION;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.SERVICE_ACCOUNT_EMAIL;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.SERVICE_ACCOUNT_NAME;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.STORAGE_CLASS;
+import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
 @JsonDeserialize(builder = GcsProvisionedResource.Builder.class)
 @JsonTypeName("dataspaceconnector:gcsgrovisionedresource")
@@ -69,27 +70,27 @@ public class GcsProvisionedResource extends ProvisionedDataDestinationResource {
         }
 
         public GcsProvisionedResource.Builder bucketName(String bucketName) {
-            dataAddressBuilder.property(BUCKET_NAME, bucketName);
+            dataAddressBuilder.property(EDC_NAMESPACE + BUCKET_NAME, bucketName);
             return this;
         }
 
         public GcsProvisionedResource.Builder location(String location) {
-            dataAddressBuilder.property(LOCATION, location);
+            dataAddressBuilder.property(EDC_NAMESPACE + LOCATION, location);
             return this;
         }
 
         public GcsProvisionedResource.Builder storageClass(String storageClass) {
-            dataAddressBuilder.property(STORAGE_CLASS, storageClass);
+            dataAddressBuilder.property(EDC_NAMESPACE + STORAGE_CLASS, storageClass);
             return this;
         }
 
         public GcsProvisionedResource.Builder serviceAccountName(String serviceAccountName) {
-            dataAddressBuilder.property(SERVICE_ACCOUNT_NAME, serviceAccountName);
+            dataAddressBuilder.property(EDC_NAMESPACE + SERVICE_ACCOUNT_NAME, serviceAccountName);
             return this;
         }
 
         public GcsProvisionedResource.Builder serviceAccountEmail(String serviceAccountEmail) {
-            dataAddressBuilder.property(SERVICE_ACCOUNT_EMAIL, serviceAccountEmail);
+            dataAddressBuilder.property(EDC_NAMESPACE + SERVICE_ACCOUNT_EMAIL, serviceAccountEmail);
             return this;
         }
 
