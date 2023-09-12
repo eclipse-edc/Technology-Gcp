@@ -24,12 +24,16 @@ maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1/2.23.
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1beta1/2.23.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-storage-v2/2.26.0-alpha, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.23.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.24.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-iam-admin-v1/3.18.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-iam-v1/1.18.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-iam-v1/1.19.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api/api-common/2.15.0, BSD-3-Clause, approved, clearlydefined
+maven/mavencentral/com.google.api/api-common/2.16.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api/gax-grpc/2.32.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.api/gax-httpjson/2.32.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.api/gax/2.32.0, BSD-3-Clause, approved, clearlydefined
+maven/mavencentral/com.google.api/gax/2.33.0, , restricted, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-storage/v1-rev20230617-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.auth/google-auth-library-credentials/1.19.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.19.0, BSD-3-Clause, approved, clearlydefined
@@ -38,6 +42,7 @@ maven/mavencentral/com.google.auto.value/auto-value-annotations/1.10.2, Apache-2
 maven/mavencentral/com.google.cloud/google-cloud-core-grpc/2.22.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-core-http/2.22.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-core/2.22.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.cloud/google-cloud-core/2.23.0, , restricted, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-iamcredentials/2.23.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-secretmanager/2.23.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-storage/2.26.0, Apache-2.0, approved, clearlydefined
