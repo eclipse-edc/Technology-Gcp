@@ -79,7 +79,7 @@ class GcsProvisionerTest {
         var serviceAccount = new GcpServiceAccount("test-sa", "sa-name", "description");
         var token = new GcpAccessToken("token", 123);
 
-        when(storageServiceMock.getOrCreateEmptyBucket(bucketName, bucketLocation)).thenReturn(bucket);
+        when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
         when(iamServiceMock.getOrCreateServiceAccount(anyString(), anyString())).thenReturn(serviceAccount);
         doNothing().when(storageServiceMock).addProviderPermissions(bucket, serviceAccount);
@@ -97,30 +97,28 @@ class GcsProvisionerTest {
             assertThat(secretToken.getToken()).isEqualTo("token");
         });
 
-        verify(storageServiceMock).getOrCreateEmptyBucket(bucketName, bucketLocation);
+        verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
         verify(storageServiceMock).addProviderPermissions(bucket, serviceAccount);
         verify(iamServiceMock).createAccessToken(serviceAccount);
     }
 
     @Test
-    void provisionFailsIfBucketNotEmpty() {
+    void provisionSucceedsIfBucketNotEmpty() {
         var resourceDefinition = createResourceDefinition();
         var bucketName = resourceDefinition.getId();
         var bucketLocation = resourceDefinition.getLocation();
 
-        when(storageServiceMock.getOrCreateEmptyBucket(bucketName, bucketLocation)).thenReturn(new GcsBucket(bucketName));
+        when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(new GcsBucket(bucketName));
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(false);
 
         var response = provisioner.provision(resourceDefinition, testPolicy).join();
 
-        assertThat(response.failed()).isTrue();
-        assertThat(response.getFailure().status()).isEqualTo(ResponseStatus.FATAL_ERROR);
+        assertThat(response.failed()).isFalse();
 
-        verify(storageServiceMock).getOrCreateEmptyBucket(bucketName, bucketLocation);
-        verify(storageServiceMock, times(0)).addProviderPermissions(any(), any());
-        verify(iamServiceMock, times(0)).createAccessToken(any());
+        verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
+        verify(storageServiceMock, times(1)).addProviderPermissions(any(), any());
+        verify(iamServiceMock, times(1)).createAccessToken(any());
     }
-
 
     @Test
     void provisionFailsBecauseOfApiError() {
@@ -128,7 +126,7 @@ class GcsProvisionerTest {
         var bucketName = resourceDefinition.getId();
         var bucketLocation = resourceDefinition.getLocation();
 
-        doThrow(new GcpException("some error")).when(storageServiceMock).getOrCreateEmptyBucket(bucketName, bucketLocation);
+        doThrow(new GcpException("some error")).when(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
 
         var response = provisioner.provision(resourceDefinition, testPolicy).join();
         assertThat(response.failed()).isTrue();

@@ -62,7 +62,7 @@ class StorageServiceImplTest {
 
         when(storageMock.create(eq(expectedBucketInfo))).thenReturn(expectedBucket);
 
-        assertThat(storageService.getOrCreateEmptyBucket(bucketName, bucketLocation).getName()).isEqualTo(bucketName);
+        assertThat(storageService.getOrCreateBucket(bucketName, bucketLocation).getName()).isEqualTo(bucketName);
     }
 
     @Test
@@ -76,7 +76,7 @@ class StorageServiceImplTest {
 
         when(storageMock.get(bucketName)).thenReturn(existingBucket);
 
-        assertThat(storageService.getOrCreateEmptyBucket(bucketName, bucketLocation).getName()).isEqualTo(bucketName);
+        assertThat(storageService.getOrCreateBucket(bucketName, bucketLocation).getName()).isEqualTo(bucketName);
     }
 
     @Test
@@ -90,7 +90,7 @@ class StorageServiceImplTest {
 
         when(storageMock.get(bucketName)).thenReturn(existingBucket);
 
-        assertThatThrownBy(() -> storageService.getOrCreateEmptyBucket(bucketName, bucketLocation)).isInstanceOf(GcpException.class);
+        assertThatThrownBy(() -> storageService.getOrCreateBucket(bucketName, bucketLocation)).isInstanceOf(GcpException.class);
     }
 
     @Test
