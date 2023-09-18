@@ -37,7 +37,7 @@ public class StorageServiceImpl implements StorageService {
     }
 
     @Override
-    public GcsBucket getOrCreateEmptyBucket(String bucketName, String location) {
+    public GcsBucket getOrCreateBucket(String bucketName, String location) {
         var bucket = Optional.ofNullable(storageClient.get(bucketName))
                 .orElseGet(() -> {
                     monitor.debug("Creating new bucket " + bucketName);

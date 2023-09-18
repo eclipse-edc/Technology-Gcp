@@ -31,6 +31,7 @@ import org.eclipse.edc.spi.response.ResponseStatus;
 import org.eclipse.edc.spi.response.StatusResult;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -60,18 +61,22 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     @Override
     public CompletableFuture<StatusResult<ProvisionResponse>> provision(
             GcsResourceDefinition resourceDefinition, Policy policy) {
-        var bucketName = resourceDefinition.getId();
-        var bucketLocation = resourceDefinition.getLocation();
+        var bucketName = Optional.ofNullable(resourceDefinition.getBucketName())
+                .orElseGet(() -> {
+                    var generatedBucketName = resourceDefinition.getId();
+                    monitor.debug("GCS bucket name generated: " + generatedBucketName);
+                    return generatedBucketName;
+                });
 
         monitor.debug("GCS Bucket request submitted: " + bucketName);
 
-        var resourceName = resourceDefinition.getId() + "-bucket";
+        var bucketLocation = resourceDefinition.getLocation();
+        var resourceName = bucketName + "-bucket";
         var processId = resourceDefinition.getTransferProcessId();
         try {
-            var bucket = storageService.getOrCreateEmptyBucket(bucketName, bucketLocation);
-            if (!storageService.isEmpty(bucketName)) {
-                return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, String.format("Bucket: %s already exists and is not empty.", bucketName)));
-            }
+            var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
+
+            // TODO use service account from transfer request, in case defined.
             var serviceAccount = createServiceAccount(processId, bucketName);
             var token = createBucketAccessToken(bucket, serviceAccount);
 
@@ -79,8 +84,8 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
 
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();
             return CompletableFuture.completedFuture(StatusResult.success(response));
-        } catch (GcpException e) {
-            return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, e.toString()));
+        } catch (GcpException gcpException) {
+            return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));
         }
     }
 
@@ -126,13 +131,19 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     }
 
     private GcsProvisionedResource getProvisionedResource(GcsResourceDefinition resourceDefinition, String resourceName, String bucketName, GcpServiceAccount serviceAccount) {
+        String serviceAccountEmail = null;
+        String serviceAccountName = null;
+        if (serviceAccount != null) {
+            serviceAccountEmail = serviceAccount.getEmail();
+            serviceAccountName = serviceAccount.getEmail();
+        }
         return GcsProvisionedResource.Builder.newInstance()
                 .id(resourceDefinition.getId())
                 .resourceDefinitionId(resourceDefinition.getId())
                 .location(resourceDefinition.getLocation())
                 .storageClass(resourceDefinition.getStorageClass())
-                .serviceAccountEmail(serviceAccount.getEmail())
-                .serviceAccountName(serviceAccount.getName())
+                .serviceAccountEmail(serviceAccountEmail)
+                .serviceAccountName(serviceAccountName)
                 .transferProcessId(resourceDefinition.getTransferProcessId())
                 .resourceName(resourceName)
                 .bucketName(bucketName)
