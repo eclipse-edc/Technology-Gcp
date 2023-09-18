@@ -22,6 +22,7 @@ public class GcsResourceDefinition extends ResourceDefinition {
 
     private String location;
     private String storageClass;
+    private String bucketName;
 
     private GcsResourceDefinition() {
     }
@@ -34,11 +35,16 @@ public class GcsResourceDefinition extends ResourceDefinition {
         return this.storageClass;
     }
 
+    public String getBucketName() {
+        return this.bucketName;
+    }
+
     @Override
     public Builder toBuilder() {
         return initializeBuilder(new Builder())
                 .location(location)
-                .storageClass(storageClass);
+                .storageClass(storageClass)
+                .bucketName(bucketName);
     }
 
     public static class Builder extends ResourceDefinition.Builder<GcsResourceDefinition, Builder> {
@@ -61,9 +67,16 @@ public class GcsResourceDefinition extends ResourceDefinition {
             return this;
         }
 
+        public Builder bucketName(String bucketName) {
+            resourceDefinition.bucketName = bucketName;
+            return this;
+        }
+
         @Override
         protected void verify() {
             super.verify();
+            // Bucket name is not required: if not present, provisioner generates a new one
+            // using the transfer id.
             Objects.requireNonNull(resourceDefinition.location, "location");
             Objects.requireNonNull(resourceDefinition.storageClass, "storageClass");
         }
