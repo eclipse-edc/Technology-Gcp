@@ -22,7 +22,9 @@ import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
 import org.eclipse.edc.connector.dataplane.util.sink.ParallelSink;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.util.List;
 import java.util.Objects;
@@ -59,6 +61,20 @@ public class GcsDataSink extends ParallelSink {
             }
         }
         return StreamResult.success();
+    }
+
+    @Override
+    protected StreamResult<Void> complete() {
+        var destinationBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, bucketName + ".complete")).build();
+        byte[] completeData = { };
+        InputStream completeDataStream = new ByteArrayInputStream(completeData);
+        try (var writer = storageClient.writer(destinationBlobInfo)) {
+            ByteStreams.copy(completeDataStream, Channels.newOutputStream(writer));
+        } catch (Exception e) {
+            monitor.severe("Error writing completion data to the bucket", e);
+            return StreamResult.error("Error writing completion data to the bucket");
+        }
+        return super.complete();
     }
 
     public static class Builder extends ParallelSink.Builder<Builder, GcsDataSink> {

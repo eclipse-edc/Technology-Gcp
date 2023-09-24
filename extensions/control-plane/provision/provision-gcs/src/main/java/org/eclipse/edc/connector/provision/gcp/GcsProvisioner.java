@@ -105,9 +105,9 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
                         .provisionedResourceId(provisionedResource.getId()).build()));
     }
 
-    private GcpServiceAccount createServiceAccount(String processId, String buckedName) {
+    private GcpServiceAccount createServiceAccount(String processId, String bucketName) {
         var serviceAccountName = sanitizeServiceAccountName(processId);
-        var uniqueServiceAccountDescription = generateUniqueServiceAccountDescription(processId, buckedName);
+        var uniqueServiceAccountDescription = generateUniqueServiceAccountDescription(processId, bucketName);
         return iamService.getOrCreateServiceAccount(serviceAccountName, uniqueServiceAccountDescription);
     }
 
