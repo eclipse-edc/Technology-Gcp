@@ -18,14 +18,14 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.StatusChecker;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
-import org.eclipse.edc.gcp.storage.StorageServiceImpl;
+import org.eclipse.edc.gcp.storage.StorageService;
 
 import java.util.List;
 
 public class GcsProvisionerStatusChecker implements StatusChecker {
-    private StorageServiceImpl storageService;
+    private StorageService storageService;
 
-    public GcsProvisionerStatusChecker(StorageServiceImpl storageService) {
+    public GcsProvisionerStatusChecker(StorageService storageService) {
         this.storageService = storageService;
     }
 
