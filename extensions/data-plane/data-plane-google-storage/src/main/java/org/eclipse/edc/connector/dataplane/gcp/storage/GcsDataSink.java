@@ -54,7 +54,7 @@ public class GcsDataSink extends ParallelSink {
                     return StreamResult.error("An error");
                 }
                 var destinationBlobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, sinkBlobName)).build();
-                try (var writer = storageClient.writer(destinationBlobInfo)) {
+                try (var writer = storageClient.writer(destinationBlobInfo, Storage.BlobWriteOption.doesNotExist())) {
                     ByteStreams.copy(input, Channels.newOutputStream(writer));
                 }
             } catch (IOException e) {
