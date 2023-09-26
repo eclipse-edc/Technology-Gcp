@@ -18,7 +18,6 @@ import org.eclipse.edc.connector.transfer.spi.provision.ProvisionManager;
 import org.eclipse.edc.connector.transfer.spi.provision.ResourceManifestGenerator;
 import org.eclipse.edc.connector.transfer.spi.status.StatusCheckerRegistry;
 import org.eclipse.edc.gcp.common.GcpCredentials;
-import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.security.Vault;
@@ -63,7 +62,5 @@ public class GcsProvisionExtension implements ServiceExtension {
 
         manifestGenerator.registerGenerator(new GcsConsumerResourceDefinitionGenerator());
 
-        statusCheckerRegistry.register(GcsStoreSchema.TYPE,
-                new GcsProvisionerStatusChecker(monitor, gcpCredential, projectId));
     }
 }

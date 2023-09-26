@@ -14,9 +14,6 @@
 
 package org.eclipse.edc.gcp.storage;
 
-import com.google.api.gax.paging.Page;
-import com.google.cloud.storage.Blob;
-import com.google.cloud.storage.Storage;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.gcp.common.GcsBucket;
 
@@ -26,15 +23,15 @@ import org.eclipse.edc.gcp.common.GcsBucket;
 public interface StorageService {
 
     /**
-     * Creates a new bucket with the given name and location.
-     * If the bucket exists in the correct location and is empty it is returned.
-     * Else an Exception is thrown.
+     * Checks if a bucket with the given name exists in the specific location,
+     * and returns it. Otherwise, if no bucket with the given name exists,
+     * creates it.
      *
-     * @param bucketName The name of the bucket
-     * @param location   The location where the data in the bucket will be stored
-     * @return {@link Storage}
+     * @param bucketName The name of the bucket, must be unique in GCP
+     * @param location   The location of the bucket (e.g. "EUROPE-WEST3", "EU")
+     * @return {@link GcsBucket}
      */
-    GcsBucket getOrCreateEmptyBucket(String bucketName, String location);
+    GcsBucket getOrCreateBucket(String bucketName, String location);
 
     /**
      * Attaches a new role binding to the bucket that grants the service account the specified role on the bucket
@@ -68,12 +65,4 @@ public interface StorageService {
      * @return true if the bucket is empty and false if not
      */
     boolean isEmpty(String bucketName);
-
-    /**
-     * Returns the list of Blobs in the bucket
-     *
-     * @param bucketName The name of the bucket
-     * @return the list of Blob items stored in the bucket
-     */
-    Page<Blob> list(String bucketName);
 }

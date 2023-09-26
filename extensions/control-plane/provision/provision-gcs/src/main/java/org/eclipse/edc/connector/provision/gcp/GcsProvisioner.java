@@ -44,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -95,18 +96,21 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     public CompletableFuture<StatusResult<ProvisionResponse>> provision(
             GcsResourceDefinition resourceDefinition,
             IamService iamService, StorageService storageService) {
-        var bucketName = resourceDefinition.getId();
-        var bucketLocation = resourceDefinition.getLocation();
+        var bucketName = Optional.ofNullable(resourceDefinition.getBucketName())
+                .orElseGet(() -> {
+                    var generatedBucketName = resourceDefinition.getId();
+                    monitor.debug("GCS bucket name generated: " + generatedBucketName);
+                    return generatedBucketName;
+                });
 
         monitor.debug("GCS Bucket request submitted: " + bucketName);
 
-        var resourceName = resourceDefinition.getId() + "-bucket";
+        var bucketLocation = resourceDefinition.getLocation();
+        var resourceName = bucketName + "-bucket";
         var processId = resourceDefinition.getTransferProcessId();
         try {
-            var bucket = storageService.getOrCreateEmptyBucket(bucketName, bucketLocation);
-            if (!storageService.isEmpty(bucketName)) {
-                return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, String.format("Bucket: %s already exists and is not empty.", bucketName)));
-            }
+            var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
+
 
             // TODO avoid creating / leaking service account at the end of the process
             var serviceAccount = createServiceAccount(processId, bucketName, iamService);
@@ -222,14 +226,20 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     }
 
     private GcsProvisionedResource getProvisionedResource(GcsResourceDefinition resourceDefinition, String resourceName, String bucketName, GcpServiceAccount serviceAccount) {
+        String serviceAccountEmail = null;
+        String serviceAccountName = null;
+        if (serviceAccount != null) {
+            serviceAccountEmail = serviceAccount.getEmail();
+            serviceAccountName = serviceAccount.getEmail();
+        }
         return GcsProvisionedResource.Builder.newInstance()
                 .id(resourceDefinition.getId())
                 .resourceDefinitionId(resourceDefinition.getId())
                 .location(resourceDefinition.getLocation())
                 .projectId(resourceDefinition.getProjectId())
                 .storageClass(resourceDefinition.getStorageClass())
-                .serviceAccountEmail(serviceAccount.getEmail())
-                .serviceAccountName(serviceAccount.getName())
+                .serviceAccountEmail(serviceAccountEmail)
+                .serviceAccountName(serviceAccountName)
                 .transferProcessId(resourceDefinition.getTransferProcessId())
                 .resourceName(resourceName)
                 .bucketName(bucketName)

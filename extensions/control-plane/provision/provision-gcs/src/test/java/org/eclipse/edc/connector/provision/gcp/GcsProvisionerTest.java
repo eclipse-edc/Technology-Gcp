@@ -137,6 +137,7 @@ class GcsProvisionerTest {
         verify(iamServiceMock, times(1)).createAccessToken(any());
     }
 
+
     @Test
     void provisionFailsBecauseOfApiError() {
         var resourceDefinition = createResourceDefinition();
