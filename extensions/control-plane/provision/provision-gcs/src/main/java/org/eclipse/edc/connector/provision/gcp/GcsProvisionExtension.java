@@ -31,7 +31,7 @@ public class GcsProvisionExtension implements ServiceExtension {
         return "GCP storage provisioner";
     }
 
-    @Setting(value = "The GCP project ID", required)
+    @Setting(value = "The GCP project ID")
     private static final String GCP_PROJECT_ID = "edc.gcp.project.id";
 
     @Inject
