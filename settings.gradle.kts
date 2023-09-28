@@ -12,7 +12,7 @@
  *
  */
 
-rootProject.name = "Technology-Gcp"
+rootProject.name = "technology-gcp"
 
 // this is needed to have access to snapshot builds of plugins
 pluginManagement {
@@ -46,4 +46,3 @@ include(":extensions:control-plane:provision:provision-gcs")
 // data plane extensions
 include(":extensions:data-plane:data-plane-google-storage")
 include(":version-catalog")
-include("launcher")

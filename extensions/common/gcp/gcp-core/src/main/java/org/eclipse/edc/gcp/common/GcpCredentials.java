@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Objects;
 
 public class GcpCredentials {
 
@@ -60,9 +61,17 @@ public class GcpCredentials {
         var serviceAccountValue = gcpServiceAccountCredentials.getServiceAccountValue();
 
         if (!StringUtils.isNullOrBlank(vaultTokenKeyName)) {
-            return createGoogleCredential(vault.resolveSecret(vaultTokenKeyName), GcpCredentialType.GOOGLE_ACCESS_TOKEN);
+            var token = vault.resolveSecret(vaultTokenKeyName);
+            if (StringUtils.isNullOrEmpty(token)) {
+                throw new GcpException(vaultTokenKeyName + " could not be retrieved from the vault.");
+            }
+            return createGoogleCredential(token, GcpCredentialType.GOOGLE_ACCESS_TOKEN);
         } else if (!StringUtils.isNullOrBlank(vaultServiceAccountKeyName)) {
-            return createGoogleCredential(vault.resolveSecret(vaultServiceAccountKeyName), GcpCredentialType.GOOGLE_SERVICE_ACCOUNT_KEY_FILE);
+            var token = vault.resolveSecret(vaultServiceAccountKeyName);
+            if (StringUtils.isNullOrEmpty(token)) {
+                throw new GcpException(vaultServiceAccountKeyName + " could not be retrieved from the vault.");
+            }
+            return createGoogleCredential(token, GcpCredentialType.GOOGLE_SERVICE_ACCOUNT_KEY_FILE);
         } else if (!StringUtils.isNullOrBlank(serviceAccountValue)) {
             var serviceKeyContent = new String(b64Decoder.decode(serviceAccountValue));
             if (!serviceKeyContent.contains(SERVICE_ACCOUNT)) {
@@ -90,10 +99,14 @@ public class GcpCredentials {
 
 
     public GoogleCredentials createGoogleCredential(String keyContent, GcpCredentialType gcpCredentialType) {
+        Objects.requireNonNull(keyContent, "key content");
         GoogleCredentials googleCredentials;
 
         if (gcpCredentialType.equals(GcpCredentialType.GOOGLE_ACCESS_TOKEN)) {
             try {
+                if (StringUtils.isNullOrEmpty(keyContent)) {
+                    throw new GcpException("keyContent is not in a valid GcpAccessToken format.");
+                }
                 var gcpAccessToken = typeManager.readValue(keyContent, GcpAccessToken.class);
                 monitor.info("Gcp: The provided token will be used to resolve the google credentials.");
                 googleCredentials = GoogleCredentials.create(
