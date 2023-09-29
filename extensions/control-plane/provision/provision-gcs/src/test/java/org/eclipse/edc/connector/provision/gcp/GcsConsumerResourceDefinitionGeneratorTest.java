@@ -9,6 +9,7 @@
  *
  *  Contributors:
  *       ZF Friedrichshafen AG - Initial API and Implementation
+ *       SAP SE - refactoring
  *
  */
 
