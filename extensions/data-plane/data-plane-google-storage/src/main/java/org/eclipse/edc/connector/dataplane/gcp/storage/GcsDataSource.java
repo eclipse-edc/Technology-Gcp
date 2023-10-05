@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.storage;
 
+import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
@@ -33,16 +34,23 @@ public class GcsDataSource implements DataSource {
     private String bucketName;
     private String blobName;
     private Monitor monitor;
+    private GoogleStoragePart part;
 
     @Override
     public StreamResult<Stream<Part>> openPartStream() {
         try {
-            return success(Stream.of(new GoogleStoragePart(storageClient, bucketName, blobName)));
+            part = new GoogleStoragePart(storageClient, bucketName, blobName);
+            return success(Stream.of(part));
         } catch (Exception e) {
             monitor.severe(String.format("Error accessing bucket %s or blob %s in project %s", bucketName, blobName, storageClient.getOptions().getProjectId()), e);
             throw new EdcException(e);
         }
+    }
 
+    @Override
+    public void close() throws Exception {
+        part.close();
+        part = null;
     }
 
     public static class Builder {
@@ -89,6 +97,7 @@ public class GcsDataSource implements DataSource {
         private final Storage storageClient;
         private final String bucketName;
         private final String blobName;
+        private ReadChannel readChannel;
 
         private GoogleStoragePart(Storage storageClient, String bucketName, String blobName) {
             this.storageClient = storageClient;
@@ -103,10 +112,13 @@ public class GcsDataSource implements DataSource {
 
         @Override
         public InputStream openStream() {
-            var reader = storageClient.reader(BlobId.of(bucketName, blobName));
-            return Channels.newInputStream(reader);
+            readChannel = storageClient.reader(BlobId.of(bucketName, blobName));
+            return Channels.newInputStream(readChannel);
+        }
 
+        public void close() {
+            readChannel.close();
+            readChannel = null;
         }
     }
-
 }

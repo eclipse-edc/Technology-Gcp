@@ -135,7 +135,7 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         String serviceAccountName = null;
         if (serviceAccount != null) {
             serviceAccountEmail = serviceAccount.getEmail();
-            serviceAccountName = serviceAccount.getEmail();
+            serviceAccountName = serviceAccount.getName();
         }
         return GcsProvisionedResource.Builder.newInstance()
                 .id(resourceDefinition.getId())
