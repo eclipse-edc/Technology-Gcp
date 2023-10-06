@@ -52,6 +52,7 @@ class IamServiceImplTest {
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
     private GcpServiceAccount testServiceAccount;
+    private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
     @BeforeEach
     void setUp() {
@@ -81,7 +82,7 @@ class IamServiceImplTest {
         var serviceAccount = ServiceAccount.newBuilder().setEmail(serviceAccountEmail).setDescription(serviceAccountDescription).build();
         var createError = apiExceptionWithStatusCode(StatusCode.Code.ALREADY_EXISTS);
         when(iamClient.createServiceAccount(any(CreateServiceAccountRequest.class))).thenThrow(createError);
-        when(iamClient.getServiceAccount(eq(String.format("projects/%s/serviceAccounts/%s", projectId, serviceAccountEmail)))).thenReturn(serviceAccount);
+        when(iamClient.getServiceAccount(eq(iamServiceAccountName))).thenReturn(serviceAccount);
 
         var createdServiceAccount = iamApi.getOrCreateServiceAccount(serviceAccountName, serviceAccountDescription);
 
@@ -94,7 +95,7 @@ class IamServiceImplTest {
         var serviceAccount = ServiceAccount.newBuilder().setEmail(serviceAccountEmail).setDescription("some-other-description").build();
         var createError = apiExceptionWithStatusCode(StatusCode.Code.ALREADY_EXISTS);
         when(iamClient.createServiceAccount(any(CreateServiceAccountRequest.class))).thenThrow(createError);
-        when(iamClient.getServiceAccount(eq(String.format("projects/%s/serviceAccounts/%s", projectId, serviceAccountEmail)))).thenReturn(serviceAccount);
+        when(iamClient.getServiceAccount(eq(iamServiceAccountName))).thenReturn(serviceAccount);
 
         assertThatThrownBy(() -> iamApi.getOrCreateServiceAccount(serviceAccountName, serviceAccountDescription)).isInstanceOf(GcpException.class);
     }
@@ -121,7 +122,7 @@ class IamServiceImplTest {
 
         iamApi.deleteServiceAccountIfExists(serviceAccount);
 
-        verify(iamClient, times(1)).deleteServiceAccount(serviceAccount.getName());
+        verify(iamClient, times(1)).deleteServiceAccount(iamServiceAccountName);
     }
 
     @Test
@@ -132,14 +133,15 @@ class IamServiceImplTest {
 
         iamApi.deleteServiceAccountIfExists(testServiceAccount);
 
-        verify(iamClient, times(1)).deleteServiceAccount(serviceAccountName);
+        verify(iamClient, times(1)).deleteServiceAccount(iamServiceAccountName);
     }
 
     @Test
     void testDeleteServiceAccountFails() {
         var exception = apiExceptionWithStatusCode(StatusCode.Code.INTERNAL);
+
         doThrow(exception)
-                .when(iamClient).deleteServiceAccount(serviceAccountName);
+                .when(iamClient).deleteServiceAccount(iamServiceAccountName);
 
         assertThatThrownBy(() -> iamApi.deleteServiceAccountIfExists(testServiceAccount))
                 .isInstanceOf(GcpException.class);
