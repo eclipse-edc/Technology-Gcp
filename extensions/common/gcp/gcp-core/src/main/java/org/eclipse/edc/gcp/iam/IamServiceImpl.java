@@ -116,7 +116,7 @@ public class IamServiceImpl implements IamService {
     @Override
     public void deleteServiceAccountIfExists(GcpServiceAccount serviceAccount) {
         try (var client = iamClientSupplier.get()) {
-            ServiceAccountName serviceAccountName = ServiceAccountName.of(gcpProjectId, serviceAccount.getEmail());
+            var serviceAccountName = ServiceAccountName.of(gcpProjectId, serviceAccount.getEmail());
             client.deleteServiceAccount(serviceAccountName.toString());
             monitor.debug("Deleted service account: " + serviceAccount.getEmail());
         } catch (ApiException e) {
