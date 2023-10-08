@@ -39,7 +39,7 @@ public class GcsDataSink extends ParallelSink {
      * Writes data into an Google storage.
      */
     @Override
-    protected StreamResult<Void> transferParts(List<DataSource.Part> parts) {
+    protected StreamResult<Object> transferParts(List<DataSource.Part> parts) {
 
         for (DataSource.Part part : parts) {
             try (var input = part.openStream()) {
