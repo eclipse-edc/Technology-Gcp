@@ -22,8 +22,8 @@ import org.eclipse.edc.spi.system.ServiceExtensionContext;
  * GCP manager object, provides connector configuration, IAM credentials.
  */
 public class GcpManager {
-    private ServiceExtensionContext context;
-    private GcpConfiguration configuration;
+    private final ServiceExtensionContext context;
+    private final GcpConfiguration configuration;
     private IamService iamService;
 
     public GcpManager(ServiceExtensionContext context) {

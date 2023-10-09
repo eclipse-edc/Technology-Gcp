@@ -34,9 +34,6 @@ public class GcpExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        var monitor = context.getMonitor();
-        monitor.info("GCP Common Extension initialize");
-
         context.registerService(GcpManager.class, new GcpManager(context));
     }
 }
