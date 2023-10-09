@@ -15,16 +15,16 @@
 package org.eclipse.edc.gcp.common;
 
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
-import org.eclipse.edc.runtime.metamodel.annotation.Provides;
+import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
 /**
  * GCP common extension, provides the GCP manager object.
  */
-@Provides(GcpManager.class)
 @Extension(value = GcpExtension.NAME)
 public class GcpExtension implements ServiceExtension {
+    private GcpManager gcpManager;
     public static final String NAME = "GCP";
 
     @Override
@@ -34,6 +34,11 @@ public class GcpExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        context.registerService(GcpManager.class, new GcpManager(context));
+        gcpManager = new GcpManager(context);
+    }
+
+    @Provider
+    public GcpManager getGcpManager() {
+        return gcpManager;
     }
 }

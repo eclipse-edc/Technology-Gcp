@@ -31,10 +31,6 @@ public class GcpManager {
         configuration = new GcpConfiguration(context);
     }
 
-    public ServiceExtensionContext getContext() {
-        return context;
-    }
-
     public GcpConfiguration getConfiguration() {
         return configuration;
     }

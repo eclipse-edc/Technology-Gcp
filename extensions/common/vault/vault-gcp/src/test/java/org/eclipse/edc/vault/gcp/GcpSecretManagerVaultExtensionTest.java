@@ -29,7 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
@@ -61,7 +61,7 @@ class GcpSecretManagerVaultExtensionTest {
         extension.gcpManager = new GcpManager(invalidContext);
 
         EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
-        assertEquals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION, exception.getMessage());
+        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
     @Test
@@ -75,7 +75,7 @@ class GcpSecretManagerVaultExtensionTest {
         extension.gcpManager = new GcpManager(invalidContext);
 
         EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
-        assertEquals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION, exception.getMessage());
+        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
     @Test

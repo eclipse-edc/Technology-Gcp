@@ -38,7 +38,7 @@ public class GcsProvisionExtension implements ServiceExtension {
     }
 
     @Inject
-    GcpManager gcpManager;
+    private GcpManager gcpManager;
 
     @Override
     public void initialize(ServiceExtensionContext context) {
