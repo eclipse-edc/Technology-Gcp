@@ -22,4 +22,6 @@ dependencies {
     implementation(libs.edc.util)
     implementation(libs.googlecloud.core)
     implementation(libs.googlecloud.secretmanager)
+
+    implementation(project(":extensions:common:gcp:gcp-core"))
 }

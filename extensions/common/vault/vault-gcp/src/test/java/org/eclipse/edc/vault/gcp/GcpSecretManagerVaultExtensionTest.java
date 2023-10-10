@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.vault.gcp;
 
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
@@ -28,7 +29,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.eq;
@@ -57,8 +58,10 @@ class GcpSecretManagerVaultExtensionTest {
         when(invalidContext.getMonitor()).thenReturn(monitor);
         when(invalidContext.getConfig()).thenReturn(ConfigFactory.empty());
 
+        extension.gcpConfiguration = new GcpConfiguration(invalidContext);
+
         EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
-        assertEquals("No setting found for key edc.vault.gcp.region", exception.getMessage());
+        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
     @Test
@@ -69,8 +72,10 @@ class GcpSecretManagerVaultExtensionTest {
         settings.put(GcpSecretManagerVaultExtension.VAULT_PROJECT, TEST_PROJECT);
         when(invalidContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
+        extension.gcpConfiguration = new GcpConfiguration(invalidContext);
+
         EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
-        assertEquals("No setting found for key edc.vault.gcp.region", exception.getMessage());
+        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
     @Test
@@ -80,6 +85,8 @@ class GcpSecretManagerVaultExtensionTest {
         var settings = new HashMap<String, String>();
         settings.put(GcpSecretManagerVaultExtension.VAULT_REGION, TEST_REGION);
         when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
+
+        extension.gcpConfiguration = new GcpConfiguration(validContext);
 
         try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
@@ -96,6 +103,8 @@ class GcpSecretManagerVaultExtensionTest {
         settings.put(GcpSecretManagerVaultExtension.VAULT_PROJECT, TEST_PROJECT);
         settings.put(GcpSecretManagerVaultExtension.VAULT_REGION, TEST_REGION);
         when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
+
+        extension.gcpConfiguration = new GcpConfiguration(validContext);
 
         try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
@@ -117,6 +126,8 @@ class GcpSecretManagerVaultExtensionTest {
             settings.put(GcpSecretManagerVaultExtension.VAULT_REGION, TEST_REGION);
             settings.put(GcpSecretManagerVaultExtension.VAULT_SACCOUNT_FILE, accountFilePath);
             when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
+
+            extension.gcpConfiguration = new GcpConfiguration(validContext);
 
             try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
                 utilities.when(() -> GcpSecretManagerVault.createWithServiceAccountCredentials(eq(monitor), eq(TEST_PROJECT), eq(TEST_REGION), Mockito.any(InputStream.class)))
