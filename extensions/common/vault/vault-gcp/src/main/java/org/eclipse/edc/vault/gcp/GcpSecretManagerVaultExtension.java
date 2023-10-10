@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.vault.gcp;
 
-import org.eclipse.edc.gcp.common.GcpManager;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provides;
@@ -53,7 +53,7 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
     static final String VAULT_REGION = "edc.vault.gcp.region";
 
     @Inject
-    GcpManager gcpManager;
+    GcpConfiguration gcpConfiguration;
 
     @Override
     public String name() {
@@ -62,18 +62,17 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        var gcpConfig = gcpManager.getConfiguration();
-        var project = gcpConfig.getSetting(VAULT_PROJECT, gcpConfig.getProjectId());
+        var project = gcpConfiguration.getSetting(VAULT_PROJECT, gcpConfiguration.getProjectId());
         if (isNullOrEmpty(project)) {
             context.getMonitor().info("GCP Secret Manager vault extension: project loaded from default config " + project);
         } else {
             context.getMonitor().info("GCP Secret Manager vault extension: project loaded from settings " + project);
         }
 
-        var saccountFile = gcpConfig.getSetting(VAULT_SACCOUNT_FILE, gcpConfig.getServiceAccountFile());
+        var saccountFile = gcpConfiguration.getSetting(VAULT_SACCOUNT_FILE, gcpConfiguration.getServiceAccountFile());
 
         // TODO support multi-region replica.
-        var region = gcpConfig.getMandatorySetting(VAULT_REGION);
+        var region = gcpConfiguration.getMandatorySetting(VAULT_REGION);
         context.getMonitor().info("GCP Secret Manager vault extension: region selected " + region);
         try {
             GcpSecretManagerVault vault = null;

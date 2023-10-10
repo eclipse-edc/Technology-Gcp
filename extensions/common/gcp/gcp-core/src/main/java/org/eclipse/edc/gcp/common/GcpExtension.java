@@ -14,6 +14,8 @@
 
 package org.eclipse.edc.gcp.common;
 
+import org.eclipse.edc.gcp.iam.IamService;
+import org.eclipse.edc.gcp.iam.IamServiceImpl;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.spi.system.ServiceExtension;
@@ -24,8 +26,11 @@ import org.eclipse.edc.spi.system.ServiceExtensionContext;
  */
 @Extension(value = GcpExtension.NAME)
 public class GcpExtension implements ServiceExtension {
-    private GcpManager gcpManager;
     public static final String NAME = "GCP";
+
+    private GcpConfiguration gcpConfiguration;
+    private IamService iamService;
+
 
     @Override
     public String name() {
@@ -34,11 +39,17 @@ public class GcpExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        gcpManager = new GcpManager(context);
+        gcpConfiguration = new GcpConfiguration(context);
+        iamService = IamServiceImpl.Builder.newInstance(context.getMonitor(), gcpConfiguration.getProjectId()).build();
     }
 
     @Provider
-    public GcpManager getGcpManager() {
-        return gcpManager;
+    public GcpConfiguration getGcpConfiguration() {
+        return gcpConfiguration;
+    }
+
+    @Provider
+    public IamService getIamService() {
+        return iamService;
     }
 }

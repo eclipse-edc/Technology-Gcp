@@ -41,7 +41,7 @@ public class GcpConfiguration {
 
     private ServiceExtensionContext context;
 
-    GcpConfiguration(ServiceExtensionContext context) {
+    public GcpConfiguration(ServiceExtensionContext context) {
         this.context = context;
     }
 

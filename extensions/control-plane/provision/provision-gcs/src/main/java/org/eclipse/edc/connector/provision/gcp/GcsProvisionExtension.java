@@ -18,7 +18,8 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import org.eclipse.edc.connector.transfer.spi.provision.ProvisionManager;
 import org.eclipse.edc.connector.transfer.spi.provision.ResourceManifestGenerator;
-import org.eclipse.edc.gcp.common.GcpManager;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
+import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.gcp.storage.StorageServiceImpl;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
@@ -38,15 +39,18 @@ public class GcsProvisionExtension implements ServiceExtension {
     }
 
     @Inject
-    private GcpManager gcpManager;
+    private IamService iamService;
+
+    @Inject
+    private GcpConfiguration gcpConfiguration;
 
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-        var storageClient = createDefaultStorageClient(gcpManager.getConfiguration().getProjectId());
+        var storageClient = createDefaultStorageClient(gcpConfiguration.getProjectId());
         var storageService = new StorageServiceImpl(storageClient, monitor);
 
-        var provisioner = new GcsProvisioner(monitor, storageService, gcpManager.getIamService());
+        var provisioner = new GcsProvisioner(monitor, storageService, iamService);
         provisionManager.register(provisioner);
 
         manifestGenerator.registerGenerator(new GcsConsumerResourceDefinitionGenerator());
