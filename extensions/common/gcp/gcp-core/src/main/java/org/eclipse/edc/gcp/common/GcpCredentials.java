@@ -11,6 +11,7 @@
  *       T-Systems International GmbH
  *
  */
+
 package org.eclipse.edc.gcp.common;
 
 import com.google.auth.oauth2.AccessToken;
