@@ -20,7 +20,7 @@ public class GcpServiceAccountCredentials {
     private String serviceAccountValue;
 
     /**
-     * Creates credentials dao for GcpServiceAccount
+     * Stores credentials dao for GcpServiceAccount
      *
      * @param vaultTokenKeyName          Key name of an entry in the vault containing an access token
      * @param vaultServiceAccountKeyName key name of an entry in the vault containing a valid Google Credentials file in json format

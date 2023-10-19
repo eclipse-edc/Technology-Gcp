@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.googlecloud.iam.admin)
     implementation(libs.googlecloud.storage)
     implementation(libs.googlecloud.iam.credentials)
-    testImplementation(libs.edc.core.connector)
+    testImplementation(libs.edc.junit)
 }
 
 
