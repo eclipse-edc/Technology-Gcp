@@ -113,14 +113,16 @@ public class GcpCredentialsTest {
 
     @Test
     void testResolveGoogleCredentialWhenTokenKeyNameIsProvided() {
-        var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(new GcpServiceAccountCredentials(accessTokenKeyName, null, null));
-        assert (gcpCred != null);
+        var gcpServiceAccountCredentialsWithTokenKeyName = new GcpServiceAccountCredentials(accessTokenKeyName, null, null);
+        var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithTokenKeyName);
+        assertThat(gcpCred != null);
     }
 
     @Test
     void testResolveGoogleCredentialWhenInvalidTokenIsProvided() {
-        Exception thrown = assertThrows(EdcException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(new GcpServiceAccountCredentials(invalidAccessTokenKeyName,  null, null)));
-        assert (thrown.getMessage().contains("valid GcpAccessToken format"));
+        var gcpServiceAccountCredentialsWithInvalidTokenKeyName = new GcpServiceAccountCredentials(invalidAccessTokenKeyName,  null, null);
+        Exception thrown = assertThrows(EdcException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithInvalidTokenKeyName));
+        assertThat(thrown.getMessage().contains("valid GcpAccessToken format"));
     }
 
     @Test
