@@ -100,39 +100,46 @@ public class GcpCredentials {
 
     public GoogleCredentials createGoogleCredential(String keyContent, GcpCredentialType gcpCredentialType) {
         Objects.requireNonNull(keyContent, "key content");
-        GoogleCredentials googleCredentials;
 
-        if (gcpCredentialType.equals(GcpCredentialType.GOOGLE_ACCESS_TOKEN)) {
-            try {
-                if (StringUtils.isNullOrEmpty(keyContent)) {
-                    throw new GcpException("keyContent is not in a valid GcpAccessToken format.");
-                }
-                var gcpAccessToken = typeManager.readValue(keyContent, GcpAccessToken.class);
-                monitor.info("Gcp: The provided token will be used to resolve the google credentials.");
-                googleCredentials = GoogleCredentials.create(
-                        new AccessToken(gcpAccessToken.getToken(),
-                                new Date(gcpAccessToken.getExpiration())));
-            } catch (EdcException ex) {
-                throw new GcpException("ACCESS_TOKEN is not in a valid GcpAccessToken format.");
-            } catch (Exception e) {
-                throw new GcpException("Error while getting the default credentials.", e);
-            }
-        } else if (gcpCredentialType.equals(GcpCredentialType.GOOGLE_SERVICE_ACCOUNT_KEY_FILE)) {
-            try {
-                monitor.debug("Gcp: The provided credentials file will be used to resolve the google credentials.");
-                googleCredentials = GoogleCredentials.fromStream(new ByteArrayInputStream(keyContent.getBytes(StandardCharsets.UTF_8)));
-            } catch (IOException e) {
-                throw new GcpException("Error while getting the credentials from the credentials file.", e);
-            }
+        return switch (gcpCredentialType) {
+            case GOOGLE_ACCESS_TOKEN -> getGoogleCredentialsFromAccessToken(keyContent);
+            case GOOGLE_SERVICE_ACCOUNT_KEY_FILE -> getGoogleCredentialsFromFile(keyContent);
+            case DEFAULT_APPLICATION -> getGoogleCredentialsFromApplicationDefault();
+        };
+    }
 
-        } else {
-            try {
-                monitor.debug("Gcp: The default Credentials will be used to resolve the google credentials.");
-                googleCredentials = GoogleCredentials.getApplicationDefault();
-            } catch (IOException e) {
-                throw new GcpException("Error while getting the default credentials.", e);
-            }
+    private GoogleCredentials getGoogleCredentialsFromApplicationDefault() {
+        try {
+            monitor.debug("Gcp: The default Credentials will be used to resolve the google credentials.");
+            return GoogleCredentials.getApplicationDefault();
+        } catch (IOException e) {
+            throw new GcpException("Error while getting the default credentials.", e);
         }
-        return googleCredentials;
+    }
+
+    private GoogleCredentials getGoogleCredentialsFromFile(String keyContent) {
+        try {
+            monitor.debug("Gcp: The provided credentials file will be used to resolve the google credentials.");
+            return GoogleCredentials.fromStream(new ByteArrayInputStream(keyContent.getBytes(StandardCharsets.UTF_8)));
+        } catch (IOException e) {
+            throw new GcpException("Error while getting the credentials from the credentials file.", e);
+        }
+    }
+
+    private GoogleCredentials getGoogleCredentialsFromAccessToken(String keyContent) {
+        if (StringUtils.isNullOrEmpty(keyContent)) {
+            throw new GcpException("keyContent is not in a valid GcpAccessToken format.");
+        }
+        try {
+            var gcpAccessToken = typeManager.readValue(keyContent, GcpAccessToken.class);
+            monitor.info("Gcp: The provided token will be used to resolve the google credentials.");
+            return  GoogleCredentials.create(
+                    new AccessToken(gcpAccessToken.getToken(),
+                            new Date(gcpAccessToken.getExpiration())));
+        } catch (EdcException ex) {
+            throw new GcpException("ACCESS_TOKEN is not in a valid GcpAccessToken format.");
+        } catch (Exception e) {
+            throw new GcpException("Error while getting the default credentials.", e);
+        }
     }
 }
