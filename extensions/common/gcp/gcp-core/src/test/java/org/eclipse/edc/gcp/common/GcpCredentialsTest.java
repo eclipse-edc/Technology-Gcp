@@ -29,7 +29,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -102,7 +101,6 @@ public class GcpCredentialsTest {
                 {"edctype":"dataspaceconnector:gcptoken","token":"18f4155e-4d02-4629-8804-057a3e9277ba","expiration":1665998128000}""";
 
         serviceAccountFileInB64 = Base64.getEncoder().encodeToString(serviceAccountFileInJson.getBytes());
-        var tokenInB64 = Base64.getEncoder().encodeToString(tokenInJson.getBytes());
 
         when(vault.resolveSecret(accessTokenKeyName)).thenReturn(tokenInJson);
         when(vault.resolveSecret(invalidAccessTokenKeyName)).thenReturn("{\"token\":\"" + tokenValue + "\"");
