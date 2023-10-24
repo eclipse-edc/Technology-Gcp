@@ -28,6 +28,7 @@ import java.util.Base64;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -115,23 +116,23 @@ public class GcpCredentialsTest {
     void testResolveGoogleCredentialWhenTokenKeyNameIsProvided() {
         var gcpServiceAccountCredentialsWithTokenKeyName = new GcpServiceAccountCredentials(accessTokenKeyName, null, null);
         var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithTokenKeyName);
-        assertThat(gcpCred != null);
+        assertThat(gcpCred).isNotNull();
     }
 
     @Test
     void testResolveGoogleCredentialWhenInvalidTokenIsProvided() {
         var gcpServiceAccountCredentialsWithInvalidTokenKeyName = new GcpServiceAccountCredentials(invalidAccessTokenKeyName,  null, null);
-        Exception thrown = assertThrows(EdcException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithInvalidTokenKeyName));
-        assertThat(thrown.getMessage().contains("valid GcpAccessToken format"));
+        assertThatThrownBy(() -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithInvalidTokenKeyName))
+                .isInstanceOf(EdcException.class)
+                .hasMessageContaining("valid GcpAccessToken format");
     }
 
     @Test
     void testResolveGoogleCredentialPriorityWhenTokenIsInvalid() {
         var gcpServiceAccountCredentialsWithInvalidTokenKeyName = new GcpServiceAccountCredentials(invalidAccessTokenKeyName, serviceAccountKeyName, null);
-        Exception thrown = assertThrows(EdcException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(
-                gcpServiceAccountCredentialsWithInvalidTokenKeyName
-        ));
-        assertThat(thrown.getMessage().contains("valid GcpAccessToken format"));
+        assertThatThrownBy(() -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsWithInvalidTokenKeyName))
+                .isInstanceOf(EdcException.class)
+                .hasMessageContaining("valid GcpAccessToken format");
     }
 
 
@@ -141,16 +142,15 @@ public class GcpCredentialsTest {
         var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(
                 gcpServiceAccountCredentialsFromServiceAccountKeyName
         );
-        assertThat(gcpCred != null);
+        assertThat(gcpCred).isNotNull();
     }
 
     @Test
     void testResolveGoogleCredentialWhenInvalidServiceAccountKeyNameIsProvided() {
         var gcpServiceAccountCredentialsFromInvalidServiceAccountKeyName = new GcpServiceAccountCredentials(null, invalidServiceAccountKeyName, null);
-        Exception thrown = assertThrows(GcpException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(
-                gcpServiceAccountCredentialsFromInvalidServiceAccountKeyName
-        ));
-        assertThat(thrown.getMessage().contains("Error while getting the credentials from the credentials file"));
+        assertThatThrownBy(() -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsFromInvalidServiceAccountKeyName))
+                .isInstanceOf(GcpException.class)
+                .hasMessageContaining("Error while getting the credentials from the credentials file");
     }
 
     @Test
@@ -159,16 +159,16 @@ public class GcpCredentialsTest {
         var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(
                 gcpServiceAccountCredentialsFromB64ServiceAccount
         );
-        assertThat(gcpCred != null);
+        assertThat(gcpCred).isNotNull();
     }
 
     @Test
     void testResolveGoogleCredentialWhenInvalidServiceAccountValueIsProvided() {
-        var gcpServiceAccountCredentialsFromInvalidB64ServiceAccount = new GcpServiceAccountCredentials(null, null, serviceAccountFileInB64 + "\\n\\rmakeItWrongB64");
-        Exception thrown = assertThrows(IllegalArgumentException.class, () -> gcpCredential.resolveGoogleCredentialsFromDataAddress(
-                gcpServiceAccountCredentialsFromInvalidB64ServiceAccount
-        ));
-        assertThat(thrown.getMessage().contains("incorrect ending byte at 2996"));
+        var invalidServiceAccountValue = serviceAccountFileInB64 + System.lineSeparator();
+        var gcpServiceAccountCredentialsFromInvalidB64ServiceAccount = new GcpServiceAccountCredentials(null, null, invalidServiceAccountValue);
+        assertThatThrownBy(() -> gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentialsFromInvalidB64ServiceAccount))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Illegal base64 character");
     }
 
     @Test
@@ -177,6 +177,6 @@ public class GcpCredentialsTest {
         var gcpCred = gcpCredential.resolveGoogleCredentialsFromDataAddress(
                 gcpServiceAccountCredentials
         );
-        assertThat(gcpCred != null);
+        assertThat(gcpCred).isNotNull();
     }
 }
