@@ -19,10 +19,12 @@ plugins {
 dependencies {
     api(libs.edc.spi.core)
     api(libs.edc.spi.transfer)
+    api(libs.edc.util)
 
     implementation(libs.googlecloud.iam.admin)
     implementation(libs.googlecloud.storage)
     implementation(libs.googlecloud.iam.credentials)
+    testImplementation(libs.edc.junit)
 }
 
 
