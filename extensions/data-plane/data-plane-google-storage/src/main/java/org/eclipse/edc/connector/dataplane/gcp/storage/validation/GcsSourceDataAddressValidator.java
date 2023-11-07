@@ -15,6 +15,7 @@
 package org.eclipse.edc.connector.dataplane.gcp.storage.validation;
 
 import org.eclipse.edc.spi.types.domain.DataAddress;
+import org.eclipse.edc.util.string.StringUtils;
 import org.eclipse.edc.validator.spi.ValidationResult;
 import org.eclipse.edc.validator.spi.Validator;
 import org.eclipse.edc.validator.spi.Violation;
@@ -31,10 +32,10 @@ public class GcsSourceDataAddressValidator implements Validator<DataAddress> {
     @Override
     public ValidationResult validate(DataAddress input) {
         var violations = new ArrayList<Violation>();
-        if (StringFunctions.isEmpty(input.getStringProperty(BLOB_NAME, null))) {
+        if (StringUtils.isNullOrBlank(input.getStringProperty(BLOB_NAME, null))) {
             violations.add(Violation.violation("Must have a %s property".formatted(BLOB_NAME), BLOB_NAME));
         }
-        if (StringFunctions.isEmpty(input.getStringProperty(BUCKET_NAME, null))) {
+        if (StringUtils.isNullOrBlank(input.getStringProperty(BUCKET_NAME, null))) {
             violations.add(Violation.violation("Must have a %s property".formatted(BUCKET_NAME), BUCKET_NAME));
         }
 
