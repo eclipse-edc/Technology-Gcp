@@ -15,21 +15,21 @@
 package org.eclipse.edc.connector.dataplane.gcp.storage;
 
 import com.google.cloud.storage.StorageOptions;
-import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSourceDataAddressValidationRule;
+import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSourceDataAddressValidator;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
-import org.eclipse.edc.connector.dataplane.util.validation.ValidationRule;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.Result;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
+import org.eclipse.edc.validator.spi.Validator;
 import org.jetbrains.annotations.NotNull;
 
 public class GcsDataSourceFactory implements DataSourceFactory {
 
-    private final ValidationRule<DataAddress> validation = new GcsSourceDataAddressValidationRule();
+    private final Validator<DataAddress> validation = new GcsSourceDataAddressValidator();
     private final Monitor monitor;
 
     public GcsDataSourceFactory(Monitor monitor) {
@@ -45,7 +45,7 @@ public class GcsDataSourceFactory implements DataSourceFactory {
     @Override
     public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
         var source = request.getSourceDataAddress();
-        return validation.apply(source);
+        return validation.validate(source).toResult();
     }
 
     @Override

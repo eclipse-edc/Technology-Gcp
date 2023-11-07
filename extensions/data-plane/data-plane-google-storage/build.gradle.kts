@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.edc.util)
     implementation(project(":extensions:common:gcp:gcp-core"))
     implementation(libs.edc.core.dataplane.util)
+    implementation(libs.edc.spi.validator)
 
     implementation(libs.googlecloud.storage)
 

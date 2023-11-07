@@ -19,10 +19,9 @@ import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSinkDataAddressValidationRule;
+import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSinkDataAddressValidator;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSink;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSinkFactory;
-import org.eclipse.edc.connector.dataplane.util.validation.ValidationRule;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
@@ -33,6 +32,7 @@ import org.eclipse.edc.spi.security.Vault;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
+import org.eclipse.edc.validator.spi.Validator;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ import java.util.concurrent.ExecutorService;
 
 public class GcsDataSinkFactory implements DataSinkFactory {
 
-    private final ValidationRule<DataAddress> validation = new GcsSinkDataAddressValidationRule();
+    private final Validator<DataAddress> validation = new GcsSinkDataAddressValidator();
     private final ExecutorService executorService;
     private final Monitor monitor;
     private final Vault vault;
@@ -63,7 +63,7 @@ public class GcsDataSinkFactory implements DataSinkFactory {
     @Override
     public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
         var destination = request.getDestinationDataAddress();
-        return validation.apply(destination);
+        return validation.validate(destination).toResult();
     }
 
     @Override
