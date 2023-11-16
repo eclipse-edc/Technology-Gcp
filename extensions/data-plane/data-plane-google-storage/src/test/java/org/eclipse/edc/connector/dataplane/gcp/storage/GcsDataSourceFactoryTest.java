@@ -17,13 +17,16 @@ package org.eclipse.edc.connector.dataplane.gcp.storage;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.edc.connector.dataplane.gcp.storage.TestFunctions.createDataAddress;
 import static org.mockito.Mockito.mock;
 
 class GcsDataSourceFactoryTest {
@@ -35,7 +38,7 @@ class GcsDataSourceFactoryTest {
 
     @Test
     void canHandle_returnsTrueWhenExpectedType() {
-        var dataAddress = TestFunctions.createDataAddress(GcsStoreSchema.TYPE)
+        var dataAddress = createDataAddress(GcsStoreSchema.TYPE)
                 .build();
         var result = factory.canHandle(TestFunctions.createRequest(dataAddress));
 
@@ -44,7 +47,7 @@ class GcsDataSourceFactoryTest {
 
     @Test
     void canHandle_returnsFalseWhenUnexpectedType() {
-        var dataAddress = TestFunctions.createDataAddress("Not Google Storage")
+        var dataAddress = createDataAddress("Not Google Storage")
                 .build();
 
         var result = factory.canHandle(TestFunctions.createRequest(dataAddress));
@@ -54,7 +57,7 @@ class GcsDataSourceFactoryTest {
 
     @Test
     void validate_ShouldSucceedIfPropertiesAreValid() {
-        var source = TestFunctions.createDataAddress(GcsStoreSchema.TYPE)
+        var source = createDataAddress(GcsStoreSchema.TYPE)
                 .property(GcsStoreSchema.BUCKET_NAME, "validBucketName")
                 .property(GcsStoreSchema.BLOB_NAME, "validBlobName")
                 .build();
@@ -67,9 +70,9 @@ class GcsDataSourceFactoryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("invalidInputs")
+    @ArgumentsSource(InvalidInputProvider.class)
     void validate_shouldFailIfPropertiesAreMissing(String bucketName, String blobName) {
-        var source = TestFunctions.createDataAddress(GcsStoreSchema.TYPE)
+        var source = createDataAddress(GcsStoreSchema.TYPE)
                 .property(GcsStoreSchema.BUCKET_NAME, bucketName)
                 .property(GcsStoreSchema.BLOB_NAME, blobName)
                 .build();
@@ -81,11 +84,15 @@ class GcsDataSourceFactoryTest {
         assertThat(result.failed()).isTrue();
     }
 
-    private static Stream<Arguments> invalidInputs() {
-        return Stream.of(
-                Arguments.of("validBucketName", ""),
-                Arguments.of(" ", "validBlobName"),
-                Arguments.of("", " ")
-        );
+
+    private static class InvalidInputProvider implements ArgumentsProvider {
+        @Override
+        public Stream<Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of("validBucketName", ""),
+                    Arguments.of(" ", "validBlobName"),
+                    Arguments.of("", " ")
+            );
+        }
     }
 }

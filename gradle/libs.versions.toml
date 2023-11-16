@@ -2,13 +2,13 @@
 format.version = "1.1"
 
 [versions]
-edc = "0.3.1-SNAPSHOT"
+edc = "0.3.2-SNAPSHOT"
 failsafe = "3.3.1"
 googleCloudIamAdmin = "3.19.0"
 googleCloudIamCredentials = "2.24.0"
 googleCloudStorage = "2.26.0"
 googleCloudSecretManager = "2.24.0"
-googleCloudCore = "2.23.0"
+googleCloudCore = "2.26.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
@@ -22,6 +22,7 @@ edc-spi-dataplane = { module = "org.eclipse.edc:data-plane-spi", version.ref = "
 edc-spi-policy = { module = "org.eclipse.edc:policy-spi", version.ref = "edc" }
 edc-spi-transfer = { module = "org.eclipse.edc:transfer-spi", version.ref = "edc" }
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
+edc-spi-validator = { module = "org.eclipse.edc:validator-spi", version.ref = "edc" }
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
 edc-util = { module = "org.eclipse.edc:util", version.ref = "edc" }
 
@@ -30,10 +31,10 @@ failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }
 failsafe-okhttp = { module = "dev.failsafe:failsafe-okhttp", version.ref = "failsafe" }
 
 # Google dependencies
-googlecloud-core = { module = "com.google.cloud:google-cloud-core", version.ref = "googleCloudCore"}
+googlecloud-core = { module = "com.google.cloud:google-cloud-core", version.ref = "googleCloudCore" }
 googlecloud-iam-admin = { module = "com.google.cloud:google-iam-admin", version.ref = "googleCloudIamAdmin" }
 googlecloud-iam-credentials = { module = "com.google.cloud:google-cloud-iamcredentials", version.ref = "googleCloudIamCredentials" }
-googlecloud-secretmanager = { module = "com.google.cloud:google-cloud-secretmanager", version.ref = "googleCloudSecretManager"}
+googlecloud-secretmanager = { module = "com.google.cloud:google-cloud-secretmanager", version.ref = "googleCloudSecretManager" }
 googlecloud-storage = { module = "com.google.cloud:google-cloud-storage", version.ref = "googleCloudStorage" }
 
 [bundles]

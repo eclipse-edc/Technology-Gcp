@@ -12,7 +12,7 @@
  *
  */
 
-rootProject.name = "technology-gcp"
+rootProject.name = "Technology-Gcp"
 
 // this is needed to have access to snapshot builds of plugins
 pluginManagement {

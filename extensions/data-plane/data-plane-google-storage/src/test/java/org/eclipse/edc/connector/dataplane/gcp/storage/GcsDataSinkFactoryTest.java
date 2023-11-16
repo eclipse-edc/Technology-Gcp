@@ -21,9 +21,11 @@ import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -82,7 +84,7 @@ class GcsDataSinkFactoryTest {
     }
 
     @ParameterizedTest
-    @MethodSource("invalidInputs")
+    @ArgumentsSource(InvalidInputProvider.class)
     void validate_shouldFailIfPropertiesAreMissing(String bucketName) {
         var source = DataAddress.Builder
                 .newInstance()
@@ -97,12 +99,6 @@ class GcsDataSinkFactoryTest {
         assertThat(result.failed()).isTrue();
     }
 
-    private static Stream<Arguments> invalidInputs() {
-        return Stream.of(
-                Arguments.of(""),
-                Arguments.of(" ")
-        );
-    }
 
     private DataFlowRequest createRequest(DataAddress destination) {
         var source = DataAddress.Builder
@@ -116,5 +112,15 @@ class GcsDataSinkFactoryTest {
                 .sourceDataAddress(source)
                 .destinationDataAddress(destination)
                 .build();
+    }
+
+    private static class InvalidInputProvider implements ArgumentsProvider {
+        @Override
+        public Stream<Arguments> provideArguments(ExtensionContext context) {
+            return Stream.of(
+                    Arguments.of(""),
+                    Arguments.of(" ")
+            );
+        }
     }
 }
