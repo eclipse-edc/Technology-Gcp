@@ -112,8 +112,14 @@ public class GcsDataSource implements DataSource {
 
         @Override
         public InputStream openStream() {
-            readChannel = storageClient.reader(BlobId.of(bucketName, blobName));
-            return Channels.newInputStream(readChannel);
+            var blobId = BlobId.of(bucketName, blobName);
+            var blob = storageClient.get(blobId);
+            if (blob != null && blob.exists()) {
+                readChannel = storageClient.reader(blobId);
+                return Channels.newInputStream(readChannel);
+            } else {
+                throw new EdcException(String.format("Error accessing bucket %s or blob %s in project %s", bucketName, blobName, storageClient.getOptions().getProjectId()));
+            }
         }
 
         public void close() {
