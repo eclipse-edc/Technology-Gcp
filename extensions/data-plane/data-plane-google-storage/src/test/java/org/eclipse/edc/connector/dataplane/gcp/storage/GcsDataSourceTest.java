@@ -26,8 +26,8 @@ import static org.mockito.Mockito.when;
 
 public class GcsDataSourceTest {
 
-    Monitor monitor = mock(Monitor.class);
-    Storage storageClient = mock(Storage.class);
+    Monitor monitor = mock();
+    Storage storageClient = mock();
     String bucketName = "TestBucketName";
     String blobName = "TestBlobName";
     GcsDataSource dataSource = GcsDataSource.Builder.newInstance()

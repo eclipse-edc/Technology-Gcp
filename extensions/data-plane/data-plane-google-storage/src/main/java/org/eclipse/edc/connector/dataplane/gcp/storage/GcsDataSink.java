@@ -21,7 +21,6 @@ import com.google.common.io.ByteStreams;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
 import org.eclipse.edc.connector.dataplane.util.sink.ParallelSink;
-import org.eclipse.edc.spi.EdcException;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -54,10 +53,6 @@ public class GcsDataSink extends ParallelSink {
                 monitor.severe("Cannot open the input part", e);
                 monitor.severe(e.toString());
                 return StreamResult.error("Cannot open the input part");
-            } catch (EdcException e) {
-                monitor.severe("Cannot open the source blob", e);
-                monitor.severe(e.toString());
-                return StreamResult.error("Cannot open the source blob");
             } catch (Exception e) {
                 monitor.severe("Error writing data to the bucket", e);
                 return StreamResult.error("Error writing data to the bucket");
