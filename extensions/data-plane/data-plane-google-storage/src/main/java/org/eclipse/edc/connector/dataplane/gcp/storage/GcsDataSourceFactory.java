@@ -18,6 +18,8 @@ import com.google.cloud.storage.StorageOptions;
 import org.eclipse.edc.connector.dataplane.gcp.storage.validation.GcsSourceDataAddressValidator;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
+import org.eclipse.edc.gcp.common.GcpCredentials;
+import org.eclipse.edc.gcp.common.GcpServiceAccountCredentials;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -31,9 +33,11 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
     private final Validator<DataAddress> validation = new GcsSourceDataAddressValidator();
     private final Monitor monitor;
+    private final GcpCredentials gcpCredential;
 
-    public GcsDataSourceFactory(Monitor monitor) {
+    public GcsDataSourceFactory(Monitor monitor, GcpCredentials gcpCredential) {
         this.monitor = monitor;
+        this.gcpCredential = gcpCredential;
     }
 
 
@@ -54,11 +58,17 @@ public class GcsDataSourceFactory implements DataSourceFactory {
         if (validationResult.failed()) {
             throw new EdcException(String.join(", ", validationResult.getFailureMessages()));
         }
-        var storageClient = StorageOptions.newBuilder()
-                .build().getService();
+
 
         var source = request.getSourceDataAddress();
-
+        var tokenKeyName = source.getKeyName();
+        var serviceAccountKeyName = source.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_NAME);
+        var serviceAccountValue = source.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_KEY_VALUE);
+        var gcpServiceAccountCredentials = new GcpServiceAccountCredentials(tokenKeyName, serviceAccountKeyName, serviceAccountValue);
+        var googleCredentials = gcpCredential.resolveGoogleCredentialsFromDataAddress(gcpServiceAccountCredentials);
+        var storageClient = StorageOptions.newBuilder()
+                .setCredentials(googleCredentials)
+                .build().getService();
         return GcsDataSource.Builder.newInstance()
                 .storageClient(storageClient)
                 .bucketName(source.getStringProperty(GcsStoreSchema.BUCKET_NAME))
