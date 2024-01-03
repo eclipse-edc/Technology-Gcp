@@ -11,7 +11,7 @@ googleCloudSecretManager = "2.32.0"
 googleCloudCore = "2.28.0"
 
 [libraries]
-assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
+assertj = { module = "org.assertj:assertj-core", version = "3.25.1" }
 edc-core-dataplane = { module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
 edc-core-dataplane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
