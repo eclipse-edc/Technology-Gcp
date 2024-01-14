@@ -60,7 +60,7 @@ class GcpSecretManagerVaultExtensionTest {
 
         extension.gcpConfiguration = new GcpConfiguration(invalidContext);
 
-        EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
+        EdcException exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
         assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
@@ -74,7 +74,7 @@ class GcpSecretManagerVaultExtensionTest {
 
         extension.gcpConfiguration = new GcpConfiguration(invalidContext);
 
-        EdcException exception = assertThrows(EdcException.class, () -> extension.initialize(invalidContext));
+        EdcException exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
         assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
     }
 
@@ -91,7 +91,7 @@ class GcpSecretManagerVaultExtensionTest {
         try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
                     .thenReturn(new GcpSecretManagerVault(null, null, null, null));
-            extension.initialize(validContext);
+            extension.createVault(validContext);
         }
     }
 
@@ -109,7 +109,7 @@ class GcpSecretManagerVaultExtensionTest {
         try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
                     .thenReturn(new GcpSecretManagerVault(null, null, null, null));
-            extension.initialize(validContext);
+            extension.createVault(validContext);
         }
     }
 
@@ -132,7 +132,7 @@ class GcpSecretManagerVaultExtensionTest {
             try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
                 utilities.when(() -> GcpSecretManagerVault.createWithServiceAccountCredentials(eq(monitor), eq(TEST_PROJECT), eq(TEST_REGION), Mockito.any(InputStream.class)))
                         .thenReturn(new GcpSecretManagerVault(null, null, null, null));
-                extension.initialize(validContext);
+                extension.createVault(validContext);
             }
         } catch (IOException ioException) {
             fail("Cannot create temporary file for testing");
