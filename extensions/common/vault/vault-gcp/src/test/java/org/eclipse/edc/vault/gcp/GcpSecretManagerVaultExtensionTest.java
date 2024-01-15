@@ -39,13 +39,12 @@ import static org.mockito.Mockito.when;
 
 class GcpSecretManagerVaultExtensionTest {
 
-    private final Monitor monitor = mock(Monitor.class);
-    private final GcpSecretManagerVaultExtension extension = new GcpSecretManagerVaultExtension();
-
     private static final String TEST_REGION = "europe-west3";
     private static final String TEST_PROJECT = "project";
     private static final String TEST_FILE_PREFIX = "file";
     private static final String TEST_FILE_SUFFIX = ".json";
+    private final Monitor monitor = mock(Monitor.class);
+    private final GcpSecretManagerVaultExtension extension = new GcpSecretManagerVaultExtension();
 
     @BeforeEach
     void resetMocks() {

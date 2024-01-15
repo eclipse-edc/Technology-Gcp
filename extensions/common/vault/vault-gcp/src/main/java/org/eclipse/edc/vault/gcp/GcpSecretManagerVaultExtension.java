@@ -18,7 +18,6 @@ import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.runtime.metamodel.annotation.Provider;
-import org.eclipse.edc.runtime.metamodel.annotation.Provides;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.security.Vault;
@@ -34,7 +33,6 @@ import static org.eclipse.edc.util.string.StringUtils.isNullOrEmpty;
 /**
  * ServiceExtension instantiating and registering Vault object.
  */
-@Provides({ Vault.class })
 @Extension(value = GcpSecretManagerVaultExtension.NAME)
 public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
