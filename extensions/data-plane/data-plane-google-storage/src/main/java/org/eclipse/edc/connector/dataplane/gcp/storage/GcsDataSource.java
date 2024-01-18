@@ -18,15 +18,19 @@ import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
+import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
 import org.eclipse.edc.spi.EdcException;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.InputStream;
 import java.nio.channels.Channels;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure.Reason.GENERAL_ERROR;
+import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.failure;
 import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.success;
 
 public class GcsDataSource implements DataSource {
@@ -38,11 +42,17 @@ public class GcsDataSource implements DataSource {
 
     @Override
     public StreamResult<Stream<Part>> openPartStream() {
+        var blobId = BlobId.of(bucketName, blobName);
+        var blob = storageClient.get(blobId);
+        if (blob == null || !blob.exists()) {
+            return failure(new StreamFailure(List.of(String.format("Error accessing bucket %s or blob %s", bucketName, blobName)), GENERAL_ERROR));
+        }
+
         try {
             part = new GoogleStoragePart(storageClient, bucketName, blobName);
             return success(Stream.of(part));
         } catch (Exception e) {
-            monitor.severe(String.format("Error accessing bucket %s or blob %s in project %s", bucketName, blobName, storageClient.getOptions().getProjectId()), e);
+            monitor.severe(String.format("Error accessing bucket %s or blob %s", bucketName, blobName), e);
             throw new EdcException(e);
         }
     }

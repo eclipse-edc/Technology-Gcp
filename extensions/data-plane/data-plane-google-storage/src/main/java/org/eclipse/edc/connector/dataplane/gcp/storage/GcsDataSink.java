@@ -52,10 +52,10 @@ public class GcsDataSink extends ParallelSink {
             } catch (IOException e) {
                 monitor.severe("Cannot open the input part", e);
                 monitor.severe(e.toString());
-                return StreamResult.error("An error");
+                return StreamResult.error("Cannot open the input part");
             } catch (Exception e) {
                 monitor.severe("Error writing data to the bucket", e);
-                return StreamResult.error("An error");
+                return StreamResult.error("Error writing data to the bucket");
             }
         }
         return StreamResult.success();

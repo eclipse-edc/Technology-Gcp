@@ -17,14 +17,10 @@ package org.eclipse.edc.vault.gcp;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
-import org.eclipse.edc.runtime.metamodel.annotation.Provides;
+import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.EdcException;
-import org.eclipse.edc.spi.security.CertificateResolver;
-import org.eclipse.edc.spi.security.PrivateKeyResolver;
 import org.eclipse.edc.spi.security.Vault;
-import org.eclipse.edc.spi.security.VaultCertificateResolver;
-import org.eclipse.edc.spi.security.VaultPrivateKeyResolver;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 
@@ -37,7 +33,6 @@ import static org.eclipse.edc.util.string.StringUtils.isNullOrEmpty;
 /**
  * ServiceExtension instantiating and registering Vault object.
  */
-@Provides({ Vault.class, PrivateKeyResolver.class, CertificateResolver.class })
 @Extension(value = GcpSecretManagerVaultExtension.NAME)
 public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
@@ -60,34 +55,35 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
         return NAME;
     }
 
-    @Override
-    public void initialize(ServiceExtensionContext context) {
+    @Provider
+    public Vault createVault(ServiceExtensionContext context) {
         var project = context.getSetting(VAULT_PROJECT, gcpConfiguration.getProjectId());
+        var monitor = context.getMonitor();
+
         if (isNullOrEmpty(project)) {
-            context.getMonitor().info("GCP Secret Manager vault extension: project loaded from default config " + project);
+            monitor.info("GCP Secret Manager vault extension: project loaded from default config " + project);
         } else {
-            context.getMonitor().info("GCP Secret Manager vault extension: project loaded from settings " + project);
+            monitor.info("GCP Secret Manager vault extension: project loaded from settings " + project);
         }
 
         var saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, gcpConfiguration.getServiceAccountFile());
 
         // TODO support multi-region replica.
         var region = context.getConfig().getString(VAULT_REGION);
-        context.getMonitor().info("GCP Secret Manager vault extension: region selected " + region);
+        monitor.info("GCP Secret Manager vault extension: region selected " + region);
         try {
-            GcpSecretManagerVault vault = null;
+            GcpSecretManagerVault vault;
             if (saccountFile == null) {
-                context.getMonitor().info("Creating GCP Secret Manager vault extension with default access settings");
-                vault = GcpSecretManagerVault.createWithDefaultSettings(context.getMonitor(), project, region);
+                monitor.info("Creating GCP Secret Manager vault extension with default access settings");
+                vault = GcpSecretManagerVault.createWithDefaultSettings(monitor, project, region);
             } else {
-                context.getMonitor().info("Creating GCP Secret Manager vault extension with Service Account credentials from file " + saccountFile);
+                monitor.info("Creating GCP Secret Manager vault extension with Service Account credentials from file " + saccountFile);
                 var credentialDataStream = Files.newInputStream(Paths.get(saccountFile));
-                vault = GcpSecretManagerVault.createWithServiceAccountCredentials(context.getMonitor(), project, region, credentialDataStream);
+                vault = GcpSecretManagerVault.createWithServiceAccountCredentials(monitor, project, region, credentialDataStream);
                 credentialDataStream.close();
             }
             context.registerService(Vault.class, vault);
-            context.registerService(PrivateKeyResolver.class, new VaultPrivateKeyResolver(vault));
-            context.registerService(CertificateResolver.class, new VaultCertificateResolver(vault));
+            return vault;
         } catch (IOException ioException) {
             throw new EdcException("Cannot create vault", ioException);
         }
