@@ -32,12 +32,27 @@ public interface IamService {
     GcpServiceAccount getOrCreateServiceAccount(String serviceAccountName, String serviceAccountDescription);
 
     /**
+     * Returns the existing service account with the matching name.
+     *
+     * @param serviceAccountName        the name for the service account. Limited to 30 chars
+     * @return the {@link GcpServiceAccount} describing the service account
+     */
+    GcpServiceAccount getServiceAccount(String serviceAccountName);
+
+    /**
      * Creates a temporary valid OAunth2.0 access token for the service account
      *
      * @param serviceAccount The service account the token should be created for
      * @return {@link GcpAccessToken}
      */
     GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount);
+
+    /**
+     * Creates a temporary valid OAunth2.0 access token using the application default account credentials.
+     *
+     * @return {@link GcpAccessToken}
+     */
+    GcpAccessToken createDefaultAccessToken();
 
     /**
      * Delete the specified service account if it exists.

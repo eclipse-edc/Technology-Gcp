@@ -21,8 +21,10 @@ import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenResponse;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
+import com.google.cloud.iam.credentials.v1.ServiceAccountName;
 import com.google.iam.admin.v1.CreateServiceAccountRequest;
 import com.google.iam.admin.v1.ServiceAccount;
+import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -51,6 +53,8 @@ class IamServiceImplTest {
     private IamService iamApi;
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
+
+    private IamServiceImpl.ApplicationDefaultCredentials adc;
     private GcpServiceAccount testServiceAccount;
     private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
@@ -59,10 +63,12 @@ class IamServiceImplTest {
         var monitor = Mockito.mock(Monitor.class);
         iamClient = Mockito.mock(IAMClient.class);
         iamCredentialsClient = Mockito.mock(IamCredentialsClient.class);
+        adc = Mockito.mock(IamServiceImpl.ApplicationDefaultCredentials.class);
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
         iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
+                .adc(() -> adc)
                 .build();
     }
 
@@ -101,6 +107,34 @@ class IamServiceImplTest {
     }
 
     @Test
+    void testGetServiceAccount() {
+        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
+        var serviceAccount = ServiceAccount.newBuilder()
+                .setEmail(serviceAccountEmail)
+                .setDescription(serviceAccountDescription)
+                .build();
+        when(iamClient.getServiceAccount(name)).thenReturn(serviceAccount);
+
+        var createdServiceAccount = iamApi.getServiceAccount(serviceAccountName);
+
+        assertThat(createdServiceAccount.getEmail()).isEqualTo(serviceAccountEmail);
+        assertThat(createdServiceAccount.getDescription()).isEqualTo(serviceAccountDescription);
+    }
+
+    @Test
+    void testGetServiceAccountThatDoesntExist() {
+        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
+        var serviceAccount = ServiceAccount.newBuilder()
+                .setEmail(serviceAccountEmail)
+                .setDescription(serviceAccountDescription)
+                .build();
+        var getError = apiExceptionWithStatusCode(StatusCode.Code.NOT_FOUND);
+        when(iamClient.getServiceAccount(name)).thenThrow(getError);
+
+        assertThatThrownBy(() -> iamApi.getServiceAccount(serviceAccountName)).isInstanceOf(GcpException.class);
+    }
+
+    @Test
     void testCreateAccessToken() {
         var expectedTokenString = "test-access-token";
         var expectedKey = GenerateAccessTokenResponse.newBuilder().setAccessToken(expectedTokenString).build();
@@ -113,6 +147,25 @@ class IamServiceImplTest {
         var accessToken = iamApi.createAccessToken(testServiceAccount);
 
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
+    }
+
+    @Test
+    void testCreateDefaultAccessToken() {
+        var expectedTokenString = "test-access-token";
+        long timeout = 3600;
+        when(adc.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
+
+        var accessToken = iamApi.createDefaultAccessToken();
+        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
+        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
+    }
+
+    @Test
+    void testCreateDefaultAccessTokenError() {
+        when(adc.getAccessToken()).thenReturn(null);
+
+        var accessToken = iamApi.createDefaultAccessToken();
+        assertThat(accessToken).isNull();
     }
 
     @Test

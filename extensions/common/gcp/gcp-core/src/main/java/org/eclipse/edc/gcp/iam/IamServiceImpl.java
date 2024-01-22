@@ -16,6 +16,8 @@ package org.eclipse.edc.gcp.iam;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
@@ -43,16 +45,27 @@ public class IamServiceImpl implements IamService {
     private final Supplier<IAMClient> iamClientSupplier;
     private final Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
     private final Monitor monitor;
+    private final Supplier<ApplicationDefaultCredentials> adc;
+
+    private IamServiceImpl(Monitor monitor,
+                        String gcpProjectId,
+                        Supplier<IAMClient> iamClientSupplier,
+                        Supplier<IamCredentialsClient> iamCredentialsClientSupplier,
+                        Supplier<ApplicationDefaultCredentials> adc
+    ) {
+        this.monitor = monitor;
+        this.gcpProjectId = gcpProjectId;
+        this.iamClientSupplier = iamClientSupplier;
+        this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
+        this.adc = adc;
+    }
 
     private IamServiceImpl(Monitor monitor,
                            String gcpProjectId,
                            Supplier<IAMClient> iamClientSupplier,
                            Supplier<IamCredentialsClient> iamCredentialsClientSupplier
     ) {
-        this.monitor = monitor;
-        this.gcpProjectId = gcpProjectId;
-        this.iamClientSupplier = iamClientSupplier;
-        this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
+        this(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier, () -> new ApplicationDefaultCredentials(monitor));
     }
 
     @Override
@@ -77,6 +90,24 @@ public class IamServiceImpl implements IamService {
             }
             monitor.severe("Unable to create service account", e);
             throw new GcpException("Unable to create service account", e);
+        }
+    }
+
+    @Override
+    public GcpServiceAccount getServiceAccount(String serviceAccountName) {
+        try (var client = iamClientSupplier.get()) {
+            var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpProjectId);
+            var name = ServiceAccountName.of(gcpProjectId, serviceAccountEmail).toString();
+            var response = client.getServiceAccount(name);
+
+            return new GcpServiceAccount(response.getEmail(), response.getName(), response.getDescription());
+        } catch (ApiException e) {
+            if (e.getStatusCode().getCode() == StatusCode.Code.NOT_FOUND) {
+                monitor.severe("Service account '" + serviceAccountName + "'not found", e);
+                throw new GcpException("Service account '" + serviceAccountName + "'not found", e);
+            }
+            monitor.severe("Unable to get service account '" + serviceAccountName + "'", e);
+            throw new GcpException("Unable to get service account '" + serviceAccountName + "'", e);
         }
     }
 
@@ -114,6 +145,11 @@ public class IamServiceImpl implements IamService {
     }
 
     @Override
+    public GcpAccessToken createDefaultAccessToken() {
+        return adc.get().getAccessToken();
+    }
+
+    @Override
     public void deleteServiceAccountIfExists(GcpServiceAccount serviceAccount) {
         try (var client = iamClientSupplier.get()) {
             var serviceAccountName = ServiceAccountName.of(gcpProjectId, serviceAccount.getEmail());
@@ -138,6 +174,7 @@ public class IamServiceImpl implements IamService {
         private final Monitor monitor;
         private Supplier<IAMClient> iamClientSupplier;
         private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
+        private Supplier<IamServiceImpl.ApplicationDefaultCredentials> adc;
 
         private Builder(Monitor monitor, String gcpProjectId) {
             this.gcpProjectId = gcpProjectId;
@@ -158,6 +195,11 @@ public class IamServiceImpl implements IamService {
             return this;
         }
 
+        public Builder adc(Supplier<IamServiceImpl.ApplicationDefaultCredentials> adc) {
+            this.adc = adc;
+            return this;
+        }
+
         public IamServiceImpl build() {
             Objects.requireNonNull(gcpProjectId, "gcpProjectId");
             Objects.requireNonNull(monitor, "monitor");
@@ -167,6 +209,12 @@ public class IamServiceImpl implements IamService {
             if (iamCredentialsClientSupplier == null) {
                 iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
             }
+
+            if (adc != null) {
+                return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier,
+                    iamCredentialsClientSupplier, adc);
+            }
+
             return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier);
         }
 
@@ -194,6 +242,26 @@ public class IamServiceImpl implements IamService {
                     throw new GcpException("Error while creating IamCredentialsClient", e);
                 }
             };
+        }
+    }
+
+    static class ApplicationDefaultCredentials {
+        private final Monitor monitor;
+
+        ApplicationDefaultCredentials(Monitor monitor) {
+            this.monitor = monitor;
+        }
+
+        public GcpAccessToken getAccessToken() {
+            try {
+                GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+                credentials.refreshIfExpired();
+                AccessToken token = credentials.getAccessToken();
+                return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
+            } catch (IOException ioException) {
+                monitor.severe("Cannot get application default access token", ioException);
+                return null;
+            }
         }
     }
 }
