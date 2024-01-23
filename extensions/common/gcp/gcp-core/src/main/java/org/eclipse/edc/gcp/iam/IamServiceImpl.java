@@ -44,19 +44,19 @@ public class IamServiceImpl implements IamService {
     private final Supplier<IAMClient> iamClientSupplier;
     private final Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
     private final Monitor monitor;
-    private final Supplier<ApplicationDefaultCredentials> adc;
+    private final Supplier<ApplicationDefaultCredentials> applicationDefaultCredentials;
 
     private IamServiceImpl(Monitor monitor,
                         String gcpProjectId,
                         Supplier<IAMClient> iamClientSupplier,
                         Supplier<IamCredentialsClient> iamCredentialsClientSupplier,
-                        Supplier<ApplicationDefaultCredentials> adc
+                        Supplier<ApplicationDefaultCredentials> applicationDefaultCredentials
     ) {
         this.monitor = monitor;
         this.gcpProjectId = gcpProjectId;
         this.iamClientSupplier = iamClientSupplier;
         this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
-        this.adc = adc;
+        this.applicationDefaultCredentials = applicationDefaultCredentials;
     }
 
     private IamServiceImpl(Monitor monitor,
@@ -145,7 +145,7 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpAccessToken createDefaultAccessToken() {
-        return adc.get().getAccessToken();
+        return applicationDefaultCredentials.get().getAccessToken();
     }
 
     @Override
@@ -173,7 +173,7 @@ public class IamServiceImpl implements IamService {
         private final Monitor monitor;
         private Supplier<IAMClient> iamClientSupplier;
         private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
-        private Supplier<IamServiceImpl.ApplicationDefaultCredentials> adc;
+        private Supplier<IamServiceImpl.ApplicationDefaultCredentials> applicationDefaultCredentials;
 
         private Builder(Monitor monitor, String gcpProjectId) {
             this.gcpProjectId = gcpProjectId;
@@ -194,8 +194,8 @@ public class IamServiceImpl implements IamService {
             return this;
         }
 
-        public Builder adc(Supplier<IamServiceImpl.ApplicationDefaultCredentials> adc) {
-            this.adc = adc;
+        public Builder applicationDefaultCredentials(Supplier<IamServiceImpl.ApplicationDefaultCredentials> applicationDefaultCredentials) {
+            this.applicationDefaultCredentials = applicationDefaultCredentials;
             return this;
         }
 
@@ -209,9 +209,9 @@ public class IamServiceImpl implements IamService {
                 iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
             }
 
-            if (adc != null) {
+            if (applicationDefaultCredentials != null) {
                 return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier,
-                    iamCredentialsClientSupplier, adc);
+                    iamCredentialsClientSupplier, applicationDefaultCredentials);
             }
 
             return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier);

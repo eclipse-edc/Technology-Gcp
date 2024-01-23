@@ -54,7 +54,7 @@ class IamServiceImplTest {
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
 
-    private IamServiceImpl.ApplicationDefaultCredentials adc;
+    private IamServiceImpl.ApplicationDefaultCredentials applicationDefaultCredentials;
     private GcpServiceAccount testServiceAccount;
     private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
@@ -63,12 +63,12 @@ class IamServiceImplTest {
         var monitor = Mockito.mock(Monitor.class);
         iamClient = Mockito.mock(IAMClient.class);
         iamCredentialsClient = Mockito.mock(IamCredentialsClient.class);
-        adc = Mockito.mock(IamServiceImpl.ApplicationDefaultCredentials.class);
+        applicationDefaultCredentials = Mockito.mock(IamServiceImpl.ApplicationDefaultCredentials.class);
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
         iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
-                .adc(() -> adc)
+                .applicationDefaultCredentials(() -> applicationDefaultCredentials)
                 .build();
     }
 
@@ -153,7 +153,7 @@ class IamServiceImplTest {
     void testCreateDefaultAccessToken() {
         var expectedTokenString = "test-access-token";
         long timeout = 3600;
-        when(adc.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
+        when(applicationDefaultCredentials.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
         var accessToken = iamApi.createDefaultAccessToken();
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
@@ -162,7 +162,7 @@ class IamServiceImplTest {
 
     @Test
     void testCreateDefaultAccessTokenError() {
-        when(adc.getAccessToken()).thenReturn(null);
+        when(applicationDefaultCredentials.getAccessToken()).thenReturn(null);
 
         var accessToken = iamApi.createDefaultAccessToken();
         assertThat(accessToken).isNull();
