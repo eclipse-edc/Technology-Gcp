@@ -16,7 +16,6 @@ package org.eclipse.edc.gcp.iam;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
-import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
@@ -254,9 +253,9 @@ public class IamServiceImpl implements IamService {
 
         public GcpAccessToken getAccessToken() {
             try {
-                GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+                var credentials = GoogleCredentials.getApplicationDefault();
                 credentials.refreshIfExpired();
-                AccessToken token = credentials.getAccessToken();
+                var token = credentials.getAccessToken();
                 return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
             } catch (IOException ioException) {
                 monitor.severe("Cannot get application default access token", ioException);
