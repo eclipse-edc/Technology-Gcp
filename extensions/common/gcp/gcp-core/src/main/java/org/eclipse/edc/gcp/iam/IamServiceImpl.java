@@ -230,6 +230,7 @@ public class IamServiceImpl implements IamService {
             this.monitor = monitor;
         }
 
+        @Override
         public GcpAccessToken getAccessToken() {
             try {
                 var credentials = GoogleCredentials.getApplicationDefault();
