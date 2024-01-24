@@ -40,31 +40,15 @@ public class IamServiceImpl implements IamService {
 
     private static final ImmutableList<String> OAUTH_SCOPE = ImmutableList.of("https://www.googleapis.com/auth/cloud-platform");
     private static final long ONE_HOUR_IN_S = TimeUnit.HOURS.toSeconds(1);
-    private final String gcpProjectId;
-    private final Supplier<IAMClient> iamClientSupplier;
-    private final Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
     private final Monitor monitor;
-    private final Supplier<ApplicationDefaultCredentials> applicationDefaultCredentials;
+    private final String gcpProjectId;
+    private Supplier<IAMClient> iamClientSupplier;
+    private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
+    private AccessTokenProvider applicationDefaultCredentials;
 
-    private IamServiceImpl(Monitor monitor,
-                        String gcpProjectId,
-                        Supplier<IAMClient> iamClientSupplier,
-                        Supplier<IamCredentialsClient> iamCredentialsClientSupplier,
-                        Supplier<ApplicationDefaultCredentials> applicationDefaultCredentials
-    ) {
+    private IamServiceImpl(Monitor monitor, String gcpProjectId) {
         this.monitor = monitor;
         this.gcpProjectId = gcpProjectId;
-        this.iamClientSupplier = iamClientSupplier;
-        this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
-        this.applicationDefaultCredentials = applicationDefaultCredentials;
-    }
-
-    private IamServiceImpl(Monitor monitor,
-                           String gcpProjectId,
-                           Supplier<IAMClient> iamClientSupplier,
-                           Supplier<IamCredentialsClient> iamCredentialsClientSupplier
-    ) {
-        this(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier, () -> new ApplicationDefaultCredentials(monitor));
     }
 
     @Override
@@ -145,7 +129,7 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpAccessToken createDefaultAccessToken() {
-        return applicationDefaultCredentials.get().getAccessToken();
+        return applicationDefaultCredentials.getAccessToken();
     }
 
     @Override
@@ -169,15 +153,10 @@ public class IamServiceImpl implements IamService {
     }
 
     public static class Builder {
-        private final String gcpProjectId;
-        private final Monitor monitor;
-        private Supplier<IAMClient> iamClientSupplier;
-        private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
-        private Supplier<IamServiceImpl.ApplicationDefaultCredentials> applicationDefaultCredentials;
+        private IamServiceImpl iamServiceImpl;
 
         private Builder(Monitor monitor, String gcpProjectId) {
-            this.gcpProjectId = gcpProjectId;
-            this.monitor = monitor;
+            iamServiceImpl = new IamServiceImpl(monitor, gcpProjectId);
         }
 
         public static IamServiceImpl.Builder newInstance(Monitor monitor, String gcpProjectId) {
@@ -185,36 +164,36 @@ public class IamServiceImpl implements IamService {
         }
 
         public Builder iamClientSupplier(Supplier<IAMClient> iamClientSupplier) {
-            this.iamClientSupplier = iamClientSupplier;
+            iamServiceImpl.iamClientSupplier = iamClientSupplier;
             return this;
         }
 
         public Builder iamCredentialsClientSupplier(Supplier<IamCredentialsClient> iamCredentialsClientSupplier) {
-            this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
+            iamServiceImpl.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
             return this;
         }
 
-        public Builder applicationDefaultCredentials(Supplier<IamServiceImpl.ApplicationDefaultCredentials> applicationDefaultCredentials) {
-            this.applicationDefaultCredentials = applicationDefaultCredentials;
+        public Builder applicationDefaultCredentials(AccessTokenProvider applicationDefaultCredentials) {
+            iamServiceImpl.applicationDefaultCredentials = applicationDefaultCredentials;
             return this;
         }
 
         public IamServiceImpl build() {
-            Objects.requireNonNull(gcpProjectId, "gcpProjectId");
-            Objects.requireNonNull(monitor, "monitor");
-            if (iamClientSupplier == null) {
-                iamClientSupplier = defaultIamClientSupplier();
+            Objects.requireNonNull(iamServiceImpl.gcpProjectId, "gcpProjectId");
+            Objects.requireNonNull(iamServiceImpl.monitor, "monitor");
+
+            if (iamServiceImpl.iamClientSupplier == null) {
+                iamServiceImpl.iamClientSupplier = defaultIamClientSupplier();
             }
-            if (iamCredentialsClientSupplier == null) {
-                iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
+            if (iamServiceImpl.iamCredentialsClientSupplier == null) {
+                iamServiceImpl.iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
             }
 
-            if (applicationDefaultCredentials != null) {
-                return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier,
-                    iamCredentialsClientSupplier, applicationDefaultCredentials);
+            if (iamServiceImpl.applicationDefaultCredentials == null) {
+                iamServiceImpl.applicationDefaultCredentials = new ApplicationDefaultCredentials(iamServiceImpl.monitor);
             }
 
-            return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier);
+            return iamServiceImpl;
         }
 
         /**
@@ -244,7 +223,7 @@ public class IamServiceImpl implements IamService {
         }
     }
 
-    static class ApplicationDefaultCredentials {
+    static class ApplicationDefaultCredentials implements AccessTokenProvider {
         private final Monitor monitor;
 
         ApplicationDefaultCredentials(Monitor monitor) {

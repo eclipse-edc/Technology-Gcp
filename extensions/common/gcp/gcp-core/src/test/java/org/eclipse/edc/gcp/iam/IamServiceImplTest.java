@@ -68,7 +68,7 @@ class IamServiceImplTest {
         iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
-                .applicationDefaultCredentials(() -> applicationDefaultCredentials)
+                .applicationDefaultCredentials(applicationDefaultCredentials)
                 .build();
     }
 
