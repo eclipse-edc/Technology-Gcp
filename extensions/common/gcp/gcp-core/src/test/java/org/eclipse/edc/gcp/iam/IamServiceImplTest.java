@@ -30,7 +30,6 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,6 +39,7 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,21 +54,21 @@ class IamServiceImplTest {
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
 
-    private IamServiceImpl.ApplicationDefaultCredentials applicationDefaultCredentials;
+    private AccessTokenProvider accessTokenProvider;
     private GcpServiceAccount testServiceAccount;
     private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
     @BeforeEach
     void setUp() {
-        var monitor = Mockito.mock(Monitor.class);
-        iamClient = Mockito.mock(IAMClient.class);
-        iamCredentialsClient = Mockito.mock(IamCredentialsClient.class);
-        applicationDefaultCredentials = Mockito.mock(IamServiceImpl.ApplicationDefaultCredentials.class);
+        var monitor = mock(Monitor.class);
+        iamClient = mock();
+        iamCredentialsClient = mock();
+        accessTokenProvider = mock();
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
         iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
-                .applicationDefaultCredentials(applicationDefaultCredentials)
+                .applicationDefaultCredentials(accessTokenProvider)
                 .build();
     }
 
@@ -153,7 +153,7 @@ class IamServiceImplTest {
     void testCreateDefaultAccessToken() {
         var expectedTokenString = "test-access-token";
         long timeout = 3600;
-        when(applicationDefaultCredentials.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
+        when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
         var accessToken = iamApi.createDefaultAccessToken();
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
@@ -162,7 +162,7 @@ class IamServiceImplTest {
 
     @Test
     void testCreateDefaultAccessTokenError() {
-        when(applicationDefaultCredentials.getAccessToken()).thenReturn(null);
+        when(accessTokenProvider.getAccessToken()).thenReturn(null);
 
         var accessToken = iamApi.createDefaultAccessToken();
         assertThat(accessToken).isNull();
