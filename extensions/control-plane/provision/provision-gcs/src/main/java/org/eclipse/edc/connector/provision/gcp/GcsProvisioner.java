@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
+import com.google.common.collect.ImmutableList;
 import org.eclipse.edc.connector.transfer.spi.provision.Provisioner;
 import org.eclipse.edc.connector.transfer.spi.types.DeprovisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
@@ -33,11 +34,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsProvisionedResource> {
-
+    private static final ImmutableList<String> OAUTH_SCOPE = ImmutableList.of("https://www.googleapis.com/auth/cloud-platform");
+    private static final long ONE_HOUR_IN_S = TimeUnit.HOURS.toSeconds(1);
     private final Monitor monitor;
     private final StorageService storageService;
     private final IamService iamService;
@@ -76,9 +79,16 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         try {
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
 
-            // TODO use service account from transfer request, in case defined.
-            var serviceAccount = createServiceAccount(processId, bucketName);
-            var token = createBucketAccessToken(bucket, serviceAccount);
+            GcpServiceAccount serviceAccount = null;
+            GcpAccessToken token = null;
+
+            if (resourceDefinition.getServiceAccount() != null) {
+                serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccount());
+                token = createAccessToken(serviceAccount);
+            } else {
+                serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
+                token = createAccessToken();
+            }
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
 
@@ -92,23 +102,9 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     @Override
     public CompletableFuture<StatusResult<DeprovisionedResource>> deprovision(
             GcsProvisionedResource provisionedResource, Policy policy) {
-        try {
-            iamService.deleteServiceAccountIfExists(
-                    new GcpServiceAccount(provisionedResource.getServiceAccountEmail(),
-                            provisionedResource.getServiceAccountName(), ""));
-        } catch (GcpException e) {
-            return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR,
-                    String.format("Deprovision failed with: %s", e.getMessage())));
-        }
         return CompletableFuture.completedFuture(StatusResult.success(
                 DeprovisionedResource.Builder.newInstance()
                         .provisionedResourceId(provisionedResource.getId()).build()));
-    }
-
-    private GcpServiceAccount createServiceAccount(String processId, String buckedName) {
-        var serviceAccountName = sanitizeServiceAccountName(processId);
-        var uniqueServiceAccountDescription = generateUniqueServiceAccountDescription(processId, buckedName);
-        return iamService.getOrCreateServiceAccount(serviceAccountName, uniqueServiceAccountDescription);
     }
 
     @NotNull
@@ -128,6 +124,14 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     private GcpAccessToken createBucketAccessToken(GcsBucket bucket, GcpServiceAccount serviceAccount) {
         storageService.addProviderPermissions(bucket, serviceAccount);
         return iamService.createAccessToken(serviceAccount);
+    }
+
+    private GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
+        return iamService.createAccessToken(serviceAccount);
+    }
+
+    private GcpAccessToken createAccessToken() {
+        return iamService.createDefaultAccessToken();
     }
 
     private GcsProvisionedResource getProvisionedResource(GcsResourceDefinition resourceDefinition, String resourceName, String bucketName, GcpServiceAccount serviceAccount) {

@@ -22,9 +22,6 @@ import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
 import com.google.cloud.iam.credentials.v1.ServiceAccountName;
 import com.google.common.collect.ImmutableList;
-import com.google.iam.admin.v1.CreateServiceAccountRequest;
-import com.google.iam.admin.v1.ProjectName;
-import com.google.iam.admin.v1.ServiceAccount;
 import com.google.protobuf.Duration;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -49,31 +46,6 @@ public class IamServiceImpl implements IamService {
     private IamServiceImpl(Monitor monitor, String gcpProjectId) {
         this.monitor = monitor;
         this.gcpProjectId = gcpProjectId;
-    }
-
-    @Override
-    public GcpServiceAccount getOrCreateServiceAccount(String serviceAccountName, String serviceAccountDescription) {
-        var requestedServiceAccount = ServiceAccount.newBuilder()
-                .setDisplayName(serviceAccountName)
-                .setDescription(serviceAccountDescription)
-                .build();
-        var request = CreateServiceAccountRequest.newBuilder()
-                .setName(ProjectName.of(gcpProjectId).toString())
-                .setAccountId(serviceAccountName)
-                .setServiceAccount(requestedServiceAccount)
-                .build();
-
-        try (var client = iamClientSupplier.get()) {
-            var serviceAccount = client.createServiceAccount(request);
-            monitor.debug("Created service account: " + serviceAccount.getEmail());
-            return new GcpServiceAccount(serviceAccount.getEmail(), serviceAccount.getName(), serviceAccountDescription);
-        } catch (ApiException e) {
-            if (e.getStatusCode().getCode() == StatusCode.Code.ALREADY_EXISTS) {
-                return getServiceAccount(serviceAccountName, serviceAccountDescription);
-            }
-            monitor.severe("Unable to create service account", e);
-            throw new GcpException("Unable to create service account", e);
-        }
     }
 
     @Override
@@ -130,22 +102,6 @@ public class IamServiceImpl implements IamService {
     @Override
     public GcpAccessToken createDefaultAccessToken() {
         return applicationDefaultCredentials.getAccessToken();
-    }
-
-    @Override
-    public void deleteServiceAccountIfExists(GcpServiceAccount serviceAccount) {
-        try (var client = iamClientSupplier.get()) {
-            var serviceAccountName = ServiceAccountName.of(gcpProjectId, serviceAccount.getEmail());
-            client.deleteServiceAccount(serviceAccountName.toString());
-            monitor.debug("Deleted service account: " + serviceAccount.getEmail());
-        } catch (ApiException e) {
-            if (e.getStatusCode().getCode() == StatusCode.Code.NOT_FOUND) {
-                monitor.severe("Service account not found", e);
-                return;
-            }
-            monitor.severe("Unable to delete service account", e);
-            throw new GcpException(e);
-        }
     }
 
     private String getServiceAccountEmail(String name, String project) {

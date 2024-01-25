@@ -23,6 +23,7 @@ public class GcsResourceDefinition extends ResourceDefinition {
     private String location;
     private String storageClass;
     private String bucketName;
+    private String serviceAccount;
 
     private GcsResourceDefinition() {
     }
@@ -39,12 +40,17 @@ public class GcsResourceDefinition extends ResourceDefinition {
         return this.bucketName;
     }
 
+    public String getServiceAccount() {
+        return this.serviceAccount;
+    }
+
     @Override
     public Builder toBuilder() {
         return initializeBuilder(new Builder())
                 .location(location)
                 .storageClass(storageClass)
-                .bucketName(bucketName);
+                .bucketName(bucketName)
+                .serviceAccount(serviceAccount);
     }
 
     public static class Builder extends ResourceDefinition.Builder<GcsResourceDefinition, Builder> {
@@ -69,6 +75,11 @@ public class GcsResourceDefinition extends ResourceDefinition {
 
         public Builder bucketName(String bucketName) {
             resourceDefinition.bucketName = bucketName;
+            return this;
+        }
+
+        public Builder serviceAccount(String serviceAccount) {
+            resourceDefinition.serviceAccount = serviceAccount;
             return this;
         }
 
