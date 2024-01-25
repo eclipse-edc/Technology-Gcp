@@ -223,13 +223,7 @@ public class IamServiceImpl implements IamService {
         }
     }
 
-    static class ApplicationDefaultCredentials implements AccessTokenProvider {
-        private final Monitor monitor;
-
-        ApplicationDefaultCredentials(Monitor monitor) {
-            this.monitor = monitor;
-        }
-
+    private record ApplicationDefaultCredentials(Monitor monitor) implements AccessTokenProvider {
         @Override
         public GcpAccessToken getAccessToken() {
             try {
