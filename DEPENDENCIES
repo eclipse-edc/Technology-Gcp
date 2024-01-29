@@ -28,6 +28,7 @@ maven/mavencentral/com.google.api/api-common/2.21.0, BSD-3-Clause, approved, cle
 maven/mavencentral/com.google.api/gax-grpc/2.38.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.api/gax-httpjson/2.38.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.api/gax/2.38.0, BSD-3-Clause, approved, #12035
+maven/mavencentral/com.google.apis/google-api-services-iam/v2-rev20240108-2.0.0, , restricted, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-storage/v1-rev20231117-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.auth/google-auth-library-credentials/1.20.0, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.20.0, BSD-3-Clause, approved, clearlydefined
@@ -52,14 +53,21 @@ maven/mavencentral/com.google.guava/failureaccess/1.0.1, Apache-2.0, approved, C
 maven/mavencentral/com.google.guava/guava/29.0-android, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.guava/guava/30.1.1-android, Apache-2.0 AND CC0-1.0 AND LicenseRef-Public-Domain, approved, CQ23244
 maven/mavencentral/com.google.guava/guava/31.0.1-jre, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.guava/guava/31.1-android, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.guava/guava/31.1-jre, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.guava/guava/32.0.0-android, Apache-2.0 AND CC0-1.0 AND CC-PDDC, approved, #8772
 maven/mavencentral/com.google.guava/guava/32.0.1-jre, Apache-2.0 AND CC0-1.0 AND CC-PDDC, approved, #8772
 maven/mavencentral/com.google.guava/guava/32.1.3-jre, Apache-2.0 AND CC0-1.0 AND LicenseRef-Public-Domain, approved, #9229
 maven/mavencentral/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava, Apache-2.0, approved, CQ22657
+maven/mavencentral/com.google.http-client/google-http-client-apache-v2/1.42.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.http-client/google-http-client-apache-v2/1.43.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.http-client/google-http-client-appengine/1.43.3, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.http-client/google-http-client-gson/1.42.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.http-client/google-http-client-gson/1.42.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.http-client/google-http-client-gson/1.43.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.http-client/google-http-client-jackson2/1.43.3, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.http-client/google-http-client/1.42.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.http-client/google-http-client/1.42.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.http-client/google-http-client/1.43.3, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.j2objc/j2objc-annotations/1.3, Apache-2.0, approved, CQ21195
 maven/mavencentral/com.google.j2objc/j2objc-annotations/2.8, Apache-2.0, approved, clearlydefined
@@ -77,6 +85,7 @@ maven/mavencentral/com.squareup.okio/okio-jvm/3.6.0, Apache-2.0, approved, #1115
 maven/mavencentral/com.squareup.okio/okio/3.6.0, Apache-2.0, approved, #11155
 maven/mavencentral/commons-beanutils/commons-beanutils/1.9.4, Apache-2.0, approved, CQ12654
 maven/mavencentral/commons-codec/commons-codec/1.11, Apache-2.0 AND BSD-3-Clause, approved, CQ15971
+maven/mavencentral/commons-codec/commons-codec/1.15, Apache-2.0 AND BSD-3-Clause AND LicenseRef-Public-Domain, approved, CQ22641
 maven/mavencentral/commons-codec/commons-codec/1.16.0, Apache-2.0 AND (Apache-2.0 AND BSD-3-Clause), approved, #9157
 maven/mavencentral/commons-collections/commons-collections/3.2.2, Apache-2.0, approved, CQ10385
 maven/mavencentral/commons-logging/commons-logging/1.2, Apache-2.0, approved, CQ10162
