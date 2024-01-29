@@ -50,7 +50,7 @@ public class GcsProvisionExtension implements ServiceExtension {
         var storageClient = createDefaultStorageClient(gcpConfiguration.getProjectId());
         var storageService = new StorageServiceImpl(storageClient, monitor);
 
-        var provisioner = new GcsProvisioner(monitor, storageService, iamService);
+        var provisioner = new GcsProvisioner(gcpConfiguration, monitor, storageService, iamService);
         provisionManager.register(provisioner);
 
         manifestGenerator.registerGenerator(new GcsConsumerResourceDefinitionGenerator());

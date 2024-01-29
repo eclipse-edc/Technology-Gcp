@@ -23,13 +23,12 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
  */
 public interface IamService {
     /**
-     * Creates or returns the service account with the matching name and description.
+     * Returns the existing service account with the matching name.
      *
      * @param serviceAccountName        the name for the service account. Limited to 30 chars
-     * @param serviceAccountDescription the unique description for the service account that is used to avoid reuse of service accounts
      * @return the {@link GcpServiceAccount} describing the service account
      */
-    GcpServiceAccount getOrCreateServiceAccount(String serviceAccountName, String serviceAccountDescription);
+    GcpServiceAccount getServiceAccount(String serviceAccountName);
 
     /**
      * Creates a temporary valid OAunth2.0 access token for the service account
@@ -40,10 +39,9 @@ public interface IamService {
     GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount);
 
     /**
-     * Delete the specified service account if it exists.
-     * Do nothing in case it doesn't exist (anymore)
+     * Creates a temporary valid OAunth2.0 access token using the application default account credentials.
      *
-     * @param serviceAccount The service account that should be deleted
+     * @return {@link GcpAccessToken}
      */
-    void deleteServiceAccountIfExists(GcpServiceAccount serviceAccount);
+    GcpAccessToken createDefaultAccessToken();
 }

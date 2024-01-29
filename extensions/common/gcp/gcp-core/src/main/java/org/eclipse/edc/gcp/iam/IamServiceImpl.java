@@ -16,14 +16,12 @@ package org.eclipse.edc.gcp.iam;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
+import com.google.api.services.iam.v2.IamScopes;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
 import com.google.cloud.iam.credentials.v1.ServiceAccountName;
-import com.google.common.collect.ImmutableList;
-import com.google.iam.admin.v1.CreateServiceAccountRequest;
-import com.google.iam.admin.v1.ProjectName;
-import com.google.iam.admin.v1.ServiceAccount;
 import com.google.protobuf.Duration;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -31,66 +29,39 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class IamServiceImpl implements IamService {
-
-    private static final ImmutableList<String> OAUTH_SCOPE = ImmutableList.of("https://www.googleapis.com/auth/cloud-platform");
     private static final long ONE_HOUR_IN_S = TimeUnit.HOURS.toSeconds(1);
-    private final String gcpProjectId;
-    private final Supplier<IAMClient> iamClientSupplier;
-    private final Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
     private final Monitor monitor;
+    private final String gcpProjectId;
+    private Supplier<IAMClient> iamClientSupplier;
+    private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
+    private AccessTokenProvider applicationDefaultCredentials;
 
-    private IamServiceImpl(Monitor monitor,
-                           String gcpProjectId,
-                           Supplier<IAMClient> iamClientSupplier,
-                           Supplier<IamCredentialsClient> iamCredentialsClientSupplier
-    ) {
+    private IamServiceImpl(Monitor monitor, String gcpProjectId) {
         this.monitor = monitor;
         this.gcpProjectId = gcpProjectId;
-        this.iamClientSupplier = iamClientSupplier;
-        this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
     }
 
     @Override
-    public GcpServiceAccount getOrCreateServiceAccount(String serviceAccountName, String serviceAccountDescription) {
-        var requestedServiceAccount = ServiceAccount.newBuilder()
-                .setDisplayName(serviceAccountName)
-                .setDescription(serviceAccountDescription)
-                .build();
-        var request = CreateServiceAccountRequest.newBuilder()
-                .setName(ProjectName.of(gcpProjectId).toString())
-                .setAccountId(serviceAccountName)
-                .setServiceAccount(requestedServiceAccount)
-                .build();
-
-        try (var client = iamClientSupplier.get()) {
-            var serviceAccount = client.createServiceAccount(request);
-            monitor.debug("Created service account: " + serviceAccount.getEmail());
-            return new GcpServiceAccount(serviceAccount.getEmail(), serviceAccount.getName(), serviceAccountDescription);
-        } catch (ApiException e) {
-            if (e.getStatusCode().getCode() == StatusCode.Code.ALREADY_EXISTS) {
-                return getServiceAccount(serviceAccountName, serviceAccountDescription);
-            }
-            monitor.severe("Unable to create service account", e);
-            throw new GcpException("Unable to create service account", e);
-        }
-    }
-
-    private GcpServiceAccount getServiceAccount(String serviceAccountName, String serviceAccountDescription) {
+    public GcpServiceAccount getServiceAccount(String serviceAccountName) {
         try (var client = iamClientSupplier.get()) {
             var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpProjectId);
             var name = ServiceAccountName.of(gcpProjectId, serviceAccountEmail).toString();
             var response = client.getServiceAccount(name);
-            if (!response.getDescription().equals(serviceAccountDescription)) {
-                String errorMessage = "A service account with the same name but different description existed already. Please ensure a unique name is used for every transfer process";
-                monitor.severe(errorMessage);
-                throw new GcpException(errorMessage);
-            }
+
             return new GcpServiceAccount(response.getEmail(), response.getName(), response.getDescription());
+        } catch (ApiException e) {
+            if (e.getStatusCode().getCode() == StatusCode.Code.NOT_FOUND) {
+                monitor.severe("Service account '" + serviceAccountName + "'not found", e);
+                throw new GcpException("Service account '" + serviceAccountName + "'not found", e);
+            }
+            monitor.severe("Unable to get service account '" + serviceAccountName + "'", e);
+            throw new GcpException("Unable to get service account '" + serviceAccountName + "'", e);
         }
     }
 
@@ -101,7 +72,7 @@ public class IamServiceImpl implements IamService {
             var lifetime = Duration.newBuilder().setSeconds(ONE_HOUR_IN_S).build();
             var request = GenerateAccessTokenRequest.newBuilder()
                     .setName(name.toString())
-                    .addAllScope(OAUTH_SCOPE)
+                    .addAllScope(Collections.singleton(IamScopes.CLOUD_PLATFORM))
                     .setLifetime(lifetime)
                     .build();
             var response = iamCredentialsClient.generateAccessToken(request);
@@ -114,19 +85,8 @@ public class IamServiceImpl implements IamService {
     }
 
     @Override
-    public void deleteServiceAccountIfExists(GcpServiceAccount serviceAccount) {
-        try (var client = iamClientSupplier.get()) {
-            var serviceAccountName = ServiceAccountName.of(gcpProjectId, serviceAccount.getEmail());
-            client.deleteServiceAccount(serviceAccountName.toString());
-            monitor.debug("Deleted service account: " + serviceAccount.getEmail());
-        } catch (ApiException e) {
-            if (e.getStatusCode().getCode() == StatusCode.Code.NOT_FOUND) {
-                monitor.severe("Service account not found", e);
-                return;
-            }
-            monitor.severe("Unable to delete service account", e);
-            throw new GcpException(e);
-        }
+    public GcpAccessToken createDefaultAccessToken() {
+        return applicationDefaultCredentials.getAccessToken();
     }
 
     private String getServiceAccountEmail(String name, String project) {
@@ -134,14 +94,10 @@ public class IamServiceImpl implements IamService {
     }
 
     public static class Builder {
-        private final String gcpProjectId;
-        private final Monitor monitor;
-        private Supplier<IAMClient> iamClientSupplier;
-        private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
+        private IamServiceImpl iamServiceImpl;
 
         private Builder(Monitor monitor, String gcpProjectId) {
-            this.gcpProjectId = gcpProjectId;
-            this.monitor = monitor;
+            iamServiceImpl = new IamServiceImpl(monitor, gcpProjectId);
         }
 
         public static IamServiceImpl.Builder newInstance(Monitor monitor, String gcpProjectId) {
@@ -149,25 +105,36 @@ public class IamServiceImpl implements IamService {
         }
 
         public Builder iamClientSupplier(Supplier<IAMClient> iamClientSupplier) {
-            this.iamClientSupplier = iamClientSupplier;
+            iamServiceImpl.iamClientSupplier = iamClientSupplier;
             return this;
         }
 
         public Builder iamCredentialsClientSupplier(Supplier<IamCredentialsClient> iamCredentialsClientSupplier) {
-            this.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
+            iamServiceImpl.iamCredentialsClientSupplier = iamCredentialsClientSupplier;
+            return this;
+        }
+
+        public Builder applicationDefaultCredentials(AccessTokenProvider applicationDefaultCredentials) {
+            iamServiceImpl.applicationDefaultCredentials = applicationDefaultCredentials;
             return this;
         }
 
         public IamServiceImpl build() {
-            Objects.requireNonNull(gcpProjectId, "gcpProjectId");
-            Objects.requireNonNull(monitor, "monitor");
-            if (iamClientSupplier == null) {
-                iamClientSupplier = defaultIamClientSupplier();
+            Objects.requireNonNull(iamServiceImpl.gcpProjectId, "gcpProjectId");
+            Objects.requireNonNull(iamServiceImpl.monitor, "monitor");
+
+            if (iamServiceImpl.iamClientSupplier == null) {
+                iamServiceImpl.iamClientSupplier = defaultIamClientSupplier();
             }
-            if (iamCredentialsClientSupplier == null) {
-                iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
+            if (iamServiceImpl.iamCredentialsClientSupplier == null) {
+                iamServiceImpl.iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
             }
-            return new IamServiceImpl(monitor, gcpProjectId, iamClientSupplier, iamCredentialsClientSupplier);
+
+            if (iamServiceImpl.applicationDefaultCredentials == null) {
+                iamServiceImpl.applicationDefaultCredentials = new ApplicationDefaultCredentials(iamServiceImpl.monitor);
+            }
+
+            return iamServiceImpl;
         }
 
         /**
@@ -194,6 +161,21 @@ public class IamServiceImpl implements IamService {
                     throw new GcpException("Error while creating IamCredentialsClient", e);
                 }
             };
+        }
+    }
+
+    private record ApplicationDefaultCredentials(Monitor monitor) implements AccessTokenProvider {
+        @Override
+        public GcpAccessToken getAccessToken() {
+            try {
+                var credentials = GoogleCredentials.getApplicationDefault().createScoped(IamScopes.CLOUD_PLATFORM);
+                credentials.refreshIfExpired();
+                var token = credentials.getAccessToken();
+                return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
+            } catch (IOException ioException) {
+                monitor.severe("Cannot get application default access token", ioException);
+                return null;
+            }
         }
     }
 }

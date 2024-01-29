@@ -35,9 +35,10 @@ public class GcsConsumerResourceDefinitionGenerator implements ConsumerResourceD
         var location = destination.getStringProperty(GcsStoreSchema.LOCATION);
         var storageClass = destination.getStringProperty(GcsStoreSchema.STORAGE_CLASS);
         var bucketName = destination.getStringProperty(GcsStoreSchema.BUCKET_NAME);
+        var serviceAccount = destination.getStringProperty(GcsStoreSchema.SERVICE_ACCOUNT_NAME);
 
         return GcsResourceDefinition.Builder.newInstance().id(id).location(location)
-                .storageClass(storageClass).bucketName(bucketName).build();
+                .storageClass(storageClass).bucketName(bucketName).serviceAccountName(serviceAccount).build();
     }
 
     @Override
