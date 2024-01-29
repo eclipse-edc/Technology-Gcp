@@ -24,14 +24,12 @@ import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
-import org.eclipse.edc.gcp.common.GcsBucket;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.gcp.storage.StorageService;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.response.ResponseStatus;
 import org.eclipse.edc.spi.response.StatusResult;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -86,12 +84,12 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
             GcpAccessToken token = null;
 
             var serviceAccountName = getServiceAccountName(resourceDefinition);
-            if (serviceAccountName != null && !serviceAccountName.isEmpty()) {
+            if (serviceAccountName != null) {
                 serviceAccount = iamService.getServiceAccount(serviceAccountName);
-                token = createAccessToken(serviceAccount);
+                token = iamService.createAccessToken(serviceAccount);
             } else {
                 serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
-                token = createAccessToken();
+                token = iamService.createDefaultAccessToken();
             }
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
@@ -118,33 +116,6 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         return CompletableFuture.completedFuture(StatusResult.success(
                 DeprovisionedResource.Builder.newInstance()
                         .provisionedResourceId(provisionedResource.getId()).build()));
-    }
-
-    @NotNull
-    private String sanitizeServiceAccountName(String processId) {
-        // service account ID must be between 6 and 30 characters and can contain lowercase alphanumeric characters and dashes
-        String processIdWithoutConstantChars = processId.replace("-", "");
-        var maxAllowedSubstringLength = Math.min(26, processIdWithoutConstantChars.length());
-        var uniqueId = processIdWithoutConstantChars.substring(0, maxAllowedSubstringLength);
-        return "edc-" + uniqueId;
-    }
-
-    @NotNull
-    private String generateUniqueServiceAccountDescription(String transferProcessId, String bucketName) {
-        return String.format("transferProcess:%s\nbucket:%s", transferProcessId, bucketName);
-    }
-
-    private GcpAccessToken createBucketAccessToken(GcsBucket bucket, GcpServiceAccount serviceAccount) {
-        storageService.addProviderPermissions(bucket, serviceAccount);
-        return iamService.createAccessToken(serviceAccount);
-    }
-
-    private GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
-        return iamService.createAccessToken(serviceAccount);
-    }
-
-    private GcpAccessToken createAccessToken() {
-        return iamService.createDefaultAccessToken();
     }
 
     private GcsProvisionedResource getProvisionedResource(GcsResourceDefinition resourceDefinition, String resourceName, String bucketName, GcpServiceAccount serviceAccount) {
