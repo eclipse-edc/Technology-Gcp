@@ -15,6 +15,7 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.gcp.common.GcpAccessToken;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.gcp.common.GcsBucket;
@@ -44,13 +45,15 @@ class GcsProvisionerTest {
     private StorageService storageServiceMock;
     private IamService iamServiceMock;
     private Policy testPolicy;
+    private GcpConfiguration gcpConfiguration;
 
     @BeforeEach
     void setUp() {
         storageServiceMock = mock();
         iamServiceMock = mock();
+        gcpConfiguration = mock();
         testPolicy = Policy.Builder.newInstance().build();
-        provisioner = new GcsProvisioner(mock(Monitor.class), storageServiceMock, iamServiceMock);
+        provisioner = new GcsProvisioner(gcpConfiguration, mock(Monitor.class), storageServiceMock, iamServiceMock);
     }
 
     @Test
@@ -75,6 +78,8 @@ class GcsProvisionerTest {
         var bucket = new GcsBucket(bucketName);
         var serviceAccount = new GcpServiceAccount("test-sa", "sa-name", "description");
         var token = new GcpAccessToken("token", 123);
+
+        when(gcpConfiguration.getServiceAccountName()).thenReturn(null);
 
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
@@ -111,6 +116,8 @@ class GcsProvisionerTest {
         var bucket = new GcsBucket(bucketName);
         var bucketLocation = resourceDefinition.getLocation();
 
+        when(gcpConfiguration.getServiceAccountName()).thenReturn(serviceAccount.getName());
+
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
         when(iamServiceMock.getServiceAccount(serviceAccount.getName())).thenReturn(serviceAccount);
@@ -139,6 +146,7 @@ class GcsProvisionerTest {
         var bucketName = resourceDefinition.getId();
         var bucketLocation = resourceDefinition.getLocation();
 
+        when(gcpConfiguration.getServiceAccountName()).thenReturn(null);
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(new GcsBucket(bucketName));
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(false);
 
@@ -207,11 +215,11 @@ class GcsProvisionerTest {
                 .transferProcessId(transferProcessId).build();
     }
 
-    private GcsResourceDefinition createResourceDefinition(String id, String location, String storageClass, String transferProcessId, String serviceAccount) {
+    private GcsResourceDefinition createResourceDefinition(String id, String location, String storageClass, String transferProcessId, String serviceAccountName) {
         return GcsResourceDefinition.Builder.newInstance().id(id)
             .location(location).storageClass(storageClass)
             .transferProcessId(transferProcessId)
-            .serviceAccount(serviceAccount)
+            .serviceAccountName(serviceAccountName)
             .build();
     }
 

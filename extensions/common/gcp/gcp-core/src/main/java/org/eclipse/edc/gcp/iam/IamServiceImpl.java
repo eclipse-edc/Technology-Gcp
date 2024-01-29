@@ -16,12 +16,12 @@ package org.eclipse.edc.gcp.iam;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
+import com.google.api.services.iam.v2.IamScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
 import com.google.cloud.iam.credentials.v1.ServiceAccountName;
-import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Duration;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -29,13 +29,12 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class IamServiceImpl implements IamService {
-
-    private static final ImmutableList<String> OAUTH_SCOPE = ImmutableList.of("https://www.googleapis.com/auth/cloud-platform");
     private static final long ONE_HOUR_IN_S = TimeUnit.HOURS.toSeconds(1);
     private final Monitor monitor;
     private final String gcpProjectId;
@@ -66,20 +65,6 @@ public class IamServiceImpl implements IamService {
         }
     }
 
-    private GcpServiceAccount getServiceAccount(String serviceAccountName, String serviceAccountDescription) {
-        try (var client = iamClientSupplier.get()) {
-            var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpProjectId);
-            var name = ServiceAccountName.of(gcpProjectId, serviceAccountEmail).toString();
-            var response = client.getServiceAccount(name);
-            if (!response.getDescription().equals(serviceAccountDescription)) {
-                String errorMessage = "A service account with the same name but different description existed already. Please ensure a unique name is used for every transfer process";
-                monitor.severe(errorMessage);
-                throw new GcpException(errorMessage);
-            }
-            return new GcpServiceAccount(response.getEmail(), response.getName(), response.getDescription());
-        }
-    }
-
     @Override
     public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
         try (var iamCredentialsClient = iamCredentialsClientSupplier.get()) {
@@ -87,7 +72,7 @@ public class IamServiceImpl implements IamService {
             var lifetime = Duration.newBuilder().setSeconds(ONE_HOUR_IN_S).build();
             var request = GenerateAccessTokenRequest.newBuilder()
                     .setName(name.toString())
-                    .addAllScope(OAUTH_SCOPE)
+                    .addAllScope(Collections.singleton(IamScopes.CLOUD_PLATFORM))
                     .setLifetime(lifetime)
                     .build();
             var response = iamCredentialsClient.generateAccessToken(request);
@@ -183,7 +168,7 @@ public class IamServiceImpl implements IamService {
         @Override
         public GcpAccessToken getAccessToken() {
             try {
-                var credentials = GoogleCredentials.getApplicationDefault();
+                var credentials = GoogleCredentials.getApplicationDefault().createScoped(IamScopes.CLOUD_PLATFORM);
                 credentials.refreshIfExpired();
                 var token = credentials.getAccessToken();
                 return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());

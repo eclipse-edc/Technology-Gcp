@@ -23,7 +23,7 @@ public class GcsResourceDefinition extends ResourceDefinition {
     private String location;
     private String storageClass;
     private String bucketName;
-    private String serviceAccount;
+    private String serviceAccountName;
 
     private GcsResourceDefinition() {
     }
@@ -40,8 +40,8 @@ public class GcsResourceDefinition extends ResourceDefinition {
         return this.bucketName;
     }
 
-    public String getServiceAccount() {
-        return this.serviceAccount;
+    public String getServiceAccountName() {
+        return this.serviceAccountName;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class GcsResourceDefinition extends ResourceDefinition {
                 .location(location)
                 .storageClass(storageClass)
                 .bucketName(bucketName)
-                .serviceAccount(serviceAccount);
+                .serviceAccountName(serviceAccountName);
     }
 
     public static class Builder extends ResourceDefinition.Builder<GcsResourceDefinition, Builder> {
@@ -78,8 +78,8 @@ public class GcsResourceDefinition extends ResourceDefinition {
             return this;
         }
 
-        public Builder serviceAccount(String serviceAccount) {
-            resourceDefinition.serviceAccount = serviceAccount;
+        public Builder serviceAccountName(String serviceAccountName) {
+            resourceDefinition.serviceAccountName = serviceAccountName;
             return this;
         }
 

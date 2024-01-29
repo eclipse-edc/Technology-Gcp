@@ -21,6 +21,7 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.gcp.common.GcsBucket;
@@ -44,11 +45,13 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
     private final Monitor monitor;
     private final StorageService storageService;
     private final IamService iamService;
+    private final GcpConfiguration gcpConfiguration;
 
-    public GcsProvisioner(Monitor monitor, StorageService storageService, IamService iamService) {
+    public GcsProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, StorageService storageService, IamService iamService) {
         this.monitor = monitor;
         this.storageService = storageService;
         this.iamService = iamService;
+        this.gcpConfiguration = gcpConfiguration;
     }
 
     @Override
@@ -82,8 +85,9 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
             GcpServiceAccount serviceAccount = null;
             GcpAccessToken token = null;
 
-            if (resourceDefinition.getServiceAccount() != null) {
-                serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccount());
+            var serviceAccountName = getServiceAccountName(resourceDefinition);
+            if (serviceAccountName != null && !serviceAccountName.isEmpty()) {
+                serviceAccount = iamService.getServiceAccount(serviceAccountName);
                 token = createAccessToken(serviceAccount);
             } else {
                 serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
@@ -97,6 +101,15 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         } catch (GcpException gcpException) {
             return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));
         }
+    }
+
+    private String getServiceAccountName(GcsResourceDefinition resourceDefinition) {
+        if (resourceDefinition.getServiceAccountName() != null) {
+            // TODO verify service account name from resource definition before returning.
+            return resourceDefinition.getServiceAccountName();
+        }
+
+        return gcpConfiguration.getServiceAccountName();
     }
 
     @Override
