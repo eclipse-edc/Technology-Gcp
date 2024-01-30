@@ -19,9 +19,12 @@ plugins {
 dependencies {
     api(libs.edc.spi.core)
     implementation(libs.edc.util)
+    implementation(libs.failsafe.core)
+
     implementation(project(":extensions:common:gcp:gcp-core"))
 
-    implementation(libs.failsafe.core)
+    // GCP dependencies.
+    implementation(platform(libs.googlecloud.bom))
     implementation(libs.googlecloud.storage)
     implementation(libs.googlecloud.iam.admin)
     implementation(libs.googlecloud.iam.credentials)
