@@ -18,11 +18,14 @@ plugins {
 
 dependencies {
     api(libs.edc.spi.dataplane)
+    api(libs.edc.core.dataplane.util)
     implementation(libs.edc.util)
-    implementation(project(":extensions:common:gcp:gcp-core"))
-    implementation(libs.edc.core.dataplane.util)
     implementation(libs.edc.spi.validator)
 
+    implementation(project(":extensions:common:gcp:gcp-core"))
+
+    // GCP dependencies.
+    implementation(platform(libs.googlecloud.bom))
     implementation(libs.googlecloud.storage)
 
     testImplementation(libs.edc.core.dataplane)
