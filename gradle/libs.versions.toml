@@ -8,7 +8,7 @@ googleCloudBom = "26.30.0"
 googleApisIam = "v2-rev20240108-2.0.0"
 
 [libraries]
-assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
+assertj = { module = "org.assertj:assertj-core", version = "3.25.2" }
 edc-core-dataplane = { module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
 edc-core-dataplane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
 edc-junit = { module = "org.eclipse.edc:junit", version.ref = "edc" }
