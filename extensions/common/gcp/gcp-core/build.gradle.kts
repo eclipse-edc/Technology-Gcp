@@ -21,9 +21,13 @@ dependencies {
     api(libs.edc.spi.transfer)
     api(libs.edc.util)
 
+    // GCP dependencies.
+    implementation(platform(libs.googlecloud.bom))
     implementation(libs.googlecloud.iam.admin)
     implementation(libs.googlecloud.storage)
     implementation(libs.googlecloud.iam.credentials)
+    implementation(libs.googleapis.iam)
+
     testImplementation(libs.edc.junit)
 }
 

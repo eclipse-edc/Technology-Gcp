@@ -21,25 +21,20 @@ import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenResponse;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
-import com.google.iam.admin.v1.CreateServiceAccountRequest;
+import com.google.cloud.iam.credentials.v1.ServiceAccountName;
 import com.google.iam.admin.v1.ServiceAccount;
+import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.AdditionalMatchers.and;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class IamServiceImplTest {
@@ -51,53 +46,51 @@ class IamServiceImplTest {
     private IamService iamApi;
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
+
+    private AccessTokenProvider accessTokenProvider;
     private GcpServiceAccount testServiceAccount;
     private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
     @BeforeEach
     void setUp() {
-        var monitor = Mockito.mock(Monitor.class);
-        iamClient = Mockito.mock(IAMClient.class);
-        iamCredentialsClient = Mockito.mock(IamCredentialsClient.class);
+        var monitor = mock(Monitor.class);
+        iamClient = mock();
+        iamCredentialsClient = mock();
+        accessTokenProvider = mock();
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
         iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
+                .applicationDefaultCredentials(accessTokenProvider)
                 .build();
     }
 
     @Test
-    void testCreateServiceAccount() {
-        var serviceAccount = ServiceAccount.newBuilder().setEmail(serviceAccountEmail).build();
-        when(iamClient.createServiceAccount(any(CreateServiceAccountRequest.class))).thenReturn(serviceAccount);
+    void testGetServiceAccount() {
+        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
+        var serviceAccount = ServiceAccount.newBuilder()
+                .setEmail(serviceAccountEmail)
+                .setDescription(serviceAccountDescription)
+                .build();
+        when(iamClient.getServiceAccount(name)).thenReturn(serviceAccount);
 
-        GcpServiceAccount createdServiceAccount = iamApi.getOrCreateServiceAccount(serviceAccountName, serviceAccountDescription);
-
-        assertThat(createdServiceAccount.getEmail()).isEqualTo(serviceAccountEmail);
-        assertThat(createdServiceAccount.getDescription()).isEqualTo(serviceAccountDescription);
-    }
-
-    @Test
-    void testCreateServiceAccountThatExistsAlreadyWithMatchingDescription() {
-        var serviceAccount = ServiceAccount.newBuilder().setEmail(serviceAccountEmail).setDescription(serviceAccountDescription).build();
-        var createError = apiExceptionWithStatusCode(StatusCode.Code.ALREADY_EXISTS);
-        when(iamClient.createServiceAccount(any(CreateServiceAccountRequest.class))).thenThrow(createError);
-        when(iamClient.getServiceAccount(eq(iamServiceAccountName))).thenReturn(serviceAccount);
-
-        var createdServiceAccount = iamApi.getOrCreateServiceAccount(serviceAccountName, serviceAccountDescription);
+        var createdServiceAccount = iamApi.getServiceAccount(serviceAccountName);
 
         assertThat(createdServiceAccount.getEmail()).isEqualTo(serviceAccountEmail);
         assertThat(createdServiceAccount.getDescription()).isEqualTo(serviceAccountDescription);
     }
 
     @Test
-    void testCreateServiceAccountThatExistsAlreadyWithOtherDescription() {
-        var serviceAccount = ServiceAccount.newBuilder().setEmail(serviceAccountEmail).setDescription("some-other-description").build();
-        var createError = apiExceptionWithStatusCode(StatusCode.Code.ALREADY_EXISTS);
-        when(iamClient.createServiceAccount(any(CreateServiceAccountRequest.class))).thenThrow(createError);
-        when(iamClient.getServiceAccount(eq(iamServiceAccountName))).thenReturn(serviceAccount);
+    void testGetServiceAccountThatDoesntExist() {
+        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
+        var serviceAccount = ServiceAccount.newBuilder()
+                .setEmail(serviceAccountEmail)
+                .setDescription(serviceAccountDescription)
+                .build();
+        var getError = apiExceptionWithStatusCode(StatusCode.Code.NOT_FOUND);
+        when(iamClient.getServiceAccount(name)).thenThrow(getError);
 
-        assertThatThrownBy(() -> iamApi.getOrCreateServiceAccount(serviceAccountName, serviceAccountDescription)).isInstanceOf(GcpException.class);
+        assertThatThrownBy(() -> iamApi.getServiceAccount(serviceAccountName)).isInstanceOf(GcpException.class);
     }
 
     @Test
@@ -116,35 +109,22 @@ class IamServiceImplTest {
     }
 
     @Test
-    void testDeleteServiceAccount() {
-        var serviceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
-        doNothing().when(iamClient).deleteServiceAccount(serviceAccountName);
+    void testCreateDefaultAccessToken() {
+        var expectedTokenString = "test-access-token";
+        long timeout = 3600;
+        when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
-        iamApi.deleteServiceAccountIfExists(serviceAccount);
-
-        verify(iamClient, times(1)).deleteServiceAccount(iamServiceAccountName);
+        var accessToken = iamApi.createDefaultAccessToken();
+        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
+        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
     }
 
     @Test
-    void testDeleteServiceAccountThatAlreadyExistsSucceeds() {
-        var exception = apiExceptionWithStatusCode(StatusCode.Code.NOT_FOUND);
-        doThrow(exception)
-                .when(iamClient).deleteServiceAccount(serviceAccountName);
+    void testCreateDefaultAccessTokenError() {
+        when(accessTokenProvider.getAccessToken()).thenReturn(null);
 
-        iamApi.deleteServiceAccountIfExists(testServiceAccount);
-
-        verify(iamClient, times(1)).deleteServiceAccount(iamServiceAccountName);
-    }
-
-    @Test
-    void testDeleteServiceAccountFails() {
-        var exception = apiExceptionWithStatusCode(StatusCode.Code.INTERNAL);
-
-        doThrow(exception)
-                .when(iamClient).deleteServiceAccount(iamServiceAccountName);
-
-        assertThatThrownBy(() -> iamApi.deleteServiceAccountIfExists(testServiceAccount))
-                .isInstanceOf(GcpException.class);
+        var accessToken = iamApi.createDefaultAccessToken();
+        assertThat(accessToken).isNull();
     }
 
     private ApiException apiExceptionWithStatusCode(StatusCode.Code code) {

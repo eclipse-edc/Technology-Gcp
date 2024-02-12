@@ -41,9 +41,9 @@ public class GcpConfiguration {
 
     public GcpConfiguration(ServiceExtensionContext context) {
         projectId = context.getSetting(PROJECT_ID, ServiceOptions.getDefaultProjectId());
-        serviceAccountName = context.getSetting(SACCOUNT_NAME, "");
-        serviceAccountFile = context.getSetting(SACCOUNT_FILE, "");
-        universeDomain = context.getSetting(UNIVERSE_DOMAIN, "");
+        serviceAccountName = context.getSetting(SACCOUNT_NAME, null);
+        serviceAccountFile = context.getSetting(SACCOUNT_FILE, null);
+        universeDomain = context.getSetting(UNIVERSE_DOMAIN, null);
     }
 
     /**
