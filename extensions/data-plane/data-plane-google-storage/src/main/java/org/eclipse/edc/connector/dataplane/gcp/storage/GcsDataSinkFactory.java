@@ -31,7 +31,7 @@ import org.eclipse.edc.spi.result.Result;
 import org.eclipse.edc.spi.security.Vault;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
-import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
+import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.eclipse.edc.validator.spi.Validator;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,18 +56,18 @@ public class GcsDataSinkFactory implements DataSinkFactory {
     }
 
     @Override
-    public boolean canHandle(DataFlowRequest request) {
+    public boolean canHandle(DataFlowStartMessage request) {
         return GcsStoreSchema.TYPE.equals(request.getDestinationDataAddress().getType());
     }
 
     @Override
-    public @NotNull Result<Void> validateRequest(DataFlowRequest request) {
+    public @NotNull Result<Void> validateRequest(DataFlowStartMessage request) {
         var destination = request.getDestinationDataAddress();
         return validation.validate(destination).toResult();
     }
 
     @Override
-    public DataSink createSink(DataFlowRequest request) {
+    public DataSink createSink(DataFlowStartMessage request) {
         var validationResult = validateRequest(request);
         if (validationResult.failed()) {
             throw new EdcException(String.join(", ", validationResult.getFailureMessages()));
