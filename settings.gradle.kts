@@ -42,6 +42,7 @@ include(":extensions:common:vault:vault-gcp")
 
 // control plane extensions
 include(":extensions:control-plane:provision:provision-gcs")
+include(":extensions:control-plane:provision:provision-bigquery")
 
 // data plane extensions
 include(":extensions:data-plane:data-plane-google-storage")
