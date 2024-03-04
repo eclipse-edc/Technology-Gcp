@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *       ZF Friedrichshafen AG - improvements (refactoring of generate method)
  *       SAP SE - refactoring
  *

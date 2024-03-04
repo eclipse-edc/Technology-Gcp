@@ -191,6 +191,7 @@ public class BigQueryServiceImpl implements BigQueryService {
         }
     }
 
+    @Override
     public Stream<DataSource.Part> runSourceQuery(String query, DataAddress sinkAddress) throws InterruptedException {
         refreshBigQueryCredentials();
 
@@ -239,6 +240,7 @@ public class BigQueryServiceImpl implements BigQueryService {
                 future, new AppendCompleteCallback(), MoreExecutors.directExecutor());
     }
 
+    @Override
     public void runSinkQuery(List<DataSource.Part> parts) {
         if (parts.isEmpty()) {
             return;
@@ -313,6 +315,7 @@ public class BigQueryServiceImpl implements BigQueryService {
         }
     }
 
+    @Override
     public boolean tableExists(BigQueryTarget target) {
         try {
             var table = bigQuery.getTable(target.getTableId());
@@ -383,11 +386,13 @@ public class BigQueryServiceImpl implements BigQueryService {
             inflightRequestCount.register();
         }
 
+        @Override
         public void onSuccess(AppendRowsResponse response) {
             monitor.info("Json writer append success");
             inflightRequestCount.arriveAndDeregister();
         }
 
+        @Override
         public void onFailure(Throwable throwable) {
             monitor.severe("Json writer failed");
             inflightRequestCount.arriveAndDeregister();

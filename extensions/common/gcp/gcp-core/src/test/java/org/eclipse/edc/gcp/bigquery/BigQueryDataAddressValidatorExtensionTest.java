@@ -16,9 +16,7 @@ package org.eclipse.edc.gcp.bigquery;
 
 import org.eclipse.edc.junit.extensions.DependencyInjectionExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-// import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.validator.spi.DataAddressValidatorRegistry;
-// import org.eclipse.edc.validator.spi.ValidationResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,52 +52,4 @@ public class BigQueryDataAddressValidatorExtensionTest {
         verify(registry).registerDestinationValidator(eq(BigQueryService.BIGQUERY_DATA), isA(BigQuerySinkDataAddressValidator.class));
         verify(registry).registerSourceValidator(eq(BigQueryService.BIGQUERY_DATA), isA(BigQuerySourceDataAddressValidator.class));
     }
-
-    /*
-    @Test
-    void testExtensionShouldValidateWellFormedAddresses(BigQueryDataAddressValidatorExtension extension, ServiceExtensionContext context) {
-        extension.initialize(context);
-
-        var validSourceAddress = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.QUERY, TEST_QUERY)
-                .build();
-
-        // assertThat(registry.validateSource(validSourceAddress)).isEqualTo(ValidationResult.success());
-
-        var validSinkAddress = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .property(BigQueryService.TABLE, TEST_TABLE)
-                .build();
-
-        assertThat(registry.validateDestination(validSinkAddress)).isEqualTo(ValidationResult.success());
-    }
-
-    @Test
-    void testExtensionShouldNotValidateIncompleteAddresses(BigQueryDataAddressValidatorExtension extension, ServiceExtensionContext context) {
-        extension.initialize(context);
-
-        var invalidSourceAddressNoQuery = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.TABLE, TEST_TABLE)
-                .build();
-
-        assertThat(registry.validateSource(invalidSourceAddressNoQuery)).isNotEqualTo(ValidationResult.success());
-
-        var invalidSinkAddressNoTable = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .build();
-
-        assertThat(registry.validateDestination(invalidSinkAddressNoTable)).isNotEqualTo(ValidationResult.success());
-
-        var invalidSinkAddressNoDataset = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.TABLE, TEST_TABLE)
-                .build();
-
-        assertThat(registry.validateDestination(invalidSinkAddressNoDataset)).isNotEqualTo(ValidationResult.success());
-    }
-    */
 }
