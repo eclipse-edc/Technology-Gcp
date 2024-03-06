@@ -1,7 +1,8 @@
 # BigQuery support for EDC
 
-### Objective
-Support exchange of data to and from BigQuery tables.
+## Decision
+
+Add the BigQuery extensions to enable the transfer of data to and from BigQuery tables.
 
 ### Extensions
 * BigQueryDataAddressValidatorExtension (common): registers two validators, one for source data address and one for destination
@@ -18,6 +19,10 @@ Two solutions:
 ### Data Sink
 Destination data address defined by dataset and destination table. 
 Factory creates the sink which receives the JSON data from the source. Using the access token created by the provisioner the sink stores the data using the Storage Write API. In case data transfer fails, currently there is no retry, data is then not committed (i.e. treated as a transaction)
+
+### Notes
+
+Data plane signaling being updated, may need rework to cover consumer-pull use cases.
 
 ### Future Development
 - Support table name as source instead of query
