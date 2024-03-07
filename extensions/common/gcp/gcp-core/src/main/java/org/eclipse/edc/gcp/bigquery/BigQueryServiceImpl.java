@@ -23,6 +23,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldList;
@@ -30,6 +31,9 @@ import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryParameterValue;
+import com.google.cloud.bigquery.StandardSQLTypeName;
+import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.BatchCommitWriteStreamsRequest;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
@@ -48,9 +52,10 @@ import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +64,8 @@ import java.util.UUID;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+
+import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
 
 public class BigQueryServiceImpl implements BigQueryService {
     private final GcpConfiguration gcpConfiguration;
@@ -84,7 +91,7 @@ public class BigQueryServiceImpl implements BigQueryService {
         }
 
         if (credentials != null) {
-            monitor.info("BigQuery extension for project '" + project + "' using provided credentials");
+            monitor.debug("BigQuery Service for project '" + project + "' using provided credentials");
             return;
         }
 
@@ -93,12 +100,12 @@ public class BigQueryServiceImpl implements BigQueryService {
         sourceCredentials.refreshIfExpired();
 
         if (serviceAccountName == null) {
-            monitor.info("BigQuery extension for project '" + project + "' using ADC, NOT RECOMMENDED");
+            monitor.warning("BigQuery Service for project '" + project + "' using ADC, NOT RECOMMENDED");
             credentials = sourceCredentials;
             return;
         }
 
-        monitor.info("BigQuery extension for project '" + project + "' using service account '" + serviceAccountName + "'");
+        monitor.debug("BigQuery Service for project '" + project + "' using service account '" + serviceAccountName + "'");
         credentials = ImpersonatedCredentials.create(
                 sourceCredentials,
                 serviceAccountName,
@@ -109,8 +116,8 @@ public class BigQueryServiceImpl implements BigQueryService {
 
     private void checkStreamWriter()
         throws DescriptorValidationException, IOException, InterruptedException {
-        monitor.info("BigQuery creating stream writer in pending mode for table " + target.getTableName().toString());
         if (streamWriter == null) {
+            monitor.debug("BigQuery Sink creating stream writer in pending mode for table " + target.getTableName().toString());
             var stream = WriteStream.newBuilder().setType(WriteStream.Type.PENDING).build();
 
             var createWriteStreamRequest =
@@ -130,7 +137,7 @@ public class BigQueryServiceImpl implements BigQueryService {
 
         if (streamWriter.isClosed()) {
             // TODO re-create the writer for a maximum, specified number of times.
-            monitor.info("BigQuery stream writer closed, recreating it for stream " + streamWriter.getStreamName());
+            monitor.info("BigQuery Sink stream writer closed, recreating it for stream " + streamWriter.getStreamName());
             var builder = JsonStreamWriter.newBuilder(streamWriter.getStreamName(), writeClient);
             if (credentials != null) {
                 builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
@@ -187,7 +194,35 @@ public class BigQueryServiceImpl implements BigQueryService {
             // TODO check margin and refresh if too close to expire.
             ((OAuth2Credentials) credentials).refreshIfExpired();
         } catch (IOException ioException) {
-            monitor.warning("Cannot refresh BigQuery credentials", ioException);
+            monitor.warning("BigQuery Service cannot refresh credentials", ioException);
+        }
+    }
+
+    private void outputPage(OutputStream outputStream, TableResult tableResult) throws IOException {
+        var page = new JSONArray();
+
+        tableResult.getValues()
+                .forEach(row -> page.put(buildRecord(tableResult.getSchema().getFields(), row)));
+
+        outputStream.write(page.toString().getBytes());
+    }
+
+    private void setNamedParameters(QueryJobConfiguration.Builder queryConfigBuilder, DataAddress sinkAddress) {
+        var prefix = EDC_NAMESPACE + '@';
+        for (var key : sinkAddress.getProperties().keySet()) {
+            if (key.startsWith(prefix)) {
+                key = key.substring(EDC_NAMESPACE.length());
+
+                var value = sinkAddress.getStringProperty(key);
+                key = key.substring(1);
+                int separatorIndex = key.indexOf("_");
+                if (separatorIndex != -1) {
+                    var type = key.substring(0, separatorIndex);
+                    key = key.substring(separatorIndex + 1);
+                    var sqlValue = QueryParameterValue.of(value, StandardSQLTypeName.valueOf(type));
+                    queryConfigBuilder.addNamedParameter(key, sqlValue);
+                }
+            }
         }
     }
 
@@ -201,43 +236,92 @@ public class BigQueryServiceImpl implements BigQueryService {
             queryConfigBuilder.setLabels(ImmutableMap.of("customer", customerName));
         }
 
+        setNamedParameters(queryConfigBuilder, sinkAddress);
+
         // Use standard SQL syntax for queries.
         // See: https://cloud.google.com/bigquery/sql-reference/
         var queryConfig = queryConfigBuilder
                 .setUseLegacySql(false)
+                .setUseQueryCache(true)
                 .build();
 
         var jobId = JobId.of(UUID.randomUUID().toString());
-        var queryJob = bigQuery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
+        var jobInfo = JobInfo.newBuilder(queryConfig).setJobId(jobId).build();
+        final var queryJob = bigQuery.create(jobInfo);
 
-        queryJob = queryJob.waitFor();
-
-        if (queryJob == null) {
-            throw new GcpException("Job no longer exists");
-        } else if (queryJob.getStatus().getError() != null) {
-            // Another way is invoking queryJob.getStatus().getExecutionErrors()
-            // to get all errors.
-            throw new GcpException(queryJob.getStatus().getError().toString());
-        }
-
-        var schema = queryJob.getQueryResults().getSchema();
-        var partArray = new JSONArray();
         var parts = new ArrayList<DataSource.Part>();
-        for (FieldValueList row : queryJob.getQueryResults().iterateAll()) {
-            partArray.put(buildRecord(schema.getFields(), row));
-        }
-        parts.add(new BigQueryPart("allRows", new ByteArrayInputStream(
-                partArray.toString().getBytes())));
+        // The output stream object is passed to the thread lambda, do not use try with resources.
+        final var outputStream = new PipedOutputStream();
+        try {
+            // The input stream object is passed to the sink thread, do not use try with resources.
+            var inputStream = new PipedInputStream(outputStream);
+            parts.add(new BigQueryPart("allRows", inputStream));
 
-        return parts.stream();
+            new Thread(() -> {
+                try {
+                    // TODO set the page size as optional parameter.
+                    var paginatedResults = queryJob.getQueryResults(
+                            QueryResultsOption.pageSize(4));
+                    outputPage(outputStream, paginatedResults);
+
+                    while (paginatedResults.hasNextPage()) {
+                        paginatedResults = paginatedResults.getNextPage();
+                        outputPage(outputStream, paginatedResults);
+                    }
+
+                } catch (IOException | InterruptedException exception) {
+                    monitor.severe("BigQuery Source exception while sourcing", exception);
+                } finally {
+                    try {
+                        outputStream.close();
+                        monitor.debug("BigQuery Source output stream closed");
+                    } catch (IOException ioException) {
+                        monitor.severe("BigQuery Source exception closing the output stream", ioException);
+                    }
+                }
+            }).start();
+
+            return parts.stream();
+        } catch (IOException ioException) {
+            throw new GcpException(ioException);
+        }
     }
 
-    private void append(JSONArray data)
+    private void append(CircularBuffer buffer)
         throws DescriptorValidationException, IOException, InterruptedException {
-        checkStreamWriter();
-        ApiFuture<AppendRowsResponse> future = streamWriter.append(data);
-        ApiFutures.addCallback(
-                future, new AppendCompleteCallback(), MoreExecutors.directExecutor());
+        while (buffer.getAvailableReadCount() > 0) {
+            var content = buffer.getString();
+            if (!content.startsWith("[")) {
+                throw new IOException("BigQuery Sink invalid JSON Array '" + content + "'");
+            }
+
+            int endIndex = content.indexOf(']');
+            if (endIndex != -1) {
+                var pageString = content.substring(0, endIndex + 1);
+                var page = new JSONArray(pageString);
+                // TODO re-try the append operation for a maximum, specified number of times.
+                checkStreamWriter();
+                ApiFuture<AppendRowsResponse> future = streamWriter.append(page);
+                ApiFutures.addCallback(
+                        future, new AppendCompleteCallback(), MoreExecutors.directExecutor());
+
+                buffer.read(pageString.length());
+            } else {
+                return;
+            }
+        }
+    }
+
+    private boolean closeStream() {
+        try {
+            checkStreamWriter();
+            streamWriter.close();
+            return true;
+        } catch (IOException | InterruptedException | DescriptorValidationException exception) {
+            monitor.severe("BigQuery Sink error while closing the stream writer", exception);
+        }
+
+        return false;
     }
 
     @Override
@@ -246,35 +330,52 @@ public class BigQueryServiceImpl implements BigQueryService {
             return;
         }
 
+        CircularBuffer buffer = new CircularBuffer(16384);
         var errorWhileAppending = false;
         for (var part : parts) {
+            buffer.reset();
             try (var inputStream = part.openStream()) {
-                var text = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                // TODO re-try the append operation for a maximum, specified number of times.
-                append(new JSONArray(text));
-            } catch (IOException ioException) {
+                boolean done = false;
+                while (!done) {
+                    var available = buffer.getAvailableWriteCount();
+                    var dataRead = inputStream.read(buffer.getBuffer(), buffer.getWriteOffset(), available);
+                    if (dataRead > 0) {
+                        buffer.write(dataRead);
+                        append(buffer);
+                    } else if (dataRead == -1) {
+                        done = true;
+                    } else if (dataRead == 0) {
+                        done = true;
+                        errorWhileAppending = true;
+                        monitor.severe("BigQuery Sink input buffer full");
+                    }
+                }
+
+                append(buffer);
+
+                if (buffer.getAvailableReadCount() > 0) {
+                    // There are leftover, means some data has not been parsed.
+                    errorWhileAppending = true;
+                    monitor.severe("BigQuery Sink cannot parse whole input data, remaining " + buffer.getAvailableReadCount());
+                }
+
+            } catch (IOException | InterruptedException | DescriptorValidationException exception) {
                 errorWhileAppending = true;
-                monitor.severe("BigQuery error while appending", ioException);
-                break;
-            } catch (InterruptedException interruptedException) {
-                errorWhileAppending = true;
-                monitor.severe("BigQuery error while appending", interruptedException);
-                break;
-            } catch (DescriptorValidationException descriptorValidationException) {
-                errorWhileAppending = true;
-                monitor.severe("BigQuery error while appending", descriptorValidationException);
+                monitor.severe("BigQuery Sink error while appending", exception);
                 break;
             }
         }
 
         inflightRequestCount.arriveAndAwaitAdvance();
-        streamWriter.close();
+        closeStream();
 
-        monitor.info("BigQuery requests arrived, stream " + streamWriter.getStreamName() + " for table " + target.getTableName().toString() + " closed, now finalizing..");
+        monitor.debug("BigQuery Sink requests arrived, stream " + streamWriter.getStreamName() + " for table " + target.getTableName().toString() + " closed, now finalizing..");
         var finalizeResponse =
                 writeClient.finalizeWriteStream(streamWriter.getStreamName());
-        monitor.info("BigQuery rows written: " + finalizeResponse.getRowCount());
+        monitor.debug("BigQuery Sink rows written: " + finalizeResponse.getRowCount());
 
+        // Commit the data stream received only if the stream writer succeeded (transaction).
+        // TODO support option to enable commit even if the stream writer failed.
         if (!errorWhileAppending) {
             var commitRequest =
                     BatchCommitWriteStreamsRequest.newBuilder()
@@ -287,13 +388,13 @@ public class BigQueryServiceImpl implements BigQueryService {
                 var errorLogged = false;
                 for (var err : commitResponse.getStreamErrorsList()) {
                     errorLogged = true;
-                    monitor.severe("BigQuery error while committing the streams " + err.getErrorMessage());
+                    monitor.severe("BigQuery Sink error while committing the streams " + err.getErrorMessage());
                 }
                 if (!errorLogged) {
-                    monitor.severe("BigQuery error while committing the streams");
+                    monitor.severe("BigQuery Sink error while committing the streams");
                 }
             } else {
-                monitor.info("BigQuery records committed successfully, write client shutting down...");
+                monitor.debug("BigQuery Sink records committed successfully, write client shutting down...");
             }
         }
         writeClient.shutdownNow();
@@ -303,15 +404,15 @@ public class BigQueryServiceImpl implements BigQueryService {
             try {
                 terminated = writeClient.awaitTermination(2, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) {
-                monitor.info("BigQuery write client shut down (interrupted)");
+                monitor.warning("BigQuery Sink write client shut down (interrupted)");
             }
             waitIterationCount++;
         } while (!terminated && waitIterationCount < 3);
 
         if (terminated) {
-            monitor.info("BigQuery write client shut down");
+            monitor.info("BigQuery Sink write client shut down");
         } else {
-            monitor.warning("BigQuery write client NOT shut down after timeout");
+            monitor.warning("BigQuery Sink write client NOT shut down after timeout");
         }
     }
 
@@ -388,15 +489,106 @@ public class BigQueryServiceImpl implements BigQueryService {
 
         @Override
         public void onSuccess(AppendRowsResponse response) {
-            monitor.info("Json writer append success");
             inflightRequestCount.arriveAndDeregister();
         }
 
         @Override
         public void onFailure(Throwable throwable) {
-            monitor.severe("Json writer failed");
+            monitor.severe("BigQuery Json writer failed", throwable);
             inflightRequestCount.arriveAndDeregister();
             // TODO retry the append operation for a maximum, specified number of times.
+        }
+    }
+
+    static class CircularBuffer {
+        private byte[] buffer;
+        private int writeOffset;
+        private int readOffset;
+
+        CircularBuffer(int size) {
+            buffer = new byte[size];
+            reset();
+        }
+
+        void reset() {
+            writeOffset = 0;
+            readOffset = 0;
+        }
+
+        byte[] getBuffer() {
+            return buffer;
+        }
+
+        int getWriteOffset() {
+            return writeOffset;
+        }
+
+        int getReadOffset() {
+            return readOffset;
+        }
+
+        int getAvailableWriteCount() {
+            if (writeOffset >= readOffset) {
+                if (readOffset == 0) {
+                    // Avoid filling the whole buffer, otherwise readOffset == writeOffset and read size == 0.
+                    return buffer.length - writeOffset - 1;
+                } else {
+                    return buffer.length - writeOffset;
+                }
+            }
+
+            // Avoid filling the whole buffer, otherwise readOffset == writeOffset and read size == 0.
+            return readOffset - writeOffset - 1;
+        }
+
+        int getAvailableReadCount() {
+            if (readOffset <= writeOffset) {
+                return writeOffset - readOffset;
+            }
+
+            return (buffer.length - readOffset) + writeOffset;
+        }
+
+        void write(int size) {
+            if (size > getAvailableWriteCount()) {
+                throw new GcpException("BigQuery buffer cannot write " + size + " bytes, max count is " + getAvailableWriteCount());
+            }
+
+            writeOffset += size;
+            while (writeOffset >= buffer.length) {
+                writeOffset -= buffer.length;
+            }
+        }
+
+        void read(int size) {
+            if (size > getAvailableReadCount()) {
+                throw new GcpException("BigQuery buffer cannot read " + size + " bytes, max count is " + getAvailableReadCount());
+            }
+
+            readOffset += size;
+            while (readOffset >= buffer.length) {
+                readOffset -= buffer.length;
+            }
+        }
+
+        String getString1() {
+            if (readOffset <= writeOffset) {
+                return new String(buffer, readOffset, writeOffset - readOffset);
+            }
+
+            return new String(buffer, readOffset, buffer.length - readOffset);
+        }
+
+        String getString2() {
+            if (readOffset <= writeOffset) {
+                return new String("");
+            }
+
+            return new String(buffer, 0, writeOffset);
+        }
+
+        String getString() {
+            return getString1() + getString2();
         }
     }
 }

@@ -17,6 +17,7 @@ package org.eclipse.edc.gcp.bigquery;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Field;
 import com.google.cloud.bigquery.FieldList;
@@ -39,6 +40,7 @@ import com.google.cloud.bigquery.storage.v1.JsonStreamWriter;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource.Part;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
+import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
@@ -52,6 +54,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -59,6 +62,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.eclipse.edc.gcp.bigquery.Asserts.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -92,6 +96,7 @@ class BigQueryServiceImplTest {
             FieldValue.of(Attribute.PRIMITIVE, "true")
     );
     private final BigQueryTarget target = new BigQueryTarget(TEST_PROJECT, TEST_DATASET, TEST_TABLE);
+    private Random random;
     private BigQueryServiceImpl bigQueryService;
     private Monitor monitor = mock();
     private GcpConfiguration gcpConfiguration = mock();
@@ -116,6 +121,9 @@ class BigQueryServiceImplTest {
             .writeClient(writeClient)
             .streamWriter(streamWriter)
             .build();
+
+        // New seed for each test.
+        random = new Random();
     }
 
     @Test
@@ -132,6 +140,24 @@ class BigQueryServiceImplTest {
         when(bigQuery.getTable(target.getTableId())).thenReturn(table);
 
         assertThat(bigQueryService.tableExists(target)).isFalse();
+    }
+
+    private JSONObject buildRecord(List<Field> fields, List<FieldValue> values) {
+        var record = new JSONObject();
+        for (var i = 0; i < fields.size(); i++) {
+            record.put(fields.get(i).getName(), values.get(i).getValue());
+        }
+
+        return record;
+    }
+
+    private BigQueryPart getPart(List<Field> fieldList, List<List<FieldValue>> fieldValueLists) {
+        var array = new JSONArray();
+        for (var row : fieldValueLists) {
+            array.put(buildRecord(fieldList, row));
+        }
+        return new BigQueryPart("allRows", new ByteArrayInputStream(
+            array.toString().getBytes()));
     }
 
     private void testRunSinkQuery(boolean succeeds) throws DescriptorValidationException, IOException, InterruptedException, ExecutionException, TimeoutException {
@@ -200,11 +226,11 @@ class BigQueryServiceImplTest {
         var jobStatus = mock(JobStatus.class);
 
         when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
-
-        when(queryJob.getQueryResults()).thenReturn(tableResult);
+        when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenReturn(tableResult);
         when(tableResult.getSchema()).thenReturn(schema);
+        when(tableResult.hasNextPage()).thenReturn(false);
         when(schema.getFields()).thenReturn(FieldList.of(TEST_FIELDS));
-        when(tableResult.iterateAll()).thenReturn(Arrays.asList(
+        when(tableResult.getValues()).thenReturn(Arrays.asList(
                 FieldValueList.of(TEST_ROW_1),
                 FieldValueList.of(TEST_ROW_2)
         ));
@@ -216,7 +242,6 @@ class BigQueryServiceImplTest {
         when(options.getCredentials()).thenReturn(credentials);
         when(credentials.getAccessToken()).thenReturn(null);
 
-        when(queryJob.waitFor()).thenReturn(queryJob);
         when(queryJob.getStatus()).thenReturn(jobStatus);
         when(jobStatus.getError()).thenReturn(null);
 
@@ -224,14 +249,13 @@ class BigQueryServiceImplTest {
 
         verify(credentials).refreshIfExpired();
         verify(bigQuery).create(any(JobInfo.class));
-        verify(queryJob).waitFor();
 
         var rows = Arrays.asList(TEST_ROW_1, TEST_ROW_2);
         var expectedParts = Arrays.asList(getPart(TEST_FIELDS, rows));
 
         var receivedList = receivedParts.toList();
         assertThat(receivedList.size()).isEqualTo(expectedParts.size());
-        for (int i = 0; i < receivedList.size(); i++) {
+        for (var i = 0; i < receivedList.size(); i++) {
             assertThat(receivedList.get(i)).isEqualTo(expectedParts.get(i));
         }
     }
@@ -246,21 +270,95 @@ class BigQueryServiceImplTest {
         testRunSourceQuery("StandardSink");
     }
 
-    private JSONObject buildRecord(List<Field> fields, List<FieldValue> values) {
-        var record = new JSONObject();
-        for (int i = 0; i < fields.size(); i++) {
-            record.put(fields.get(i).getName(), values.get(i).getValue());
-        }
+    @Test
+    void testCircularBufferWithContent() {
+        var buffer = new BigQueryServiceImpl.CircularBuffer(256);
 
-        return record;
+        for (var i = 0; i < 1000; ++i) {
+            var availableWriteCount = buffer.getAvailableWriteCount();
+            var stringLength = Math.min(availableWriteCount, 37);
+
+            var generatedString = random.ints(32, 126 + 1)
+                    .limit(stringLength)
+                    .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                    .toString();
+
+            System.arraycopy(generatedString.getBytes(), 0, buffer.getBuffer(), buffer.getWriteOffset(), generatedString.length());
+            buffer.write(generatedString.length());
+
+            var availableReadCount = buffer.getAvailableReadCount();
+            assertThat(availableReadCount).isEqualTo(generatedString.length());
+
+            var fetchedString = new String(buffer.getBuffer(), buffer.getReadOffset(), availableReadCount);
+            assertThat(fetchedString).isEqualTo(generatedString);
+
+            buffer.read(fetchedString.length());
+        }
     }
 
-    private BigQueryPart getPart(List<Field> fieldList, List<List<FieldValue>> fieldValueLists) {
-        var array = new JSONArray();
-        for (var row : fieldValueLists) {
-            array.put(buildRecord(fieldList, row));
+    @Test
+    void testCircularBufferWithoutContent() {
+        var buffer = new BigQueryServiceImpl.CircularBuffer(256);
+        var min = 13;
+
+        for (var i = 0; i < 1000; ++i) {
+            var availableWriteCount = buffer.getAvailableWriteCount();
+
+            var randomCount = min + Math.abs(random.nextInt(123));
+            var used = Math.min(availableWriteCount, randomCount);
+            buffer.write(used);
+            var availableReadCount = buffer.getAvailableReadCount();
+            assertThat(availableReadCount).isEqualTo(used);
+            buffer.read(availableReadCount);
         }
-        return new BigQueryPart("allRows", new ByteArrayInputStream(
-            array.toString().getBytes()));
+    }
+
+    @Test
+    void testCircularBufferWithoutContentMultipleWrite() {
+        var buffer = new BigQueryServiceImpl.CircularBuffer(256);
+        var min = 13;
+
+        for (var i = 0; i < 1000; ++i) {
+            var sum = 0;
+            var writeCount = 1 + Math.abs(random.nextInt(7));
+
+            for (var j = 0; j < writeCount; ++j) {
+                var availableWriteCount = buffer.getAvailableWriteCount();
+                var randomCount = min + Math.abs(random.nextInt(31));
+                var used = Math.min(availableWriteCount, randomCount);
+
+                buffer.write(used);
+                sum += used;
+            }
+
+            var availableReadCount = buffer.getAvailableReadCount();
+            assertThat(availableReadCount).isEqualTo(sum);
+            buffer.read(availableReadCount);
+        }
+    }
+
+    @Test
+    void testCircularBufferFails() {
+        for (var i = 0; i < 4; ++i) {
+            var size = 16 + Math.abs(random.nextInt(32768));
+            var buffer = new BigQueryServiceImpl.CircularBuffer(size);
+
+            var readException = assertThrows(GcpException.class, () -> buffer.read(1));
+            assertThat(readException.getMessage()).isEqualTo("BigQuery buffer cannot read 1 bytes, max count is 0");
+
+            var maxWrite = buffer.getAvailableWriteCount();
+            assertThat(maxWrite).isEqualTo(size - 1);
+
+            var writeException = assertThrows(GcpException.class, () -> buffer.write(maxWrite + 1));
+            assertThat(writeException.getMessage()).isEqualTo("BigQuery buffer cannot write " + (maxWrite + 1) + " bytes, max count is " + maxWrite);
+
+            var writeCount = maxWrite / 3;
+            buffer.write(writeCount);
+
+            var maxRead = buffer.getAvailableReadCount();
+            assertThat(maxRead).isEqualTo(writeCount);
+            readException = assertThrows(GcpException.class, () -> buffer.read(maxRead + 1));
+            assertThat(readException.getMessage()).isEqualTo("BigQuery buffer cannot read " + (maxRead + 1) + " bytes, max count is " + maxRead);
+        }
     }
 }

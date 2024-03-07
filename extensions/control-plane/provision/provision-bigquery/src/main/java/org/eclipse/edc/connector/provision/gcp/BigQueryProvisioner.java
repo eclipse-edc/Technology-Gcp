@@ -42,13 +42,11 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefinition, BigQueryProvisionedResource> {
     private final GcpConfiguration gcpConfiguration;
     private final Monitor monitor;
-    private final IamService iamService;
     private final TypeManager typeManager;
     private BigQueryService bigQueryService;
 
-    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, IamService iamService, TypeManager typeManager) {
+    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
         this.monitor = monitor;
-        this.iamService = iamService;
         this.gcpConfiguration = gcpConfiguration;
         this.typeManager = typeManager;
     }
@@ -68,6 +66,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             BigQueryResourceDefinition resourceDefinition, Policy policy) {
         var target = getTarget(resourceDefinition);
         monitor.info("BigQuery Provisioner provision " + target.getTableName());
+        // TODO check if injected IAM service can be used (ADC / refresher).
         var bqIamService = getIamService(resourceDefinition);
         var serviceAccountName = getServiceAccountName(resourceDefinition);
 
@@ -177,12 +176,12 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     public static class Builder {
         private final BigQueryProvisioner bqProvisioner;
 
-        public static Builder newInstance(GcpConfiguration gcpConfiguration, Monitor monitor, IamService iamService, TypeManager typeManager) {
-            return new Builder(gcpConfiguration, monitor, iamService, typeManager);
+        public static Builder newInstance(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
+            return new Builder(gcpConfiguration, monitor, typeManager);
         }
 
-        private Builder(GcpConfiguration gcpConfiguration, Monitor monitor, IamService iamService, TypeManager typeManager) {
-            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor, iamService, typeManager);
+        private Builder(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
+            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor, typeManager);
         }
 
         public Builder bigQueryService(BigQueryService bigQueryService) {

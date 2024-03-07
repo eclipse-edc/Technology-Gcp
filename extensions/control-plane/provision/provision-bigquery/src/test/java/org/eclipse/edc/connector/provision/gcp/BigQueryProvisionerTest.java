@@ -20,7 +20,6 @@ import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryService;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
-import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.types.TypeManager;
@@ -48,7 +47,6 @@ class BigQueryProvisionerTest {
     private BigQueryProvisioner bigQueryProvisioner;
     private Monitor monitor = mock();
     private GcpConfiguration gcpConfiguration = mock();
-    private IamService iamService = mock();
     private BigQueryService bigQueryService = mock();
     private TypeManager typeManager = mock();
 
@@ -56,14 +54,12 @@ class BigQueryProvisionerTest {
     void setUp() {
         reset(gcpConfiguration);
         reset(monitor);
-        reset(iamService);
         reset(bigQueryService);
         reset(typeManager);
 
         when(typeManager.getMapper()).thenReturn(objectMapper);
 
-        bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor,
-                iamService, typeManager)
+        bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
             .bigQueryService(bigQueryService)
             .build();
     }
