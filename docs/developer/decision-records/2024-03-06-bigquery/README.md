@@ -4,6 +4,12 @@
 
 Add the BigQuery extensions to enable the transfer of data to and from BigQuery tables.
 
+## Rationale
+
+BigQuery is a widely adopted enterprise data warehouse, adding support for this service extends the use-cases covered by GCP extensions.
+
+## Approach
+
 ### Extensions
 * BigQueryDataAddressValidatorExtension (common): registers two validators, one for source data address and one for destination
 * BigQueryProvisionExtension (control plane): registers the provisioner for BigQuery. Currently only checks that destination table exists and provides access token to the sink in the data plane
