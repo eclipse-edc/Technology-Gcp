@@ -581,7 +581,7 @@ public class BigQueryServiceImpl implements BigQueryService {
 
         String getString2() {
             if (readOffset <= writeOffset) {
-                return new String("");
+                return "";
             }
 
             return new String(buffer, 0, writeOffset);
