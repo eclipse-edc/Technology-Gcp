@@ -20,7 +20,19 @@ maven/mavencentral/com.google.android/annotations/4.1.1.4, Apache-2.0, approved,
 maven/mavencentral/com.google.api-client/google-api-client/2.2.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api-client/google-api-client/2.3.0, Apache-2.0 AND BSD-3-Clause, approved, #13411
 maven/mavencentral/com.google.api.grpc/gapic-google-cloud-storage-v2/2.34.0-alpha, Apache-2.0, approved, #13418
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1/3.1.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1/3.2.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1beta1/0.173.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1beta1/0.174.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1beta2/0.173.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/grpc-google-cloud-bigquerystorage-v1beta2/0.174.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api.grpc/grpc-google-cloud-storage-v2/2.34.0-alpha, Apache-2.0, approved, #13434
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1/3.1.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1/3.2.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1beta1/0.173.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1beta1/0.174.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1beta2/0.173.0, , restricted, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-cloud-bigquerystorage-v1beta2/0.174.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-iamcredentials-v1/2.36.0, Apache-2.0, approved, #13435
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1/2.36.0, Apache-2.0, approved, #13395
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1beta1/2.36.0, Apache-2.0, approved, #13409
@@ -32,11 +44,16 @@ maven/mavencentral/com.google.api/api-common/2.26.0, BSD-3-Clause, approved, #13
 maven/mavencentral/com.google.api/gax-grpc/2.43.0, BSD-3-Clause, approved, #13436
 maven/mavencentral/com.google.api/gax-httpjson/2.43.0, BSD-3-Clause, approved, #13396
 maven/mavencentral/com.google.api/gax/2.43.0, BSD-3-Clause, approved, #13405
+maven/mavencentral/com.google.apis/google-api-services-bigquery/v2-rev20240203-2.0.0, , restricted, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-iam/v2-rev20240108-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-storage/v1-rev20240209-2.0.0, Apache-2.0, approved, #13416
 maven/mavencentral/com.google.auth/google-auth-library-credentials/1.23.0, BSD-3-Clause, approved, #13420
 maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.23.0, BSD-3-Clause, approved, #13437
 maven/mavencentral/com.google.auto.value/auto-value-annotations/1.10.4, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.auto.value/auto-value/1.10.4, Apache-2.0, approved, #8470
+maven/mavencentral/com.google.cloud/google-cloud-bigquery/2.37.2, , restricted, clearlydefined
+maven/mavencentral/com.google.cloud/google-cloud-bigquerystorage/3.1.0, , restricted, clearlydefined
+maven/mavencentral/com.google.cloud/google-cloud-bigquerystorage/3.2.0, , restricted, clearlydefined
 maven/mavencentral/com.google.cloud/google-cloud-core-grpc/2.33.0, Apache-2.0, approved, #13408
 maven/mavencentral/com.google.cloud/google-cloud-core-http/2.33.0, Apache-2.0, approved, #13439
 maven/mavencentral/com.google.cloud/google-cloud-core/2.33.0, Apache-2.0, approved, #13406
@@ -55,6 +72,7 @@ maven/mavencentral/com.google.errorprone/error_prone_annotations/2.21.1, Apache-
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.22.0, Apache-2.0, approved, #10661
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.23.0, Apache-2.0, approved, #11083
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.24.1, Apache-2.0, approved, #12448
+maven/mavencentral/com.google.flatbuffers/flatbuffers-java/23.5.26, Apache-2.0, approved, #12857
 maven/mavencentral/com.google.guava/failureaccess/1.0.1, Apache-2.0, approved, CQ22654
 maven/mavencentral/com.google.guava/failureaccess/1.0.2, Apache-2.0, approved, CQ22654
 maven/mavencentral/com.google.guava/guava/29.0-android, Apache-2.0, approved, clearlydefined
@@ -115,6 +133,8 @@ maven/mavencentral/io.grpc/grpc-services/1.61.1, Apache-2.0, approved, #13397
 maven/mavencentral/io.grpc/grpc-stub/1.61.1, Apache-2.0, approved, #13398
 maven/mavencentral/io.grpc/grpc-util/1.61.1, Apache-2.0, approved, #13428
 maven/mavencentral/io.grpc/grpc-xds/1.61.1, Apache-2.0, approved, #13424
+maven/mavencentral/io.netty/netty-buffer/4.1.104.Final, Apache-2.0, approved, CQ21842
+maven/mavencentral/io.netty/netty-common/4.1.104.Final, Apache-2.0 AND MIT AND CC0-1.0, approved, CQ21843
 maven/mavencentral/io.opencensus/opencensus-api/0.31.1, Apache-2.0, approved, clearlydefined
 maven/mavencentral/io.opencensus/opencensus-contrib-http-util/0.31.1, Apache-2.0, approved, clearlydefined
 maven/mavencentral/io.opencensus/opencensus-proto/0.2.0, Apache-2.0, approved, clearlydefined
@@ -138,6 +158,10 @@ maven/mavencentral/net.bytebuddy/byte-buddy/1.14.12, Apache-2.0 AND BSD-3-Clause
 maven/mavencentral/net.java.dev.jna/jna/5.13.0, Apache-2.0 AND LGPL-2.1-or-later, approved, #6709
 maven/mavencentral/net.sf.saxon/Saxon-HE/12.4, MPL-2.0 AND (MPL-2.0 AND Apache-2.0) AND (MPL-2.0 AND LicenseRef-X11-style) AND MPL-1.0 AND W3C, approved, #12716
 maven/mavencentral/org.antlr/antlr4-runtime/4.13.1, BSD-3-Clause, approved, #10767
+maven/mavencentral/org.apache.arrow/arrow-format/15.0.0, Apache-2.0, approved, #12854
+maven/mavencentral/org.apache.arrow/arrow-memory-core/15.0.0, Apache-2.0, approved, #12855
+maven/mavencentral/org.apache.arrow/arrow-memory-netty/15.0.0, Apache-2.0, approved, #12853
+maven/mavencentral/org.apache.arrow/arrow-vector/15.0.0, Apache-2.0 AND (Apache-2.0 AND FTL), approved, #12856
 maven/mavencentral/org.apache.commons/commons-compress/1.24.0, Apache-2.0 AND BSD-3-Clause AND bzip2-1.0.6 AND LicenseRef-Public-Domain, approved, #10368
 maven/mavencentral/org.apache.commons/commons-lang3/3.7, Apache-2.0, approved, clearlydefined
 maven/mavencentral/org.apache.commons/commons-lang3/3.8.1, Apache-2.0, approved, #815
@@ -160,6 +184,7 @@ maven/mavencentral/org.assertj/assertj-core/3.25.3, Apache-2.0, approved, #12585
 maven/mavencentral/org.bouncycastle/bcpkix-jdk18on/1.77, MIT, approved, #11593
 maven/mavencentral/org.bouncycastle/bcprov-jdk18on/1.77, MIT AND CC0-1.0, approved, #11595
 maven/mavencentral/org.bouncycastle/bcutil-jdk18on/1.77, MIT, approved, #11596
+maven/mavencentral/org.checkerframework/checker-compat-qual/2.5.6, GPL-2.0-only with Classpath-Exception-2.0, approved, #11598
 maven/mavencentral/org.checkerframework/checker-qual/3.37.0, MIT, approved, clearlydefined
 maven/mavencentral/org.checkerframework/checker-qual/3.41.0, MIT, approved, #12032
 maven/mavencentral/org.checkerframework/checker-qual/3.42.0, MIT, approved, clearlydefined
@@ -170,6 +195,8 @@ maven/mavencentral/org.codehaus.plexus/plexus-container-default/2.1.0, Apache-2.
 maven/mavencentral/org.codehaus.plexus/plexus-utils/3.1.1, , approved, CQ16492
 maven/mavencentral/org.codehaus.plexus/plexus-utils/3.3.0, , approved, CQ21066
 maven/mavencentral/org.conscrypt/conscrypt-openjdk-uber/2.5.2, Apache-2.0, approved, clearlydefined
+maven/mavencentral/org.eclipse.collections/eclipse-collections-api/11.1.0, EPL-1.0 OR BSD-3-Clause, approved, technology.collections
+maven/mavencentral/org.eclipse.collections/eclipse-collections/11.1.0, EPL-1.0 OR BSD-3-Clause, approved, technology.collections
 maven/mavencentral/org.eclipse.edc/autodoc-processor/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/boot/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/catalog-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
@@ -259,6 +286,7 @@ maven/mavencentral/org.jetbrains.kotlin/kotlin-stdlib/1.9.10, Apache-2.0, approv
 maven/mavencentral/org.jetbrains/annotations/13.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/org.jetbrains/annotations/17.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/org.jetbrains/annotations/24.1.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/org.json/json/20231013, OTHER, restricted, clearlydefined
 maven/mavencentral/org.junit-pioneer/junit-pioneer/2.2.0, EPL-2.0, approved, #11857
 maven/mavencentral/org.junit.jupiter/junit-jupiter-api/5.10.1, EPL-2.0, approved, #9714
 maven/mavencentral/org.junit.jupiter/junit-jupiter-api/5.10.2, EPL-2.0, approved, #9714
@@ -293,5 +321,6 @@ maven/mavencentral/org.slf4j/slf4j-api/1.7.36, MIT, approved, CQ13368
 maven/mavencentral/org.slf4j/slf4j-api/2.0.9, MIT, approved, #5915
 maven/mavencentral/org.testcontainers/junit-jupiter/1.19.7, MIT, approved, #10344
 maven/mavencentral/org.testcontainers/testcontainers/1.19.7, Apache-2.0 AND MIT, approved, #10347
+maven/mavencentral/org.threeten/threeten-extra/1.7.2, BSD-3-Clause, approved, #6493
 maven/mavencentral/org.threeten/threetenbp/1.6.8, BSD-3-Clause, approved, #6750
 maven/mavencentral/org.xmlresolver/xmlresolver/5.2.2, Apache-2.0, approved, clearlydefined
