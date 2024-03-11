@@ -16,6 +16,7 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
+import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.types.domain.DataAddress;
@@ -44,10 +45,10 @@ public class GcsConsumerResourceDefinitionGeneratorTest {
                 .property(GcsStoreSchema.STORAGE_CLASS, "test-storage-class")
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dr = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var dataRequest = TransferProcess.Builder.newInstance().dataRequest(DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build()).build();
         var policy = Policy.Builder.newInstance().build();
 
-        var definition = generator.generate(dr, policy);
+        var definition = generator.generate(dataRequest, policy);
 
         assertThat(definition).isInstanceOf(GcsResourceDefinition.class);
         var objectDef = (GcsResourceDefinition) definition;
@@ -68,7 +69,7 @@ public class GcsConsumerResourceDefinitionGeneratorTest {
                 .property(GcsStoreSchema.STORAGE_CLASS, "test-storage-class")
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var dataRequest = TransferProcess.Builder.newInstance().dataRequest(DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build()).build();
         var policy = Policy.Builder.newInstance().build();
 
         var definition = generator.canGenerate(dataRequest, policy);
@@ -81,7 +82,7 @@ public class GcsConsumerResourceDefinitionGeneratorTest {
                 .property(GcsStoreSchema.STORAGE_CLASS, "test-storage-class")
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var dataRequest = TransferProcess.Builder.newInstance().dataRequest(DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build()).build();
         var policy = Policy.Builder.newInstance().build();
 
         var definition = generator.canGenerate(dataRequest, policy);
