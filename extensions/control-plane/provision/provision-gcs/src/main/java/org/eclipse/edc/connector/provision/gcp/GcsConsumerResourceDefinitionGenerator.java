@@ -17,8 +17,8 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.provision.ConsumerResourceDefinitionGenerator;
-import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.policy.model.Policy;
 import org.jetbrains.annotations.Nullable;
@@ -29,8 +29,8 @@ public class GcsConsumerResourceDefinitionGenerator implements ConsumerResourceD
 
     @Override
     public @Nullable
-    ResourceDefinition generate(DataRequest dataRequest, Policy policy) {
-        var destination = dataRequest.getDataDestination();
+    ResourceDefinition generate(TransferProcess transferProcess, Policy policy) {
+        var destination = transferProcess.getDataDestination();
         var id = randomUUID().toString();
         var location = destination.getStringProperty(GcsStoreSchema.LOCATION);
         var storageClass = destination.getStringProperty(GcsStoreSchema.STORAGE_CLASS);
@@ -42,7 +42,7 @@ public class GcsConsumerResourceDefinitionGenerator implements ConsumerResourceD
     }
 
     @Override
-    public boolean canGenerate(DataRequest dataRequest, Policy policy) {
-        return GcsStoreSchema.TYPE.equals(dataRequest.getDestinationType());
+    public boolean canGenerate(TransferProcess transferProcess, Policy policy) {
+        return GcsStoreSchema.TYPE.equals(transferProcess.getDestinationType());
     }
 }
