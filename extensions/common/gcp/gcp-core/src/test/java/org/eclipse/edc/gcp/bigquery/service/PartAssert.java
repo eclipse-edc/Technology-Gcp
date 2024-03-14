@@ -12,7 +12,7 @@
  *
  */
 
-package org.eclipse.edc.gcp.bigquery;
+package org.eclipse.edc.gcp.bigquery.service;
 
 import org.assertj.core.api.AbstractAssert;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource.Part;
@@ -22,12 +22,15 @@ import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PartAssert extends AbstractAssert<PartAssert, Part> {
-    public PartAssert(Part actual) {
+/**
+ * Provides isEqualTo method to compare directly two DataSource.Part objects.
+ */
+class PartAssert extends AbstractAssert<PartAssert, Part> {
+    PartAssert(Part actual) {
         super(actual, PartAssert.class);
     }
 
-    public PartAssert isEqualTo(Part expected) {
+    PartAssert isEqualTo(Part expected) {
         isNotNull();
         assertThat(actual.name()).isEqualTo(expected.name());
 

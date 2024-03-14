@@ -15,7 +15,7 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.bigquery.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 
 import java.util.HashMap;
 import java.util.Map;

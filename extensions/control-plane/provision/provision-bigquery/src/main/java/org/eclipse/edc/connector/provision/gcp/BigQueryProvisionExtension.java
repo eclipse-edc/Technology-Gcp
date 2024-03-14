@@ -43,6 +43,7 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
+
         var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
                 .build();
 

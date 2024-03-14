@@ -15,9 +15,9 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.provision.ConsumerResourceDefinitionGenerator;
-import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.bigquery.BigQueryService;
+import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.policy.model.Policy;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,8 +27,8 @@ public class BigQueryConsumerResourceDefinitionGenerator implements ConsumerReso
 
     @Override
     public @Nullable
-    ResourceDefinition generate(DataRequest dataRequest, Policy policy) {
-        var destination = dataRequest.getDataDestination();
+    ResourceDefinition generate(TransferProcess transferProcess, Policy policy) {
+        var destination = transferProcess.getDataDestination();
         var id = randomUUID().toString();
         return BigQueryResourceDefinition.Builder.newInstance()
                 .id(id)
@@ -37,7 +37,7 @@ public class BigQueryConsumerResourceDefinitionGenerator implements ConsumerReso
     }
 
     @Override
-    public boolean canGenerate(DataRequest dataRequest, Policy policy) {
-        return BigQueryService.BIGQUERY_DATA.equals(dataRequest.getDestinationType());
+    public boolean canGenerate(TransferProcess transferProcess, Policy policy) {
+        return BigQueryService.BIGQUERY_DATA.equals(transferProcess.getDestinationType());
     }
 }

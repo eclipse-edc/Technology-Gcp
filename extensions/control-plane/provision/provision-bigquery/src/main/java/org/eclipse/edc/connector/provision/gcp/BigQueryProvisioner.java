@@ -19,9 +19,9 @@ import org.eclipse.edc.connector.transfer.spi.types.DeprovisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.bigquery.BigQueryService;
-import org.eclipse.edc.gcp.bigquery.BigQueryServiceImpl;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceImpl;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -43,7 +43,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     private final GcpConfiguration gcpConfiguration;
     private final Monitor monitor;
     private final TypeManager typeManager;
-    private BigQueryService bigQueryService;
+    private BigQueryProvisionService bqProvisionService;
 
     private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
         this.monitor = monitor;
@@ -88,13 +88,13 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
                 serviceAccountEmail = serviceAccount.getEmail();
             }
 
-            if (bigQueryService == null) {
-                bigQueryService = BigQueryServiceImpl.Builder.newInstance(gcpConfiguration, target, monitor)
+            if (bqProvisionService == null) {
+                bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target, monitor)
                         .serviceAccount(serviceAccountEmail)
                         .build();
             }
 
-            if (!bigQueryService.tableExists(target)) {
+            if (!bqProvisionService.tableExists()) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
                 return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, "Table " + target.getTableName().toString() + " doesn't exist"));
             }
@@ -184,8 +184,8 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor, typeManager);
         }
 
-        public Builder bigQueryService(BigQueryService bigQueryService) {
-            bqProvisioner.bigQueryService = bigQueryService;
+        public Builder bqProvisionService(BigQueryProvisionService bqProvisionService) {
+            bqProvisioner.bqProvisionService = bqProvisionService;
             return this;
         }
 

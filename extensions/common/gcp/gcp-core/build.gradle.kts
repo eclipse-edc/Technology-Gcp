@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.googleapis.iam)
 
     testImplementation(libs.edc.junit)
+    testImplementation(libs.googlecloud.gax)
 }
 
 

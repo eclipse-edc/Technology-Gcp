@@ -12,20 +12,20 @@
  *
  */
 
-package org.eclipse.edc.gcp.bigquery;
+package org.eclipse.edc.gcp.bigquery.service;
 
-import org.assertj.core.api.Assertions;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource.Part;
 
-public class Asserts extends Assertions {
+import java.util.List;
 
-    private Asserts() {}
-
-    public static PartAssert assertThat(Part actual) {
-        return new PartAssert(actual);
-    }
-
-    public static BigQueryPartAssert assertThat(BigQueryPart actual) {
-        return new BigQueryPartAssert(actual);
-    }
+/**
+ * Interface for BigQuery service.
+ */
+public interface BigQuerySinkService {
+    /**
+     * Executes the given query to insert values into the target table.
+     *
+     * @param parts list of rows to be inserted.
+     */
+    void runSinkQuery(List<Part> parts);
 }

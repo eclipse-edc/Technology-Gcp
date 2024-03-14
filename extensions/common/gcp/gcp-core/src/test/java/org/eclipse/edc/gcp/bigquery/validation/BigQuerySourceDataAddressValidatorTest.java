@@ -12,8 +12,9 @@
  *
  */
 
-package org.eclipse.edc.gcp.bigquery;
+package org.eclipse.edc.gcp.bigquery.validation;
 
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.junit.jupiter.api.Test;
 

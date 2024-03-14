@@ -12,8 +12,9 @@
  *
  */
 
-package org.eclipse.edc.gcp.bigquery;
+package org.eclipse.edc.gcp.bigquery.validation;
 
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.junit.jupiter.api.Test;
 
@@ -37,21 +38,27 @@ public class BigQuerySinkDataAddressValidatorTest {
     }
 
     @Test
-    void testSinkValidatorShouldNotValidateIncompleteAddresses() {
+    void testSinkValidatorShouldNotValidateWithoutTable() {
         var invalidSinkAddressNoTable = DataAddress.Builder.newInstance()
                 .type(BigQueryService.BIGQUERY_DATA)
                 .property(BigQueryService.DATASET, TEST_DATASET)
                 .build();
 
         assertThat(validator.validate(invalidSinkAddressNoTable).failed()).isTrue();
+    }
 
+    @Test
+    void testSinkValidatorShouldNotValidateWithoutDataset() {
         var invalidSinkAddressNoDataset = DataAddress.Builder.newInstance()
                 .type(BigQueryService.BIGQUERY_DATA)
                 .property(BigQueryService.TABLE, TEST_TABLE)
                 .build();
 
         assertThat(validator.validate(invalidSinkAddressNoDataset).failed()).isTrue();
+    }
 
+    @Test
+    void testSinkValidatorShouldNotValidateEmptyAddress() {
         var invalidSinkAddressNoInfo = DataAddress.Builder.newInstance()
                 .type(BigQueryService.BIGQUERY_DATA)
                 .build();

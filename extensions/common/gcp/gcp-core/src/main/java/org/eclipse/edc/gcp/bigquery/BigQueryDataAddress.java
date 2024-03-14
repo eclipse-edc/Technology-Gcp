@@ -14,11 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 
 import java.util.Optional;
@@ -29,45 +25,36 @@ import static java.util.Collections.emptyMap;
  * This is a wrapper class for the {@link DataAddress} object, which has typed accessors for
  * properties specific to a BigQuery endpoint.
  */
-@JsonTypeName()
-@JsonDeserialize(builder = DataAddress.Builder.class)
 public class BigQueryDataAddress extends DataAddress {
     private BigQueryDataAddress() {
         setType(BigQueryService.BIGQUERY_DATA);
     }
 
-    @JsonIgnore
     public String getProject() {
         return getStringProperty(BigQueryService.PROJECT);
     }
 
-    @JsonIgnore
     public String getDataset() {
         return getStringProperty(BigQueryService.DATASET);
     }
 
-    @JsonIgnore
     public String getTable() {
         return getStringProperty(BigQueryService.TABLE);
     }
 
-    @JsonIgnore
     public String getQuery() {
         return getStringProperty(BigQueryService.QUERY);
     }
 
-    @JsonIgnore
     public String getServiceAccountName() {
         return getStringProperty(BigQueryService.SERVICE_ACCOUNT_NAME);
     }
 
-    @JsonPOJOBuilder(withPrefix = "")
     public static final class Builder extends DataAddress.Builder<BigQueryDataAddress, Builder> {
         private Builder() {
             super(new BigQueryDataAddress());
         }
 
-        @JsonCreator
         public static Builder newInstance() {
             return new Builder();
         }

@@ -15,7 +15,8 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
-import org.eclipse.edc.gcp.bigquery.BigQueryService;
+import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.asset.Asset;
@@ -46,10 +47,11 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
                 .property(BigQueryService.TABLE, TEST_TABLE)
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dr = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
         var policy = Policy.Builder.newInstance().build();
 
-        var definition = generator.generate(dr, policy);
+        var definition = generator.generate(transferProcess, policy);
 
         assertThat(definition).isInstanceOf(BigQueryResourceDefinition.class);
         var objectDef = (BigQueryResourceDefinition) definition;
@@ -70,9 +72,10 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
                 .build();
         var asset = Asset.Builder.newInstance().build();
         var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
         var policy = Policy.Builder.newInstance().build();
 
-        var definition = generator.canGenerate(dataRequest, policy);
+        var definition = generator.canGenerate(transferProcess, policy);
         assertThat(definition).isTrue();
     }
 
@@ -82,9 +85,10 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
                 .build();
         var asset = Asset.Builder.newInstance().build();
         var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
         var policy = Policy.Builder.newInstance().build();
 
-        var definition = generator.canGenerate(dataRequest, policy);
+        var definition = generator.canGenerate(transferProcess, policy);
         assertThat(definition).isFalse();
     }
 }

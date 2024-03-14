@@ -12,8 +12,9 @@
  *
  */
 
-package org.eclipse.edc.gcp.bigquery;
+package org.eclipse.edc.gcp.bigquery.validation;
 
+import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;

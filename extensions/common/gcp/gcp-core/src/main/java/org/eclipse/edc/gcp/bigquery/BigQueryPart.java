@@ -21,6 +21,8 @@ import java.io.InputStream;
 public class BigQueryPart implements DataSource.Part {
     private final String name;
     private final InputStream inputStream;
+    private Exception sourceException;
+
 
     public BigQueryPart(String name, InputStream inputStream) {
         this.name = name;
@@ -40,5 +42,13 @@ public class BigQueryPart implements DataSource.Part {
     @Override
     public long size() {
         return SIZE_UNKNOWN;
+    }
+
+    public void setException(Exception exception) {
+        sourceException = exception;
+    }
+
+    public Exception getException() {
+        return sourceException;
     }
 }

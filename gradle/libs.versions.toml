@@ -6,6 +6,7 @@ edc = "0.5.2-SNAPSHOT"
 failsafe = "3.3.1"
 googleCloudBom = "26.33.0"
 googleApisIam = "v2-rev20240108-2.0.0"
+googleApiGax = "2.45.0"
 
 [libraries]
 assertj = { module = "org.assertj:assertj-core", version = "3.24.2" }
@@ -17,6 +18,7 @@ edc-spi-catalog = { module = "org.eclipse.edc:catalog-spi", version.ref = "edc" 
 edc-spi-contract = { module = "org.eclipse.edc:contract-spi", version.ref = "edc" }
 edc-spi-core = { module = "org.eclipse.edc:core-spi", version.ref = "edc" }
 edc-spi-dataplane = { module = "org.eclipse.edc:data-plane-spi", version.ref = "edc" }
+edc-dataplane-selector-api = { module = "org.eclipse.edc:data-plane-selector-api", version.ref = "edc" }
 edc-spi-policy = { module = "org.eclipse.edc:policy-spi", version.ref = "edc" }
 edc-spi-transfer = { module = "org.eclipse.edc:transfer-spi", version.ref = "edc" }
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
@@ -36,6 +38,7 @@ googlecloud-iam-credentials = { module = "com.google.cloud:google-cloud-iamcrede
 googlecloud-secretmanager = { module = "com.google.cloud:google-cloud-secretmanager" }
 googlecloud-storage = { module = "com.google.cloud:google-cloud-storage" }
 googlecloud-bigquery = { module = "com.google.cloud:google-cloud-bigquery" }
+googlecloud-gax = { module = "com.google.api:gax" , version.ref = "googleApiGax"}
 googleapis-iam = { module = "com.google.apis:google-api-services-iam", version.ref = "googleApisIam"}
 
 [bundles]
