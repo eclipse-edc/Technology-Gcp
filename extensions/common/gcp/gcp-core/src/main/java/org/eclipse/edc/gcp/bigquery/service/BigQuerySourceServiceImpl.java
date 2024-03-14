@@ -86,7 +86,6 @@ public class BigQuerySourceServiceImpl implements BigQuerySourceService {
 
         // The output stream object is passed to the thread lambda, do not use try with resources.
         final var outputStream = new PipedOutputStream();
-        final Exception queryException;
         try {
             // The input stream object is passed to the sink thread, do not use try with resources.
             var inputStream = new PipedInputStream(outputStream);
@@ -107,7 +106,7 @@ public class BigQuerySourceServiceImpl implements BigQuerySourceService {
                     part.setException(exception);
                     monitor.severe("BigQuery Source exception while sourcing", exception);
                 } finally {
-                    closeSourceStream(part, outputStream);
+                    closeSourceStream(outputStream);
                 }
             });
 
@@ -154,7 +153,7 @@ public class BigQuerySourceServiceImpl implements BigQuerySourceService {
         }
     }
 
-    void closeSourceStream(BigQueryPart part, PipedOutputStream outputStream) {
+    void closeSourceStream(PipedOutputStream outputStream) {
         try {
             outputStream.close();
             monitor.debug("BigQuery Source output stream closed");
