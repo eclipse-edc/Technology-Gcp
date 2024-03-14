@@ -151,8 +151,6 @@ class BigQuerySourceServiceImplTest {
         var queryJob = mock(Job.class);
         when(queryJob.getStatus()).thenReturn(jobStatus);
 
-
-
         when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
         if (!queryException) {
             when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenReturn(tableResult);
@@ -163,7 +161,7 @@ class BigQuerySourceServiceImplTest {
         var credentials = mock(OAuth2Credentials.class);
         when(credentials.getAccessToken()).thenReturn(null);
 
-        var options = BigQueryOptions.newBuilder().setCredentials(credentials).build();
+        var options = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(TEST_PROJECT).build();
         when(bigQuery.getOptions()).thenReturn(options);
 
         var receivedParts = bqSourceService.runSourceQuery(TEST_QUERY, sinkAddress);

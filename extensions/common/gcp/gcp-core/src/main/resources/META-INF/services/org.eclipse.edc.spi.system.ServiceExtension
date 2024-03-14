@@ -8,9 +8,9 @@
 #  SPDX-License-Identifier: Apache-2.0
 #
 #  Contributors:
-#       Google LCC - Initial implementation
+#       Google LLC - Initial implementation
 #
 #
 
 org.eclipse.edc.gcp.common.GcpExtension
-
+org.eclipse.edc.gcp.bigquery.validation.BigQueryDataAddressValidatorExtension
