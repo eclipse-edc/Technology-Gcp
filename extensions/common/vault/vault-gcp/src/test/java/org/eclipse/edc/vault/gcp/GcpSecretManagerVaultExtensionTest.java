@@ -21,7 +21,6 @@ import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.system.configuration.ConfigFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import java.io.IOException;
@@ -53,41 +52,41 @@ class GcpSecretManagerVaultExtensionTest {
 
     @Test
     void noSettings_shouldThrowException() {
-        ServiceExtensionContext invalidContext = mock(ServiceExtensionContext.class);
+        var invalidContext = mock(ServiceExtensionContext.class);
         when(invalidContext.getMonitor()).thenReturn(monitor);
         when(invalidContext.getConfig()).thenReturn(ConfigFactory.empty());
 
-        extension.gcpConfiguration = new GcpConfiguration(invalidContext);
+        extension.gcpConfiguration = new GcpConfiguration(null, null, null, null);
 
-        EdcException exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
-        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
+        var exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
+        assertThat(exception.getMessage()).isEqualTo("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION);
     }
 
     @Test
     void onlyProjectSetting_shouldThrowException() {
-        ServiceExtensionContext invalidContext = mock(ServiceExtensionContext.class);
+        var invalidContext = mock(ServiceExtensionContext.class);
         when(invalidContext.getMonitor()).thenReturn(monitor);
         var settings = new HashMap<String, String>();
         settings.put(GcpSecretManagerVaultExtension.VAULT_PROJECT, TEST_PROJECT);
         when(invalidContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
-        extension.gcpConfiguration = new GcpConfiguration(invalidContext);
+        extension.gcpConfiguration = new GcpConfiguration("projId", null, null, null);
 
-        EdcException exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
-        assertThat(exception.getMessage().equals("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION));
+        var exception = assertThrows(EdcException.class, () -> extension.createVault(invalidContext));
+        assertThat(exception.getMessage()).isEqualTo("No setting found for key " + GcpSecretManagerVaultExtension.VAULT_REGION);
     }
 
     @Test
     void onlyRegionSetting_shouldNotThrowException() {
-        ServiceExtensionContext validContext = mock(ServiceExtensionContext.class);
+        var validContext = mock(ServiceExtensionContext.class);
         when(validContext.getMonitor()).thenReturn(monitor);
         var settings = new HashMap<String, String>();
         settings.put(GcpSecretManagerVaultExtension.VAULT_REGION, TEST_REGION);
         when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
-        extension.gcpConfiguration = new GcpConfiguration(validContext);
+        extension.gcpConfiguration = new GcpConfiguration(null, null, null, TEST_REGION);
 
-        try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
+        try (var utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
                     .thenReturn(new GcpSecretManagerVault(null, null, null, null));
             extension.createVault(validContext);
@@ -96,16 +95,16 @@ class GcpSecretManagerVaultExtensionTest {
 
     @Test
     void mandatorySettings_shouldNotThrowException() {
-        ServiceExtensionContext validContext = mock(ServiceExtensionContext.class);
+        var validContext = mock(ServiceExtensionContext.class);
         when(validContext.getMonitor()).thenReturn(monitor);
         var settings = new HashMap<String, String>();
         settings.put(GcpSecretManagerVaultExtension.VAULT_PROJECT, TEST_PROJECT);
         settings.put(GcpSecretManagerVaultExtension.VAULT_REGION, TEST_REGION);
         when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
-        extension.gcpConfiguration = new GcpConfiguration(validContext);
+        extension.gcpConfiguration = new GcpConfiguration(TEST_PROJECT, null, null, TEST_REGION);
 
-        try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
+        try (var utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
             utilities.when(() -> GcpSecretManagerVault.createWithDefaultSettings(monitor, TEST_PROJECT, TEST_REGION))
                     .thenReturn(new GcpSecretManagerVault(null, null, null, null));
             extension.createVault(validContext);
@@ -118,7 +117,7 @@ class GcpSecretManagerVaultExtensionTest {
             var tempPath = Files.createTempFile(TEST_FILE_PREFIX, TEST_FILE_SUFFIX);
             var accountFilePath = tempPath.toString();
             Files.write(tempPath, ("test account data").getBytes());
-            ServiceExtensionContext validContext = mock(ServiceExtensionContext.class);
+            var validContext = mock(ServiceExtensionContext.class);
             when(validContext.getMonitor()).thenReturn(monitor);
             var settings = new HashMap<String, String>();
             settings.put(GcpSecretManagerVaultExtension.VAULT_PROJECT, TEST_PROJECT);
@@ -126,9 +125,9 @@ class GcpSecretManagerVaultExtensionTest {
             settings.put(GcpSecretManagerVaultExtension.VAULT_SACCOUNT_FILE, accountFilePath);
             when(validContext.getConfig()).thenReturn(ConfigFactory.fromMap(settings));
 
-            extension.gcpConfiguration = new GcpConfiguration(validContext);
+            extension.gcpConfiguration = new GcpConfiguration(TEST_PROJECT, null, accountFilePath, TEST_REGION);
 
-            try (MockedStatic<GcpSecretManagerVault> utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
+            try (var utilities = Mockito.mockStatic(GcpSecretManagerVault.class)) {
                 utilities.when(() -> GcpSecretManagerVault.createWithServiceAccountCredentials(eq(monitor), eq(TEST_PROJECT), eq(TEST_REGION), Mockito.any(InputStream.class)))
                         .thenReturn(new GcpSecretManagerVault(null, null, null, null));
                 extension.createVault(validContext);

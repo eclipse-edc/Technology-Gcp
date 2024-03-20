@@ -107,7 +107,7 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
             return resourceDefinition.getServiceAccountName();
         }
 
-        return gcpConfiguration.getServiceAccountName();
+        return gcpConfiguration.serviceAccountName();
     }
 
     @Override

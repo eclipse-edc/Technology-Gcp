@@ -57,7 +57,7 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
     @Provider
     public Vault createVault(ServiceExtensionContext context) {
-        var project = context.getSetting(VAULT_PROJECT, gcpConfiguration.getProjectId());
+        var project = context.getSetting(VAULT_PROJECT, gcpConfiguration.projectId());
         var monitor = context.getMonitor();
 
         if (isNullOrEmpty(project)) {
@@ -66,7 +66,7 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
             monitor.info("GCP Secret Manager vault extension: project loaded from settings " + project);
         }
 
-        var saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, gcpConfiguration.getServiceAccountFile());
+        var saccountFile = context.getSetting(VAULT_SACCOUNT_FILE, gcpConfiguration.serviceAccountFile());
 
         // TODO support multi-region replica.
         var region = context.getConfig().getString(VAULT_REGION);
