@@ -47,7 +47,7 @@ public class GcsProvisionExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-        var storageClient = createDefaultStorageClient(gcpConfiguration.getProjectId());
+        var storageClient = createDefaultStorageClient(gcpConfiguration.projectId());
         var storageService = new StorageServiceImpl(storageClient, monitor);
 
         var provisioner = new GcsProvisioner(gcpConfiguration, monitor, storageService, iamService);
