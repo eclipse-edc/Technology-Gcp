@@ -14,44 +14,18 @@
 
 package org.eclipse.edc.gcp.common;
 
-import com.google.cloud.ServiceOptions;
-import org.eclipse.edc.runtime.metamodel.annotation.Setting;
-import org.eclipse.edc.spi.system.ServiceExtensionContext;
-
 /**
  * Common configuration of the connector, provides accessors to parameters.
  */
-public class GcpConfiguration {
-    @Setting(value = "Default GCP project ID for the connector", required = false)
-    public static final String PROJECT_ID = "edc.gcp.project.id";
-
-    @Setting(value = "Default service account name for the connector", required = false)
-    public static final String SACCOUNT_NAME = "edc.gcp.saccount.name";
-
-    @Setting(value = "Default JSON file with service account credentials for the connector", required = false)
-    public static final String SACCOUNT_FILE = "edc.gcp.saccount.file";
-
-    @Setting(value = "Default universe domain for the connector", required = false)
-    public static final String UNIVERSE_DOMAIN = "edc.gcp.universe";
-
-    private String projectId;
-    private String serviceAccountName;
-    private String serviceAccountFile;
-    private String universeDomain;
-
-    public GcpConfiguration(ServiceExtensionContext context) {
-        projectId = context.getSetting(PROJECT_ID, ServiceOptions.getDefaultProjectId());
-        serviceAccountName = context.getSetting(SACCOUNT_NAME, null);
-        serviceAccountFile = context.getSetting(SACCOUNT_FILE, null);
-        universeDomain = context.getSetting(UNIVERSE_DOMAIN, null);
-    }
+public record GcpConfiguration(String projectId, String serviceAccountName, String serviceAccountFile,
+                               String universeDomain) {
 
     /**
      * Project ID for the connector.
      *
      * @return the default project ID of the connector, or the default from the cloud SDK.
      */
-    public String getProjectId() {
+    public String projectId() {
         return projectId;
     }
 
@@ -60,7 +34,7 @@ public class GcpConfiguration {
      *
      * @return the default service account name of the connector, or an empty string if not available.
      */
-    public String getServiceAccountName() {
+    public String serviceAccountName() {
         return serviceAccountName;
     }
 
@@ -69,7 +43,7 @@ public class GcpConfiguration {
      *
      * @return the default service account key file path of the connector, or an empty string if not available.
      */
-    public String getServiceAccountFile() {
+    public String serviceAccountFile() {
         return serviceAccountFile;
     }
 
@@ -78,7 +52,7 @@ public class GcpConfiguration {
      *
      * @return the default universe domain of the connector, or an empty string if not available.
      */
-    public String getUniverseDomain() {
+    public String universeDomain() {
         return universeDomain;
     }
 }
