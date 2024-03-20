@@ -17,7 +17,6 @@ package org.eclipse.edc.gcp.bigquery.service;
 import com.google.api.services.iam.v2.IamScopes;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
-import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.BigQueryOptions;
@@ -141,17 +140,5 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
         }
 
         bigQuery = bqBuilder.build().getService();
-    }
-
-    private void refreshBigQueryCredentials() {
-        var credentials = bigQuery.getOptions().getCredentials();
-        if (credentials instanceof OAuth2Credentials authCredentials) {
-            try {
-                // TODO check margin and refresh if too close to expire.
-                authCredentials.refreshIfExpired();
-            } catch (IOException ioException) {
-                monitor.warning("BigQuery Service cannot refresh credentials", ioException);
-            }
-        }
     }
 }

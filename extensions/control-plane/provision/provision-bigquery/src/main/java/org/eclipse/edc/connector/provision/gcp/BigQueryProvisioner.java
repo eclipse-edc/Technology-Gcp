@@ -20,7 +20,7 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceFactory;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceImpl;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
@@ -43,7 +43,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     private final GcpConfiguration gcpConfiguration;
     private final Monitor monitor;
     private final TypeManager typeManager;
-    private BigQueryProvisionService bqProvisionService;
+    private BigQueryProvisionServiceFactory bqProvisionServiceFactory;
 
     private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
         this.monitor = monitor;
@@ -88,6 +88,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
                 serviceAccountEmail = serviceAccount.getEmail();
             }
 
+            var bqProvisionService = bqProvisionServiceFactory != null ? bqProvisionServiceFactory.get() : null;
             if (bqProvisionService == null) {
                 bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target.project(), monitor)
                         .serviceAccount(serviceAccountEmail)
@@ -184,8 +185,8 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor, typeManager);
         }
 
-        public Builder bqProvisionService(BigQueryProvisionService bqProvisionService) {
-            bqProvisioner.bqProvisionService = bqProvisionService;
+        public Builder bqProvisionServiceFactory(BigQueryProvisionServiceFactory bqProvisionServiceFactory) {
+            bqProvisioner.bqProvisionServiceFactory = bqProvisionServiceFactory;
             return this;
         }
 
