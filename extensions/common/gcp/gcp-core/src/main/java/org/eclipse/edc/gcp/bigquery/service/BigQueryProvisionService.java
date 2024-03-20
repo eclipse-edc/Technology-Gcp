@@ -14,6 +14,8 @@
 
 package org.eclipse.edc.gcp.bigquery.service;
 
+import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
+
 /**
  * Interface used by BigQuery Provisioner.
  */
@@ -23,5 +25,5 @@ public interface BigQueryProvisionService {
      *
      * @return true if the table targeted exists.
      */
-    boolean tableExists();
+    boolean tableExists(BigQueryTarget target);
 }

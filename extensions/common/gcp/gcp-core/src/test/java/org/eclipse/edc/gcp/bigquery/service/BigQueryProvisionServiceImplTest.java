@@ -51,7 +51,7 @@ class BigQueryProvisionServiceImplTest {
         reset(table);
         reset(typeManager);
 
-        bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target, monitor)
+        bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, TEST_PROJECT, monitor)
             .bigQuery(bigQuery)
             .build();
 
@@ -64,7 +64,7 @@ class BigQueryProvisionServiceImplTest {
         when(table.exists()).thenReturn(true);
         when(bigQuery.getTable(target.getTableId())).thenReturn(table);
 
-        assertThat(bqProvisionService.tableExists()).isTrue();
+        assertThat(bqProvisionService.tableExists(target)).isTrue();
     }
 
     @Test
@@ -72,6 +72,6 @@ class BigQueryProvisionServiceImplTest {
         when(table.exists()).thenReturn(false);
         when(bigQuery.getTable(target.getTableId())).thenReturn(table);
 
-        assertThat(bqProvisionService.tableExists()).isFalse();
+        assertThat(bqProvisionService.tableExists(target)).isFalse();
     }
 }

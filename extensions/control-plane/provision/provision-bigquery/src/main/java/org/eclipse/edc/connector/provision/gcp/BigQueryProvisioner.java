@@ -89,12 +89,12 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             }
 
             if (bqProvisionService == null) {
-                bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target, monitor)
+                bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target.project(), monitor)
                         .serviceAccount(serviceAccountEmail)
                         .build();
             }
 
-            if (!bqProvisionService.tableExists()) {
+            if (!bqProvisionService.tableExists(target)) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
                 return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, "Table " + target.getTableName().toString() + " doesn't exist"));
             }

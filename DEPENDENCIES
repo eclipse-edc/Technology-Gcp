@@ -72,13 +72,13 @@ maven/mavencentral/com.google.cloud/libraries-bom/26.33.0, None, restricted, #13
 maven/mavencentral/com.google.code.findbugs/jsr305/3.0.2, Apache-2.0, approved, #20
 maven/mavencentral/com.google.code.gson/gson/2.10.1, Apache-2.0, approved, #6159
 maven/mavencentral/com.google.code.gson/gson/2.8.9, Apache-2.0, approved, CQ23496
-maven/mavencentral/com.google.collections/google-collections/1.0, Apache-2.0, approved, CQ3285
 maven/mavencentral/com.google.crypto.tink/tink/1.12.0, Apache-2.0, approved, #12041
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.18.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.21.1, Apache-2.0, approved, #9834
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.22.0, Apache-2.0, approved, #10661
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.23.0, Apache-2.0, approved, #11083
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.24.1, Apache-2.0, approved, #12448
+maven/mavencentral/com.google.errorprone/error_prone_annotations/2.26.1, Apache-2.0, approved, #13657
 maven/mavencentral/com.google.flatbuffers/flatbuffers-java/23.5.26, Apache-2.0, approved, #12857
 maven/mavencentral/com.google.guava/failureaccess/1.0.1, Apache-2.0, approved, CQ22654
 maven/mavencentral/com.google.guava/failureaccess/1.0.2, Apache-2.0, approved, CQ22654
@@ -89,7 +89,7 @@ maven/mavencentral/com.google.guava/guava/32.0.0-android, Apache-2.0 AND CC0-1.0
 maven/mavencentral/com.google.guava/guava/32.0.0-jre, Apache-2.0 AND CC0-1.0 AND CC-PDDC, approved, #8772
 maven/mavencentral/com.google.guava/guava/32.0.1-jre, Apache-2.0 AND CC0-1.0 AND CC-PDDC, approved, #8772
 maven/mavencentral/com.google.guava/guava/32.1.3-jre, Apache-2.0 AND CC0-1.0 AND LicenseRef-Public-Domain, approved, #9229
-maven/mavencentral/com.google.guava/guava/33.0.0-jre, Apache-2.0 AND CC0-1.0, approved, #12173
+maven/mavencentral/com.google.guava/guava/33.1.0-jre, Apache-2.0 AND CC0-1.0, approved, #13675
 maven/mavencentral/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava, Apache-2.0, approved, CQ22657
 maven/mavencentral/com.google.http-client/google-http-client-apache-v2/1.44.1, Apache-2.0, approved, #13430
 maven/mavencentral/com.google.http-client/google-http-client-appengine/1.44.1, Apache-2.0, approved, #13425
@@ -105,7 +105,7 @@ maven/mavencentral/com.google.protobuf/protobuf-java/3.24.3, BSD-3-Clause, appro
 maven/mavencentral/com.google.protobuf/protobuf-java/3.25.2, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.re2j/re2j/1.7, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.nimbusds/nimbus-jose-jwt/9.37.3, Apache-2.0, approved, #11701
-maven/mavencentral/com.puppycrawl.tools/checkstyle/10.14.0, LGPL-2.1-or-later AND (Apache-2.0 AND LGPL-2.1-or-later) AND Apache-2.0, approved, #13562
+maven/mavencentral/com.puppycrawl.tools/checkstyle/10.14.2, LGPL-2.1-or-later AND (Apache-2.0 AND LGPL-2.1-or-later) AND Apache-2.0, approved, #13562
 maven/mavencentral/com.squareup.okhttp3/okhttp-dnsoverhttps/4.12.0, Apache-2.0, approved, #11159
 maven/mavencentral/com.squareup.okhttp3/okhttp/4.12.0, Apache-2.0, approved, #11156
 maven/mavencentral/com.squareup.okhttp3/okhttp/4.9.3, Apache-2.0 AND MPL-2.0, approved, #3225
@@ -193,7 +193,6 @@ maven/mavencentral/org.bouncycastle/bcprov-jdk18on/1.77, MIT AND CC0-1.0, approv
 maven/mavencentral/org.bouncycastle/bcutil-jdk18on/1.77, MIT, approved, #11596
 maven/mavencentral/org.checkerframework/checker-compat-qual/2.5.6, GPL-2.0-only with Classpath-Exception-2.0, approved, #11598
 maven/mavencentral/org.checkerframework/checker-qual/3.37.0, MIT, approved, clearlydefined
-maven/mavencentral/org.checkerframework/checker-qual/3.41.0, MIT, approved, #12032
 maven/mavencentral/org.checkerframework/checker-qual/3.42.0, MIT, approved, clearlydefined
 maven/mavencentral/org.codehaus.mojo/animal-sniffer-annotations/1.23, MIT, approved, clearlydefined
 maven/mavencentral/org.codehaus.plexus/plexus-classworlds/2.6.0, Apache-2.0 AND Plexus, approved, CQ22821

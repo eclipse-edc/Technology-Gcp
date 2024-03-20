@@ -32,14 +32,14 @@ import java.util.Objects;
 
 public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
     private final GcpConfiguration gcpConfiguration;
-    private final BigQueryTarget target;
+    private final String project;
     private final Monitor monitor;
     private BigQuery bigQuery;
     private GoogleCredentials credentials;
     private String serviceAccountName;
 
     @Override
-    public boolean tableExists() {
+    public boolean tableExists(BigQueryTarget target) {
         try {
             var table = bigQuery.getTable(target.getTableId());
             return table != null && table.exists();
@@ -52,12 +52,12 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
     public static class Builder {
         private final BigQueryProvisionServiceImpl bqProvisionService;
 
-        public static Builder newInstance(GcpConfiguration gcpConfiguration, BigQueryTarget target, Monitor monitor) {
-            return new Builder(gcpConfiguration, target, monitor);
+        public static Builder newInstance(GcpConfiguration gcpConfiguration, String project, Monitor monitor) {
+            return new Builder(gcpConfiguration, project, monitor);
         }
 
-        private Builder(GcpConfiguration gcpConfiguration, BigQueryTarget target, Monitor monitor) {
-            bqProvisionService = new BigQueryProvisionServiceImpl(gcpConfiguration, target, monitor);
+        private Builder(GcpConfiguration gcpConfiguration, String project, Monitor monitor) {
+            bqProvisionService = new BigQueryProvisionServiceImpl(gcpConfiguration, project, monitor);
         }
 
         public Builder credentials(GoogleCredentials credentials) {
@@ -86,20 +86,20 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
         }
     }
 
-    private BigQueryProvisionServiceImpl(GcpConfiguration gcpConfiguration, BigQueryTarget target, Monitor monitor) {
+    private BigQueryProvisionServiceImpl(GcpConfiguration gcpConfiguration, String project, Monitor monitor) {
         this.gcpConfiguration = gcpConfiguration;
-        this.target = target;
+        this.project = project;
         this.monitor = monitor;
     }
 
     private void initCredentials() throws IOException {
-        var project = target.project();
-        if (project == null) {
-            project = gcpConfiguration.getProjectId();
+        var credentialProject = project;
+        if (credentialProject == null) {
+            credentialProject = gcpConfiguration.getProjectId();
         }
 
         if (credentials != null) {
-            monitor.debug("BigQuery Service for project '" + project + "' using provided credentials");
+            monitor.debug("BigQuery Service for project '" + credentialProject + "' using provided credentials");
             return;
         }
 
@@ -108,12 +108,12 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
         sourceCredentials.refreshIfExpired();
 
         if (serviceAccountName == null) {
-            monitor.warning("BigQuery Service for project '" + project + "' using ADC, NOT RECOMMENDED");
+            monitor.warning("BigQuery Service for project '" + credentialProject + "' using ADC, NOT RECOMMENDED");
             credentials = sourceCredentials;
             return;
         }
 
-        monitor.debug("BigQuery Service for project '" + project + "' using service account '" + serviceAccountName + "'");
+        monitor.debug("BigQuery Service for project '" + credentialProject + "' using service account '" + serviceAccountName + "'");
         credentials = ImpersonatedCredentials.create(
               sourceCredentials,
               serviceAccountName,
@@ -129,12 +129,12 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
 
         initCredentials();
 
-        var project = target.project();
-        if (project == null) {
-            project = gcpConfiguration.getProjectId();
+        var credentialProject = project;
+        if (credentialProject == null) {
+            credentialProject = gcpConfiguration.getProjectId();
         }
 
-        var bqBuilder = BigQueryOptions.newBuilder().setProjectId(project);
+        var bqBuilder = BigQueryOptions.newBuilder().setProjectId(credentialProject);
 
         if (credentials != null) {
             bqBuilder.setCredentials(credentials);

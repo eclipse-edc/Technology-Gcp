@@ -17,6 +17,7 @@ package org.eclipse.edc.connector.provision.gcp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionService;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
@@ -42,6 +43,7 @@ class BigQueryProvisionerTest {
     private static final String TRANSFER_ID = "transfer-id";
     private static final String CUSTOMER_NAME = "customer-name";
     private static final String RESOURCE_NAME = "resource-name";
+    private static final BigQueryTarget TEST_TARGET = new BigQueryTarget(TEST_PROJECT, TEST_DATASET, TEST_TABLE);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private BigQueryProvisioner bigQueryProvisioner;
     private Monitor monitor = mock();
@@ -116,7 +118,7 @@ class BigQueryProvisionerTest {
 
         var policy = Policy.Builder.newInstance().build();
 
-        when(bqProvisionService.tableExists()).thenReturn(true);
+        when(bqProvisionService.tableExists(TEST_TARGET)).thenReturn(true);
 
         var response = bigQueryProvisioner.provision(resourceDefinition, policy).join().getContent();
         assertThat(response.getResource()).isInstanceOfSatisfying(BigQueryProvisionedResource.class, resource -> {
@@ -143,7 +145,7 @@ class BigQueryProvisionerTest {
 
         var policy = Policy.Builder.newInstance().build();
 
-        when(bqProvisionService.tableExists()).thenReturn(false);
+        when(bqProvisionService.tableExists(TEST_TARGET)).thenReturn(false);
 
         var response = bigQueryProvisioner.provision(resourceDefinition, policy).join();
         assertThat(response.failed()).isTrue();
