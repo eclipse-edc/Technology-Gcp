@@ -152,7 +152,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             return resourceDefinition.getServiceAccountName();
         }
 
-        return gcpConfiguration.getServiceAccountName();
+        return gcpConfiguration.serviceAccountName();
     }
 
     private IamService getIamService(BigQueryResourceDefinition resourceDefinition) {
@@ -168,7 +168,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         var table = resourceDefinition.getTable();
 
         if (project == null) {
-            project = gcpConfiguration.getProjectId();
+            project = gcpConfiguration.projectId();
         }
 
         return new BigQueryTarget(project, dataset, table);

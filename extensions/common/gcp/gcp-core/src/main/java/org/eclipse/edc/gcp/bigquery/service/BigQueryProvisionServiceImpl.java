@@ -94,7 +94,7 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
     private void initCredentials() throws IOException {
         var credentialProject = project;
         if (credentialProject == null) {
-            credentialProject = gcpConfiguration.getProjectId();
+            credentialProject = gcpConfiguration.projectId();
         }
 
         if (credentials != null) {
@@ -130,7 +130,7 @@ public class BigQueryProvisionServiceImpl implements BigQueryProvisionService {
 
         var credentialProject = project;
         if (credentialProject == null) {
-            credentialProject = gcpConfiguration.getProjectId();
+            credentialProject = gcpConfiguration.projectId();
         }
 
         var bqBuilder = BigQueryOptions.newBuilder().setProjectId(credentialProject);
