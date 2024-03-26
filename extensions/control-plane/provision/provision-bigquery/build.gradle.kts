@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2022 Google LLC
+ *  Copyright (c) 2024 Google LLC
  *
  *  This program and the accompanying materials are made available under the
  *  terms of the Apache License, Version 2.0 which is available at
@@ -18,22 +18,14 @@ plugins {
 
 dependencies {
     api(libs.edc.spi.core)
-    api(libs.edc.spi.dataplane)
-    api(libs.edc.spi.transfer)
-    api(libs.edc.util)
-    implementation(libs.edc.spi.validator)
+    implementation(libs.edc.util)
+    implementation(libs.failsafe.core)
 
+    implementation(project(":extensions:common:gcp:gcp-core"))
 
     // GCP dependencies.
     implementation(platform(libs.googlecloud.bom))
     implementation(libs.googlecloud.bigquery)
     implementation(libs.googlecloud.iam.admin)
-    implementation(libs.googlecloud.storage)
     implementation(libs.googlecloud.iam.credentials)
-    implementation(libs.googleapis.iam)
-
-    testImplementation(libs.edc.junit)
-    testImplementation(libs.googlecloud.gax)
 }
-
-
