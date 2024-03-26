@@ -29,7 +29,6 @@ import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.response.StatusResult;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -39,7 +38,6 @@ import static com.google.protobuf.util.Timestamps.fromMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,13 +59,6 @@ class BigQueryProvisionerTest {
     private final GcpConfiguration gcpConfiguration = mock();
     private final BigQuery bigQuery = mock();
     private final IamService iamService = mock();
-
-    @BeforeEach
-    void setUp() {
-        reset(gcpConfiguration);
-        reset(monitor);
-        reset(bigQuery);
-    }
 
     @Test
     void testCanProvisionTrue() {
