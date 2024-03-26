@@ -14,10 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery.service;
 
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
-import org.eclipse.edc.gcp.common.GcpConfiguration;
-import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.IOException;
 
@@ -27,31 +24,10 @@ import java.io.IOException;
  */
 public interface BigQueryFactory {
     /**
-     * Provides instances of the BigQuery service using specific credentials.
-     *
-     * @param gcpConfiguration connector configuration
-     * @param credentials the credentials to use to execute bigquery calls
-     * @param monitor monitor object for logging
-     * @return the instance of the service
-     */
-    BigQuery createBigQuery(GcpConfiguration gcpConfiguration, GoogleCredentials credentials, Monitor monitor);
-
-    /**
      * Provides instances of the BigQuery service using specific service account name.
      *
-     * @param gcpConfiguration connector configuration
      * @param serviceAccountName the service account to use to execute bigquery calls
-     * @param monitor monitor object for logging
      * @return the instance of the service
      */
-    BigQuery createBigQuery(GcpConfiguration gcpConfiguration, String serviceAccountName, Monitor monitor) throws IOException;
-
-    /**
-     * Provides instances of the BigQuery service using default credentials and service account from configuration.
-     *
-     * @param gcpConfiguration connector configuration
-     * @param monitor monitor object for logging
-     * @return the instance of the service
-     */
-    BigQuery createBigQuery(GcpConfiguration gcpConfiguration, Monitor monitor) throws IOException;
+    BigQuery createBigQuery(String serviceAccountName) throws IOException;
 }

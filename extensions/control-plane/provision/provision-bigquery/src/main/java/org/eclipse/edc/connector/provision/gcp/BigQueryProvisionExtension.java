@@ -16,7 +16,9 @@ package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.provision.ProvisionManager;
 import org.eclipse.edc.connector.transfer.spi.provision.ResourceManifestGenerator;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryFactoryImpl;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
+import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
@@ -31,6 +33,8 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     private ResourceManifestGenerator manifestGenerator;
     @Inject
     private GcpConfiguration gcpConfiguration;
+    @Inject
+    private IamService iamService;
 
     @Override
     public String name() {
@@ -40,8 +44,9 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
+        var bqFactory = new BigQueryFactoryImpl(gcpConfiguration, monitor);
 
-        var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
+        var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, bqFactory, iamService, monitor)
                 .build();
 
         provisionManager.register(provisioner);

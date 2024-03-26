@@ -26,20 +26,16 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class BigQueryFactoryImpl implements BigQueryFactory {
-    private GcpConfiguration gcpConfiguration;
-    private String project;
-    private Monitor monitor;
+    private final GcpConfiguration gcpConfiguration;
+    private final Monitor monitor;
 
-    @Override
-    public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, GoogleCredentials credentials, Monitor monitor) {
-        return BigQueryOptions.newBuilder()
-                .setProjectId(gcpConfiguration.projectId())
-                .setCredentials(credentials)
-                .build().getService();
+    public BigQueryFactoryImpl(GcpConfiguration gcpConfiguration, Monitor monitor) {
+        this.gcpConfiguration = gcpConfiguration;
+        this.monitor = monitor;
     }
 
     @Override
-    public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, String serviceAccountName, Monitor monitor) throws IOException {
+    public BigQuery createBigQuery(String serviceAccountName) throws IOException {
         var credentials = GoogleCredentials.getApplicationDefault()
                 .createScoped(IamScopes.CLOUD_PLATFORM);
         credentials.refreshIfExpired();
@@ -52,20 +48,26 @@ public class BigQueryFactoryImpl implements BigQueryFactory {
             monitor.debug("BigQuery Service for project '" + gcpConfiguration.projectId() +
                     "' using service account '" + serviceAccountName + "'");
             credentials = ImpersonatedCredentials.create(
-                    credentials,
-                    serviceAccountName,
-                    null,
-                    Arrays.asList("https://www.googleapis.com/auth/bigquery"),
-                    3600);
+                credentials,
+                serviceAccountName,
+                null,
+                Arrays.asList("https://www.googleapis.com/auth/bigquery"),
+                3600);
         } else {
             monitor.warning("BigQuery Service for project '" + gcpConfiguration.projectId() + "' using ADC, NOT RECOMMENDED");
         }
 
-        return createBigQuery(gcpConfiguration, credentials, monitor);
+        return createBigQuery(credentials);
     }
 
-    @Override
-    public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, Monitor monitor) throws IOException {
-        return createBigQuery(gcpConfiguration, gcpConfiguration.serviceAccountName(), monitor);
+    private BigQuery createBigQuery(GoogleCredentials credentials) {
+        return BigQueryOptions.newBuilder()
+                .setProjectId(gcpConfiguration.projectId())
+                .setCredentials(credentials)
+                .build().getService();
+    }
+
+    private BigQuery createBigQuery() throws IOException {
+        return createBigQuery(gcpConfiguration.serviceAccountName());
     }
 }

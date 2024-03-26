@@ -21,13 +21,11 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryFactoryImpl;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.gcp.iam.IamService;
-import org.eclipse.edc.gcp.iam.IamServiceImpl;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.response.ResponseStatus;
@@ -40,12 +38,16 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefinition, BigQueryProvisionedResource> {
+    public static final GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
     private final GcpConfiguration gcpConfiguration;
+    private final BigQueryFactory bqFactory;
+    private final IamService iamService;
     private final Monitor monitor;
-    private BigQueryFactory bqFactory;
 
-    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor) {
+    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
         this.gcpConfiguration = gcpConfiguration;
+        this.bqFactory = bqFactory;
+        this.iamService = iamService;
         this.monitor = monitor;
     }
 
@@ -65,7 +67,6 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         var target = getTarget(resourceDefinition);
         monitor.info("BigQuery Provisioner provision " + target.getTableName());
         // TODO check if injected IAM service can be used (ADC / refresher).
-        var bqIamService = getIamService(resourceDefinition);
         var serviceAccountName = getServiceAccountName(resourceDefinition);
 
         var tableName = Optional.ofNullable(target.table())
@@ -79,18 +80,12 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         // TODO update target with the generated table name.
 
         try {
-            String serviceAccountEmail = null;
             GcpServiceAccount serviceAccount = null;
             if (serviceAccountName != null) {
-                serviceAccount = bqIamService.getServiceAccount(serviceAccountName);
-                serviceAccountEmail = serviceAccount.getEmail();
+                serviceAccount = iamService.getServiceAccount(serviceAccountName);
             }
 
-            if (bqFactory == null) {
-                bqFactory = new BigQueryFactoryImpl();
-            }
-
-            var bigQuery = bqFactory.createBigQuery(gcpConfiguration, monitor);
+            var bigQuery = bqFactory.createBigQuery(serviceAccountName);
             var table = bigQuery.getTable(target.getTableId());
             if (table == null || !table.exists()) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
@@ -101,10 +96,10 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             GcpAccessToken token = null;
 
             if (serviceAccount != null) {
-                token = bqIamService.createAccessToken(serviceAccount);
+                token = iamService.createAccessToken(serviceAccount);
             } else {
-                serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
-                token = bqIamService.createDefaultAccessToken();
+                serviceAccount = ADC_SERVICE_ACCOUNT;
+                token = iamService.createDefaultAccessToken();
             }
             monitor.info("BigQuery Provisioner token ready");
 
@@ -152,13 +147,6 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         return gcpConfiguration.serviceAccountName();
     }
 
-    private IamService getIamService(BigQueryResourceDefinition resourceDefinition) {
-        var target = getTarget(resourceDefinition);
-        // TODO verify the credentials for IAM access.
-        return IamServiceImpl.Builder.newInstance(monitor, target.project())
-            .build();
-    }
-
     private BigQueryTarget getTarget(BigQueryResourceDefinition resourceDefinition) {
         var project = resourceDefinition.getProject();
         var dataset = resourceDefinition.getDataset();
@@ -174,17 +162,12 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     public static class Builder {
         private final BigQueryProvisioner bqProvisioner;
 
-        public static Builder newInstance(GcpConfiguration gcpConfiguration, Monitor monitor) {
-            return new Builder(gcpConfiguration, monitor);
+        public static Builder newInstance(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
+            return new Builder(gcpConfiguration, bqFactory, iamService, monitor);
         }
 
-        private Builder(GcpConfiguration gcpConfiguration, Monitor monitor) {
-            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor);
-        }
-
-        public Builder bqFactory(BigQueryFactory bqFactory) {
-            bqProvisioner.bqFactory = bqFactory;
-            return this;
+        private Builder(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
+            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
         }
 
         public BigQueryProvisioner build() {
