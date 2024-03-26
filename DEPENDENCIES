@@ -68,7 +68,7 @@ maven/mavencentral/com.google.cloud/google-cloud-iamcredentials/2.36.0, Apache-2
 maven/mavencentral/com.google.cloud/google-cloud-secretmanager/2.36.0, Apache-2.0, approved, #13412
 maven/mavencentral/com.google.cloud/google-cloud-storage/2.34.0, Apache-2.0, approved, #13413
 maven/mavencentral/com.google.cloud/google-iam-admin/3.31.0, Apache-2.0, approved, #13432
-maven/mavencentral/com.google.cloud/libraries-bom/26.33.0, None, restricted, #13404
+maven/mavencentral/com.google.cloud/libraries-bom/26.33.0, Apache-2.0, approved, #13404
 maven/mavencentral/com.google.code.findbugs/jsr305/3.0.2, Apache-2.0, approved, #20
 maven/mavencentral/com.google.code.gson/gson/2.10.1, Apache-2.0, approved, #6159
 maven/mavencentral/com.google.code.gson/gson/2.8.9, Apache-2.0, approved, CQ23496
@@ -127,12 +127,12 @@ maven/mavencentral/io.grpc/grpc-api/1.61.1, Apache-2.0, approved, #13422
 maven/mavencentral/io.grpc/grpc-auth/1.61.1, Apache-2.0, approved, #13401
 maven/mavencentral/io.grpc/grpc-context/1.27.2, Apache-2.0, approved, clearlydefined
 maven/mavencentral/io.grpc/grpc-context/1.60.1, Apache-2.0, approved, clearlydefined
-maven/mavencentral/io.grpc/grpc-context/1.61.1, None, restricted, #13414
+maven/mavencentral/io.grpc/grpc-context/1.61.1, Apache-2.0, approved, #13414
 maven/mavencentral/io.grpc/grpc-core/1.61.1, Apache-2.0, approved, #13427
 maven/mavencentral/io.grpc/grpc-googleapis/1.61.1, Apache-2.0, approved, #13433
 maven/mavencentral/io.grpc/grpc-grpclb/1.61.1, Apache-2.0, approved, #13410
 maven/mavencentral/io.grpc/grpc-inprocess/1.61.1, Apache-2.0, approved, #13438
-maven/mavencentral/io.grpc/grpc-netty-shaded/1.61.1, None, restricted, #13431
+maven/mavencentral/io.grpc/grpc-netty-shaded/1.61.1, Apache-2.0, approved, #13431
 maven/mavencentral/io.grpc/grpc-protobuf-lite/1.61.1, Apache-2.0, approved, #13423
 maven/mavencentral/io.grpc/grpc-protobuf/1.61.1, Apache-2.0, approved, clearlydefined
 maven/mavencentral/io.grpc/grpc-rls/1.61.1, Apache-2.0, approved, #13429
@@ -204,6 +204,7 @@ maven/mavencentral/org.conscrypt/conscrypt-openjdk-uber/2.5.2, Apache-2.0, appro
 maven/mavencentral/org.eclipse.collections/eclipse-collections-api/11.1.0, EPL-1.0 OR BSD-3-Clause, approved, technology.collections
 maven/mavencentral/org.eclipse.collections/eclipse-collections/11.1.0, EPL-1.0 OR BSD-3-Clause, approved, technology.collections
 maven/mavencentral/org.eclipse.edc/autodoc-processor/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
+maven/mavencentral/org.eclipse.edc/boot-lib/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/boot/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/catalog-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/connector-core/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
@@ -213,6 +214,7 @@ maven/mavencentral/org.eclipse.edc/crypto-common/0.5.2-SNAPSHOT, Apache-2.0, app
 maven/mavencentral/org.eclipse.edc/data-plane-core/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/data-plane-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/data-plane-util/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
+maven/mavencentral/org.eclipse.edc/http-lib/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/http-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/http/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/identity-did-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
@@ -221,8 +223,11 @@ maven/mavencentral/org.eclipse.edc/jersey-core/0.5.2-SNAPSHOT, Apache-2.0, appro
 maven/mavencentral/org.eclipse.edc/jersey-providers/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/jetty-core/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/json-ld-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
+maven/mavencentral/org.eclipse.edc/junit-base/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/junit/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/jwt-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
+maven/mavencentral/org.eclipse.edc/keys-lib/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
+maven/mavencentral/org.eclipse.edc/keys-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/policy-engine-spi/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/policy-engine/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc
 maven/mavencentral/org.eclipse.edc/policy-evaluator/0.5.2-SNAPSHOT, Apache-2.0, approved, technology.edc

@@ -20,8 +20,8 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceFactory;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceImpl;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryFactoryImpl;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -32,8 +32,8 @@ import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.response.ResponseStatus;
 import org.eclipse.edc.spi.response.StatusResult;
-import org.eclipse.edc.spi.types.TypeManager;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -42,13 +42,11 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefinition, BigQueryProvisionedResource> {
     private final GcpConfiguration gcpConfiguration;
     private final Monitor monitor;
-    private final TypeManager typeManager;
-    private BigQueryProvisionServiceFactory bqProvisionServiceFactory;
+    private BigQueryFactory bqFactory;
 
-    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
-        this.monitor = monitor;
+    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, Monitor monitor) {
         this.gcpConfiguration = gcpConfiguration;
-        this.typeManager = typeManager;
+        this.monitor = monitor;
     }
 
     @Override
@@ -88,14 +86,13 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
                 serviceAccountEmail = serviceAccount.getEmail();
             }
 
-            var bqProvisionService = bqProvisionServiceFactory != null ? bqProvisionServiceFactory.get() : null;
-            if (bqProvisionService == null) {
-                bqProvisionService = BigQueryProvisionServiceImpl.Builder.newInstance(gcpConfiguration, target.project(), monitor)
-                        .serviceAccount(serviceAccountEmail)
-                        .build();
-            }
 
-            if (!bqProvisionService.tableExists(target)) {
+            if (bqFactory != null) {
+                bqFactory = new BigQueryFactoryImpl();
+            }
+            var bigQuery = bqFactory.createBigQuery(gcpConfiguration, monitor);
+            var table = bigQuery.getTable(target.getTableId());
+            if (table == null || !table.exists()) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
                 return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, "Table " + target.getTableName().toString() + " doesn't exist"));
             }
@@ -114,8 +111,8 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             var resource = getProvisionedResource(resourceDefinition, resourceName, tableName, serviceAccount);
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();
             return CompletableFuture.completedFuture(StatusResult.success(response));
-        } catch (GcpException gcpException) {
-            return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));
+        } catch (GcpException | IOException exception) {
+            return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, exception.toString()));
         }
     }
 
@@ -177,16 +174,16 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     public static class Builder {
         private final BigQueryProvisioner bqProvisioner;
 
-        public static Builder newInstance(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
-            return new Builder(gcpConfiguration, monitor, typeManager);
+        public static Builder newInstance(GcpConfiguration gcpConfiguration, Monitor monitor) {
+            return new Builder(gcpConfiguration, monitor);
         }
 
-        private Builder(GcpConfiguration gcpConfiguration, Monitor monitor, TypeManager typeManager) {
-            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor, typeManager);
+        private Builder(GcpConfiguration gcpConfiguration, Monitor monitor) {
+            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, monitor);
         }
 
-        public Builder bqProvisionServiceFactory(BigQueryProvisionServiceFactory bqProvisionServiceFactory) {
-            bqProvisioner.bqProvisionServiceFactory = bqProvisionServiceFactory;
+        public Builder bqFactory(BigQueryFactory bqFactory) {
+            bqProvisioner.bqFactory = bqFactory;
             return this;
         }
 

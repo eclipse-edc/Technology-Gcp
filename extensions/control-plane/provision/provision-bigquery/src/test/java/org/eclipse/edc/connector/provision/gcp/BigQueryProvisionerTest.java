@@ -15,19 +15,21 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.Table;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionService;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryProvisionServiceFactory;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.policy.model.Policy;
 import org.eclipse.edc.spi.monitor.Monitor;
-import org.eclipse.edc.spi.types.TypeManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,22 +50,18 @@ class BigQueryProvisionerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private Monitor monitor = mock();
     private GcpConfiguration gcpConfiguration = mock();
-    private BigQueryProvisionService bqProvisionService = mock();
-    private TypeManager typeManager = mock();
+    private BigQuery bigQuery = mock();
 
     @BeforeEach
     void setUp() {
         reset(gcpConfiguration);
         reset(monitor);
-        reset(bqProvisionService);
-        reset(typeManager);
-
-        when(typeManager.getMapper()).thenReturn(objectMapper);
+        reset(bigQuery);
     }
 
     @Test
     void testCanProvisionTrue() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
                 .build();
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
@@ -78,7 +76,7 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanProvisionFalse() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
                 .build();
 
         assertThat(bigQueryProvisioner.canProvision(new ResourceDefinition() {
@@ -91,7 +89,7 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanDeprovisionTrue() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
                 .build();
 
         var provisionedResource = BigQueryProvisionedResource.Builder.newInstance()
@@ -106,7 +104,7 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanDeprovisionFalse() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
                 .build();
 
         assertThat(bigQueryProvisioner.canDeprovision(new ProvisionedResource() {
@@ -115,15 +113,8 @@ class BigQueryProvisionerTest {
 
     @Test
     void provisionSuccess() throws InterruptedException, ExecutionException {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
-                .bqProvisionServiceFactory(new BigQueryProvisionServiceFactory() {
-                    @Override
-                    public BigQueryProvisionService get() {
-                        var bqProvisionService = mock(BigQueryProvisionService.class);
-                        when(bqProvisionService.tableExists(TEST_TARGET)).thenReturn(true);
-                        return bqProvisionService;
-                    }
-                })
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
+                .bqFactory(new BigQueryFactoryTest())
                 .build();
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
@@ -136,6 +127,10 @@ class BigQueryProvisionerTest {
                 .build();
 
         var policy = Policy.Builder.newInstance().build();
+
+        var table = mock(Table.class);
+        when(table.exists()).thenReturn(true);
+        when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
 
         var response = bigQueryProvisioner.provision(resourceDefinition, policy).join().getContent();
         assertThat(response.getResource()).isInstanceOfSatisfying(BigQueryProvisionedResource.class, resource -> {
@@ -151,15 +146,8 @@ class BigQueryProvisionerTest {
 
     @Test
     void provisionFailsIfTableDoesntExist() throws InterruptedException, ExecutionException {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
-                .bqProvisionServiceFactory(new BigQueryProvisionServiceFactory() {
-                    @Override
-                    public BigQueryProvisionService get() {
-                        var bqProvisionService = mock(BigQueryProvisionService.class);
-                        when(bqProvisionService.tableExists(TEST_TARGET)).thenReturn(false);
-                        return bqProvisionService;
-                    }
-                })
+        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
+                .bqFactory(new BigQueryFactoryTest())
                 .build();
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
@@ -173,7 +161,25 @@ class BigQueryProvisionerTest {
 
         var policy = Policy.Builder.newInstance().build();
 
+        var table = mock(Table.class);
+        when(table.exists()).thenReturn(false);
+        when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
+
         var response = bigQueryProvisioner.provision(resourceDefinition, policy).join();
         assertThat(response.failed()).isTrue();
+    }
+
+    private class BigQueryFactoryTest implements BigQueryFactory {
+        public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, GoogleCredentials credentials, Monitor monitor) {
+            return bigQuery;
+        }
+
+        public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, String serviceAccountName, Monitor monitor) throws IOException {
+            return bigQuery;
+        }
+
+        public BigQuery createBigQuery(GcpConfiguration gcpConfiguration, Monitor monitor) throws IOException {
+            return bigQuery;
+        }
     }
 }

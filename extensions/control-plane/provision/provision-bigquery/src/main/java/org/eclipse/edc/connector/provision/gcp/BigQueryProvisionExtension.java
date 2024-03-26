@@ -21,7 +21,6 @@ import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-import org.eclipse.edc.spi.types.TypeManager;
 
 @Extension(value = BigQueryProvisionExtension.NAME)
 public class BigQueryProvisionExtension implements ServiceExtension {
@@ -32,8 +31,6 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     private ResourceManifestGenerator manifestGenerator;
     @Inject
     private GcpConfiguration gcpConfiguration;
-    @Inject
-    private TypeManager typeManager;
 
     @Override
     public String name() {
@@ -44,7 +41,7 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
 
-        var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor, typeManager)
+        var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, monitor)
                 .build();
 
         provisionManager.register(provisioner);

@@ -14,7 +14,6 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.transfer.spi.types.DataRequest;
 import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
 import org.eclipse.edc.policy.model.Policy;
@@ -47,8 +46,7 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
                 .property(BigQueryService.TABLE, TEST_TABLE)
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
-        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataDestination(destination).build();
         var policy = Policy.Builder.newInstance().build();
 
         var definition = generator.generate(transferProcess, policy);
@@ -71,8 +69,7 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
         var destination = DataAddress.Builder.newInstance().type(BigQueryService.BIGQUERY_DATA)
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
-        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataDestination(destination).build();
         var policy = Policy.Builder.newInstance().build();
 
         var definition = generator.canGenerate(transferProcess, policy);
@@ -84,8 +81,7 @@ public class BigQueryConsumerResourceDefinitionGeneratorTest {
         var destination = DataAddress.Builder.newInstance().type("NonBigQueryData")
                 .build();
         var asset = Asset.Builder.newInstance().build();
-        var dataRequest = DataRequest.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
-        var transferProcess = TransferProcess.Builder.newInstance().dataRequest(dataRequest).build();
+        var transferProcess = TransferProcess.Builder.newInstance().dataDestination(destination).assetId(asset.getId()).build();
         var policy = Policy.Builder.newInstance().build();
 
         var definition = generator.canGenerate(transferProcess, policy);
