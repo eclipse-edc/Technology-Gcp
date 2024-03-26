@@ -86,10 +86,10 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
                 serviceAccountEmail = serviceAccount.getEmail();
             }
 
-
-            if (bqFactory != null) {
+            if (bqFactory == null) {
                 bqFactory = new BigQueryFactoryImpl();
             }
+
             var bigQuery = bqFactory.createBigQuery(gcpConfiguration, monitor);
             var table = bigQuery.getTable(target.getTableId());
             if (table == null || !table.exists()) {

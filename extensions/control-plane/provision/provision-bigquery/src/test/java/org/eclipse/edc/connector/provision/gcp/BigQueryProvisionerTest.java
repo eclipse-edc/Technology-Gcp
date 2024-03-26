@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Table;
+// import org.assertj.core.util.Arrays;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
@@ -132,8 +133,10 @@ class BigQueryProvisionerTest {
         when(table.exists()).thenReturn(true);
         when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
 
-        var response = bigQueryProvisioner.provision(resourceDefinition, policy).join().getContent();
-        assertThat(response.getResource()).isInstanceOfSatisfying(BigQueryProvisionedResource.class, resource -> {
+        var response = bigQueryProvisioner.provision(resourceDefinition, policy).join();
+
+        assertThat(response.succeeded()).isTrue();
+        assertThat(response.getContent().getResource()).isInstanceOfSatisfying(BigQueryProvisionedResource.class, resource -> {
             assertThat(resource.getId()).isEqualTo(RESOURCE_ID);
             assertThat(resource.getTransferProcessId()).isEqualTo(TRANSFER_ID);
             assertThat(resource.getProject()).isEqualTo(TEST_PROJECT);
