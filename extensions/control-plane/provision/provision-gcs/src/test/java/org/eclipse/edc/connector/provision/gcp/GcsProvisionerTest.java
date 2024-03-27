@@ -79,7 +79,7 @@ class GcsProvisionerTest {
         var serviceAccount = new GcpServiceAccount("test-sa", "sa-name", "description");
         var token = new GcpAccessToken("token", 123);
 
-        when(gcpConfiguration.getServiceAccountName()).thenReturn(null);
+        when(gcpConfiguration.serviceAccountName()).thenReturn(null);
 
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
@@ -116,7 +116,7 @@ class GcsProvisionerTest {
         var bucket = new GcsBucket(bucketName);
         var bucketLocation = resourceDefinition.getLocation();
 
-        when(gcpConfiguration.getServiceAccountName()).thenReturn(serviceAccount.getName());
+        when(gcpConfiguration.serviceAccountName()).thenReturn(serviceAccount.getName());
 
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
@@ -146,7 +146,7 @@ class GcsProvisionerTest {
         var bucketName = resourceDefinition.getId();
         var bucketLocation = resourceDefinition.getLocation();
 
-        when(gcpConfiguration.getServiceAccountName()).thenReturn(null);
+        when(gcpConfiguration.serviceAccountName()).thenReturn(null);
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(new GcsBucket(bucketName));
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(false);
 

@@ -19,7 +19,7 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.security.Vault;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
-import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
+import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,13 +100,13 @@ class GcsDataSinkFactoryTest {
     }
 
 
-    private DataFlowRequest createRequest(DataAddress destination) {
+    private DataFlowStartMessage createRequest(DataAddress destination) {
         var source = DataAddress.Builder
                 .newInstance()
                 .type(GcsStoreSchema.TYPE)
                 .build();
 
-        return DataFlowRequest.Builder.newInstance()
+        return DataFlowStartMessage.Builder.newInstance()
                 .id(UUID.randomUUID().toString())
                 .processId(UUID.randomUUID().toString())
                 .sourceDataAddress(source)

@@ -16,14 +16,14 @@ package org.eclipse.edc.connector.dataplane.gcp.storage;
 
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.spi.types.domain.DataAddress;
-import org.eclipse.edc.spi.types.domain.transfer.DataFlowRequest;
+import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 
 import java.util.UUID;
 
 public class TestFunctions {
 
-    public static DataFlowRequest createRequest(DataAddress sourceDataAddress) {
-        return DataFlowRequest.Builder.newInstance()
+    public static DataFlowStartMessage createRequest(DataAddress sourceDataAddress) {
+        return DataFlowStartMessage.Builder.newInstance()
                 .id(UUID.randomUUID().toString())
                 .processId(UUID.randomUUID().toString())
                 .sourceDataAddress(sourceDataAddress)
