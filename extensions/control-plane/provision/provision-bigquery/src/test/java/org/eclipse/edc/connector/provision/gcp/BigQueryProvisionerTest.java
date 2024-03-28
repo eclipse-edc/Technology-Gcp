@@ -146,16 +146,17 @@ class BigQueryProvisionerTest {
                 .isEqualTo(true);
     }
 
+    private GcpAccessToken getTestToken() {
+        var now = fromMillis(System.currentTimeMillis());
+        var expirationMillis = (now.getSeconds() + 3600) * 1000;
+        return new GcpAccessToken(TEST_TOKEN, expirationMillis);
+    }
+
     private void provisionSucceeds(String serviceAccountName)  throws IOException {
+        // Arrange test environment.
+        var useAdc = false;
         var bqFactory = mock(BigQueryFactory.class);
-        if (serviceAccountName == null) {
-            when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
-        } else {
-            when(bqFactory.createBigQuery(serviceAccountName)).thenReturn(bigQuery);
-        }
-
-        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
-
+        var token = getTestToken();
         var resourceDefinitionBuilder = BigQueryResourceDefinition.Builder.newInstance()
                 .id(RESOURCE_ID)
                 .transferProcessId(TRANSFER_ID)
@@ -163,22 +164,28 @@ class BigQueryProvisionerTest {
                 .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
                 .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME);
-
-        var now = fromMillis(System.currentTimeMillis());
-        var expirationMillis = (now.getSeconds() + 3600) * 1000;
-        var token = new GcpAccessToken(TEST_TOKEN, expirationMillis);
-        var useAdc = false;
         GcpServiceAccount serviceAccount = null;
 
         if (serviceAccountName == null) {
+            // Use default credentials.
             useAdc = true;
+            // When using defuault credentials, createBigQuery is executed passing a null argument.
+            when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
+
             serviceAccount = BigQueryProvisioner.ADC_SERVICE_ACCOUNT;
             serviceAccountName = serviceAccount.getName();
+
             when(iamService.createDefaultAccessToken()).thenReturn(token);
         } else {
+            // Using credentials specified in the transfer request.
+            resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
+            // When using credentials from the transfer request, createBigQuery is executed passing
+            // the name of the specified service account.
+            when(bqFactory.createBigQuery(serviceAccountName)).thenReturn(bigQuery);
+
             serviceAccount = new GcpServiceAccount(TEST_EMAIL, serviceAccountName, TEST_DESCRIPTION);
             when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
-            resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
+
             when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
         }
 
@@ -202,8 +209,11 @@ class BigQueryProvisionerTest {
         when(table.exists()).thenReturn(true);
         when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
 
+        // Act.
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
         var result = bigQueryProvisioner.provision(resourceDefinition, policy);
 
+        // Assert.
         if (!useAdc) {
             verify(iamService).getServiceAccount(serviceAccountName);
             verify(iamService).createAccessToken(serviceAccount);
