@@ -15,10 +15,11 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
@@ -30,27 +31,27 @@ public class BigQueryResourceDefinition extends ResourceDefinition {
     }
 
     public String getProject() {
-        return getString(BigQueryService.PROJECT);
+        return getString(BigQueryServiceSchema.PROJECT);
     }
 
     public String getDataset() {
-        return getString(BigQueryService.DATASET);
+        return getString(BigQueryServiceSchema.DATASET);
     }
 
     public String getTable() {
-        return getString(BigQueryService.TABLE);
+        return getString(BigQueryServiceSchema.TABLE);
     }
 
     public String getQuery() {
-        return getString(BigQueryService.QUERY);
+        return getString(BigQueryServiceSchema.QUERY);
     }
 
     public String getServiceAccountName() {
-        return getString(BigQueryService.SERVICE_ACCOUNT_NAME);
+        return getString(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME);
     }
 
     public String getCustomerName() {
-        return getString(BigQueryService.CUSTOMER_NAME);
+        return getString(BigQueryServiceSchema.CUSTOMER_NAME);
     }
 
     private String getString(String key) {
@@ -95,7 +96,8 @@ public class BigQueryResourceDefinition extends ResourceDefinition {
         @Override
         protected void verify() {
             super.verify();
-            // TODO verify required fields.
+            Objects.requireNonNull(resourceDefinition.getDataset(), BigQueryServiceSchema.DATASET);
+            Objects.requireNonNull(resourceDefinition.getTable(), BigQueryServiceSchema.TABLE);
         }
     }
 }

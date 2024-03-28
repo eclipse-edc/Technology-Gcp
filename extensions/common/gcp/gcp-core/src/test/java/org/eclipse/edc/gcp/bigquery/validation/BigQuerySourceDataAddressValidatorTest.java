@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery.validation;
 
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.junit.jupiter.api.Test;
 
@@ -28,8 +28,8 @@ public class BigQuerySourceDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldValidateWellFormedAddresses() {
         var validSourceAddress = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.QUERY, TEST_QUERY)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.QUERY, TEST_QUERY)
                 .build();
 
         var validationResult = validator.validate(validSourceAddress);
@@ -39,8 +39,8 @@ public class BigQuerySourceDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldNotValidateIncompleteAddresses() {
         var invalidSourceAddressNoQuery = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.TABLE, TEST_TABLE)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
 
         assertThat(validator.validate(invalidSourceAddressNoQuery).failed()).isTrue();

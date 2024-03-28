@@ -44,7 +44,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     private final IamService iamService;
     private final Monitor monitor;
 
-    private BigQueryProvisioner(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
+    public BigQueryProvisioner(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
         this.gcpConfiguration = gcpConfiguration;
         this.bqFactory = bqFactory;
         this.iamService = iamService;
@@ -157,21 +157,5 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         }
 
         return new BigQueryTarget(project, dataset, table);
-    }
-
-    public static class Builder {
-        private final BigQueryProvisioner bqProvisioner;
-
-        public static Builder newInstance(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
-            return new Builder(gcpConfiguration, bqFactory, iamService, monitor);
-        }
-
-        private Builder(GcpConfiguration gcpConfiguration, BigQueryFactory bqFactory, IamService iamService, Monitor monitor) {
-            bqProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
-        }
-
-        public BigQueryProvisioner build() {
-            return bqProvisioner;
-        }
     }
 }

@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery.validation;
 
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
@@ -35,9 +35,9 @@ public class BigQueryDataAddressValidatorExtension implements ServiceExtension {
 
     @Override
     public void initialize(ServiceExtensionContext context) {
-        validatorRegistry.registerDestinationValidator(BigQueryService.BIGQUERY_DATA,
+        validatorRegistry.registerDestinationValidator(BigQueryServiceSchema.BIGQUERY_DATA,
                 new BigQuerySinkDataAddressValidator());
-        validatorRegistry.registerSourceValidator(BigQueryService.BIGQUERY_DATA,
+        validatorRegistry.registerSourceValidator(BigQueryServiceSchema.BIGQUERY_DATA,
                 new BigQuerySourceDataAddressValidator());
     }
 }

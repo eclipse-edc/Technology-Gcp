@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import org.eclipse.edc.connector.transfer.spi.types.ProvisionedDataDestinationResource;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 
 import java.util.Map;
 
@@ -30,27 +30,27 @@ public class BigQueryProvisionedResource extends ProvisionedDataDestinationResou
     }
 
     public String getQuery() {
-        return getDataAddress().getStringProperty(BigQueryService.QUERY);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.QUERY);
     }
 
     public String getTable() {
-        return getDataAddress().getStringProperty(BigQueryService.TABLE);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.TABLE);
     }
 
     public String getDataset() {
-        return getDataAddress().getStringProperty(BigQueryService.DATASET);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.DATASET);
     }
 
     public String getServiceAccountName() {
-        return getDataAddress().getStringProperty(BigQueryService.SERVICE_ACCOUNT_NAME);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME);
     }
 
     public String getProject() {
-        return getDataAddress().getStringProperty(BigQueryService.PROJECT);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.PROJECT);
     }
 
     public String getCustomerName() {
-        return getDataAddress().getStringProperty(BigQueryService.CUSTOMER_NAME);
+        return getDataAddress().getStringProperty(BigQueryServiceSchema.CUSTOMER_NAME);
     }
 
     @JsonPOJOBuilder(withPrefix = "")
@@ -59,7 +59,7 @@ public class BigQueryProvisionedResource extends ProvisionedDataDestinationResou
 
         private Builder() {
             super(new BigQueryProvisionedResource());
-            dataAddressBuilder.type(BigQueryService.BIGQUERY_DATA);
+            dataAddressBuilder.type(BigQueryServiceSchema.BIGQUERY_DATA);
         }
 
         @JsonCreator
@@ -73,32 +73,32 @@ public class BigQueryProvisionedResource extends ProvisionedDataDestinationResou
         }
 
         public Builder query(String query) {
-            dataAddressBuilder.property(BigQueryService.QUERY, query);
+            dataAddressBuilder.property(BigQueryServiceSchema.QUERY, query);
             return this;
         }
 
         public Builder project(String project) {
-            dataAddressBuilder.property(BigQueryService.PROJECT, project);
+            dataAddressBuilder.property(BigQueryServiceSchema.PROJECT, project);
             return this;
         }
 
         public Builder table(String table) {
-            dataAddressBuilder.property(BigQueryService.TABLE, table);
+            dataAddressBuilder.property(BigQueryServiceSchema.TABLE, table);
             return this;
         }
 
         public Builder dataset(String dataset) {
-            dataAddressBuilder.property(BigQueryService.DATASET, dataset);
+            dataAddressBuilder.property(BigQueryServiceSchema.DATASET, dataset);
             return this;
         }
 
         public Builder serviceAccountName(String serviceAccountName) {
-            dataAddressBuilder.property(BigQueryService.SERVICE_ACCOUNT_NAME, serviceAccountName);
+            dataAddressBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
             return this;
         }
 
         public Builder customerName(String customerName) {
-            dataAddressBuilder.property(BigQueryService.CUSTOMER_NAME, customerName);
+            dataAddressBuilder.property(BigQueryServiceSchema.CUSTOMER_NAME, customerName);
             return this;
         }
 

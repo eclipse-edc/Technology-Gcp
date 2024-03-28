@@ -66,8 +66,4 @@ public class BigQueryFactoryImpl implements BigQueryFactory {
                 .setCredentials(credentials)
                 .build().getService();
     }
-
-    private BigQuery createBigQuery() throws IOException {
-        return createBigQuery(gcpConfiguration.serviceAccountName());
-    }
 }

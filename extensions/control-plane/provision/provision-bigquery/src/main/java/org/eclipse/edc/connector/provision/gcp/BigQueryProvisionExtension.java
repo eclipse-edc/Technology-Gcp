@@ -46,8 +46,7 @@ public class BigQueryProvisionExtension implements ServiceExtension {
         var monitor = context.getMonitor();
         var bqFactory = new BigQueryFactoryImpl(gcpConfiguration, monitor);
 
-        var provisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, bqFactory, iamService, monitor)
-                .build();
+        var provisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
         provisionManager.register(provisioner);
         manifestGenerator.registerGenerator(new BigQueryConsumerResourceDefinitionGenerator());

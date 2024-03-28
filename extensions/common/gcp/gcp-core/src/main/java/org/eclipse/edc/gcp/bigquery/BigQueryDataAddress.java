@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery;
 
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 
 import java.util.Optional;
@@ -27,27 +27,27 @@ import static java.util.Collections.emptyMap;
  */
 public class BigQueryDataAddress extends DataAddress {
     private BigQueryDataAddress() {
-        setType(BigQueryService.BIGQUERY_DATA);
+        setType(BigQueryServiceSchema.BIGQUERY_DATA);
     }
 
     public String getProject() {
-        return getStringProperty(BigQueryService.PROJECT);
+        return getStringProperty(BigQueryServiceSchema.PROJECT);
     }
 
     public String getDataset() {
-        return getStringProperty(BigQueryService.DATASET);
+        return getStringProperty(BigQueryServiceSchema.DATASET);
     }
 
     public String getTable() {
-        return getStringProperty(BigQueryService.TABLE);
+        return getStringProperty(BigQueryServiceSchema.TABLE);
     }
 
     public String getQuery() {
-        return getStringProperty(BigQueryService.QUERY);
+        return getStringProperty(BigQueryServiceSchema.QUERY);
     }
 
     public String getServiceAccountName() {
-        return getStringProperty(BigQueryService.SERVICE_ACCOUNT_NAME);
+        return getStringProperty(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME);
     }
 
     public static final class Builder extends DataAddress.Builder<BigQueryDataAddress, Builder> {
@@ -60,27 +60,27 @@ public class BigQueryDataAddress extends DataAddress {
         }
 
         public Builder project(String project) {
-            property(BigQueryService.PROJECT, project);
+            property(BigQueryServiceSchema.PROJECT, project);
             return this;
         }
 
         public Builder dataset(String dataset) {
-            property(BigQueryService.DATASET, dataset);
+            property(BigQueryServiceSchema.DATASET, dataset);
             return this;
         }
 
         public Builder table(String table) {
-            property(BigQueryService.TABLE, table);
+            property(BigQueryServiceSchema.TABLE, table);
             return this;
         }
 
         public Builder query(String query) {
-            property(BigQueryService.QUERY, query);
+            property(BigQueryServiceSchema.QUERY, query);
             return this;
         }
 
         public Builder serviceAccountName(String serviceAccountName) {
-            property(BigQueryService.SERVICE_ACCOUNT_NAME, serviceAccountName);
+            property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
             return this;
         }
 

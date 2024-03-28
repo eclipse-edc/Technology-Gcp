@@ -21,7 +21,7 @@ import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -62,14 +62,13 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanProvisionTrue() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, null, null, monitor)
-                .build();
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, null, null, monitor);
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
                 .id(RESOURCE_ID)
-                .property(BigQueryService.PROJECT, TEST_PROJECT)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .property(BigQueryService.TABLE, TEST_TABLE)
+                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
 
         assertThat(bigQueryProvisioner.canProvision(resourceDefinition)).isTrue();
@@ -77,8 +76,7 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanProvisionFalse() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, null, null, monitor)
-                .build();
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, null, null, monitor);
 
         assertThat(bigQueryProvisioner.canProvision(new ResourceDefinition() {
             @Override
@@ -90,8 +88,7 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanDeprovisionTrue() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, null, null, monitor)
-                .build();
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, null, null, monitor);
 
         var provisionedResource = BigQueryProvisionedResource.Builder.newInstance()
                 .id(RESOURCE_ID)
@@ -105,36 +102,36 @@ class BigQueryProvisionerTest {
 
     @Test
     void testCanDeprovisionFalse() {
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, null, null, monitor)
-                .build();
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, null, null, monitor);
 
         assertThat(bigQueryProvisioner.canDeprovision(new ProvisionedResource() {
         })).isFalse();
     }
 
     @Test
-    void provisionSuccessUsingAdc() {
+    void provisionSuccessUsingAdc() throws IOException {
         provisionSucceeds(null);
     }
 
     @Test
-    void provisionSuccessUsingServiceAccount() {
+    void provisionSuccessUsingServiceAccount() throws IOException {
         provisionSucceeds(TEST_SERVICE_ACCOUNT_NAME);
     }
 
     @Test
-    void provisionFailsIfTableDoesntExist() {
-        var bqFactory = new BigQueryFactoryTest();
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, bqFactory, null, monitor)
-                .build();
+    void provisionFailsIfTableDoesntExist() throws IOException {
+        var bqFactory = mock(BigQueryFactory.class);
+        when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
+
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, null, monitor);
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
                 .id(RESOURCE_ID)
                 .transferProcessId(TRANSFER_ID)
-                .property(BigQueryService.PROJECT, TEST_PROJECT)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .property(BigQueryService.TABLE, TEST_TABLE)
-                .property(BigQueryService.CUSTOMER_NAME, CUSTOMER_NAME)
+                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
+                .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME)
                 .build();
 
         var policy = Policy.Builder.newInstance().build();
@@ -149,24 +146,23 @@ class BigQueryProvisionerTest {
                 .isEqualTo(true);
     }
 
-    private class BigQueryFactoryTest implements BigQueryFactory {
-        public BigQuery createBigQuery(String serviceAccountName) throws IOException {
-            return bigQuery;
+    private void provisionSucceeds(String serviceAccountName)  throws IOException {
+        var bqFactory = mock(BigQueryFactory.class);
+        if (serviceAccountName == null) {
+            when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
+        } else {
+            when(bqFactory.createBigQuery(serviceAccountName)).thenReturn(bigQuery);
         }
-    }
 
-    private void provisionSucceeds(String serviceAccountName) {
-        var bqFactory = new BigQueryFactoryTest();
-        var bigQueryProvisioner = BigQueryProvisioner.Builder.newInstance(gcpConfiguration, bqFactory, iamService, monitor)
-                .build();
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
         var resourceDefinitionBuilder = BigQueryResourceDefinition.Builder.newInstance()
                 .id(RESOURCE_ID)
                 .transferProcessId(TRANSFER_ID)
-                .property(BigQueryService.PROJECT, TEST_PROJECT)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .property(BigQueryService.TABLE, TEST_TABLE)
-                .property(BigQueryService.CUSTOMER_NAME, CUSTOMER_NAME);
+                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
+                .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME);
 
         var now = fromMillis(System.currentTimeMillis());
         var expirationMillis = (now.getSeconds() + 3600) * 1000;
@@ -182,7 +178,7 @@ class BigQueryProvisionerTest {
         } else {
             serviceAccount = new GcpServiceAccount(TEST_EMAIL, serviceAccountName, TEST_DESCRIPTION);
             when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
-            resourceDefinitionBuilder.property(BigQueryService.SERVICE_ACCOUNT_NAME, serviceAccountName);
+            resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
             when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
         }
 

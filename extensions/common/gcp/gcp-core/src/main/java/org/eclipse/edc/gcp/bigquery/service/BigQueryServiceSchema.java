@@ -17,7 +17,7 @@ package org.eclipse.edc.gcp.bigquery.service;
 /**
  * Schema for BigQuery service.
  */
-public interface BigQueryService {
+public interface BigQueryServiceSchema {
     /** DataAddress type for BigQuery transfer. */
     String BIGQUERY_DATA = "BigQueryData";
     /** DataAddress type for BigQuery transfer. */

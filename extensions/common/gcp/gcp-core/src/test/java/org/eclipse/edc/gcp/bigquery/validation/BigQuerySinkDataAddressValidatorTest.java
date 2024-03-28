@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery.validation;
 
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +28,9 @@ public class BigQuerySinkDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldValidateWellFormedAddresses() {
         var validSinkAddress = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.DATASET, TEST_DATASET)
-                .property(BigQueryService.TABLE, TEST_TABLE)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
 
         var validationResult = validator.validate(validSinkAddress);
@@ -40,8 +40,8 @@ public class BigQuerySinkDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldNotValidateWithoutTable() {
         var invalidSinkAddressNoTable = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.DATASET, TEST_DATASET)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
                 .build();
 
         assertThat(validator.validate(invalidSinkAddressNoTable).failed()).isTrue();
@@ -50,8 +50,8 @@ public class BigQuerySinkDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldNotValidateWithoutDataset() {
         var invalidSinkAddressNoDataset = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
-                .property(BigQueryService.TABLE, TEST_TABLE)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
 
         assertThat(validator.validate(invalidSinkAddressNoDataset).failed()).isTrue();
@@ -60,7 +60,7 @@ public class BigQuerySinkDataAddressValidatorTest {
     @Test
     void testSinkValidatorShouldNotValidateEmptyAddress() {
         var invalidSinkAddressNoInfo = DataAddress.Builder.newInstance()
-                .type(BigQueryService.BIGQUERY_DATA)
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
                 .build();
 
         assertThat(validator.validate(invalidSinkAddressNoInfo).failed()).isTrue();

@@ -22,7 +22,7 @@ import org.eclipse.edc.validator.spi.Violation;
 
 import java.util.ArrayList;
 
-import static org.eclipse.edc.gcp.bigquery.service.BigQueryService.QUERY;
+import static org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema.QUERY;
 import static org.eclipse.edc.validator.spi.ValidationResult.failure;
 import static org.eclipse.edc.validator.spi.ValidationResult.success;
 

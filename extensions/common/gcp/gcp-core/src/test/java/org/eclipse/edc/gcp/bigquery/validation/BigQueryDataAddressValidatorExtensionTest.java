@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.gcp.bigquery.validation;
 
-import org.eclipse.edc.gcp.bigquery.service.BigQueryService;
+import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.junit.extensions.DependencyInjectionExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.validator.spi.DataAddressValidatorRegistry;
@@ -50,9 +50,9 @@ public class BigQueryDataAddressValidatorExtensionTest {
 
         assertThat(extension.name()).isEqualTo(BigQueryDataAddressValidatorExtension.NAME);
 
-        verify(registry).registerDestinationValidator(eq(BigQueryService.BIGQUERY_DATA), isA(
+        verify(registry).registerDestinationValidator(eq(BigQueryServiceSchema.BIGQUERY_DATA), isA(
                 BigQuerySinkDataAddressValidator.class));
-        verify(registry).registerSourceValidator(eq(BigQueryService.BIGQUERY_DATA), isA(
+        verify(registry).registerSourceValidator(eq(BigQueryServiceSchema.BIGQUERY_DATA), isA(
                 BigQuerySourceDataAddressValidator.class));
     }
 }
