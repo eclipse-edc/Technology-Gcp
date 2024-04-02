@@ -81,6 +81,13 @@ class IamServiceImplTest {
     }
 
     @Test
+    void testGetDefaultServiceAccount() {
+        var returnedServiceAccount = iamApi.getServiceAccount(null);
+
+        assertThat(returnedServiceAccount).isEqualTo(IamService.ADC_SERVICE_ACCOUNT);
+    }
+
+    @Test
     void testGetServiceAccountThatDoesntExist() {
         var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
         var serviceAccount = ServiceAccount.newBuilder()
@@ -115,6 +122,17 @@ class IamServiceImplTest {
         when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
         var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
+        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
+        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
+    }
+
+    @Test
+    void testCreateDefaultAccessTokenFromNullAccount() {
+        var expectedTokenString = "test-access-token";
+        long timeout = 3600;
+        when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
+
+        var accessToken = iamApi.createAccessToken(null);
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
         assertThat(accessToken.getExpiration()).isEqualTo(timeout);
     }
