@@ -86,11 +86,10 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
             var serviceAccountName = getServiceAccountName(resourceDefinition);
             if (serviceAccountName != null) {
                 serviceAccount = iamService.getServiceAccount(serviceAccountName);
-                token = iamService.createAccessToken(serviceAccount);
             } else {
-                serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
-                token = iamService.createDefaultAccessToken();
+                serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
             }
+            token = iamService.createAccessToken(serviceAccount);
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
 

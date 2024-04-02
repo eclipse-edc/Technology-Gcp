@@ -114,7 +114,7 @@ class IamServiceImplTest {
         long timeout = 3600;
         when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
-        var accessToken = iamApi.createDefaultAccessToken();
+        var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
         assertThat(accessToken.getExpiration()).isEqualTo(timeout);
     }
@@ -123,7 +123,7 @@ class IamServiceImplTest {
     void testCreateDefaultAccessTokenError() {
         when(accessTokenProvider.getAccessToken()).thenReturn(null);
 
-        var accessToken = iamApi.createDefaultAccessToken();
+        var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
         assertThat(accessToken).isNull();
     }
 

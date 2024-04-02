@@ -67,6 +67,10 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
+        if (serviceAccount == null || serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
+            return applicationDefaultCredentials.getAccessToken();
+        }
+
         try (var iamCredentialsClient = iamCredentialsClientSupplier.get()) {
             var name = ServiceAccountName.of("-", serviceAccount.getEmail());
             var lifetime = Duration.newBuilder().setSeconds(ONE_HOUR_IN_S).build();
@@ -82,11 +86,6 @@ public class IamServiceImpl implements IamService {
         } catch (Exception e) {
             throw new GcpException("Error creating service account token:\n" + e);
         }
-    }
-
-    @Override
-    public GcpAccessToken createDefaultAccessToken() {
-        return applicationDefaultCredentials.getAccessToken();
     }
 
     private String getServiceAccountEmail(String name, String project) {

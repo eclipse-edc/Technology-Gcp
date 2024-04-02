@@ -38,7 +38,6 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefinition, BigQueryProvisionedResource> {
-    public static final GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
     private final GcpConfiguration gcpConfiguration;
     private final BigQueryFactory bqFactory;
     private final IamService iamService;
@@ -95,12 +94,10 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
 
             GcpAccessToken token = null;
 
-            if (serviceAccount != null) {
-                token = iamService.createAccessToken(serviceAccount);
-            } else {
-                serviceAccount = ADC_SERVICE_ACCOUNT;
-                token = iamService.createDefaultAccessToken();
+            if (serviceAccount == null) {
+                serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
             }
+            token = iamService.createAccessToken(serviceAccount);
             monitor.info("BigQuery Provisioner token ready");
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, tableName, serviceAccount);

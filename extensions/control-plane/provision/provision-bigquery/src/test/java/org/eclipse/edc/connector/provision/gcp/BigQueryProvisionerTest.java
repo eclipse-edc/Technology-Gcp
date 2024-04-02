@@ -172,10 +172,8 @@ class BigQueryProvisionerTest {
             // When using defuault credentials, createBigQuery is executed passing a null argument.
             when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
 
-            serviceAccount = BigQueryProvisioner.ADC_SERVICE_ACCOUNT;
+            serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
             serviceAccountName = serviceAccount.getName();
-
-            when(iamService.createDefaultAccessToken()).thenReturn(token);
         } else {
             // Using credentials specified in the transfer request.
             resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
@@ -185,9 +183,8 @@ class BigQueryProvisionerTest {
 
             serviceAccount = new GcpServiceAccount(TEST_EMAIL, serviceAccountName, TEST_DESCRIPTION);
             when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
-
-            when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
         }
+        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
 
         var resourceDefinition = resourceDefinitionBuilder.build();
         var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
@@ -218,7 +215,7 @@ class BigQueryProvisionerTest {
             verify(iamService).getServiceAccount(serviceAccountName);
             verify(iamService).createAccessToken(serviceAccount);
         } else {
-            verify(iamService).createDefaultAccessToken();
+            verify(iamService).createAccessToken(serviceAccount);
         }
 
         var content = assertThat(result).succeedsWithin(1, SECONDS)
