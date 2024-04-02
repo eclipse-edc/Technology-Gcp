@@ -14,8 +14,8 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.transfer.spi.provision.ProvisionManager;
-import org.eclipse.edc.connector.transfer.spi.provision.ResourceManifestGenerator;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ProvisionManager;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ResourceManifestGenerator;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactoryImpl;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.iam.IamService;

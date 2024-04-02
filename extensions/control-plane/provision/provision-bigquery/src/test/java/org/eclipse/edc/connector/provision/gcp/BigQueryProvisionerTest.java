@@ -16,9 +16,9 @@ package org.eclipse.edc.connector.provision.gcp;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.Table;
-import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
-import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
-import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionResponse;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedResource;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;

@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 
 import java.util.HashMap;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
+import static org.eclipse.edc.spi.constants.CoreConstants.EDC_NAMESPACE;
 
 public class BigQueryResourceDefinition extends ResourceDefinition {
     private Map<String, Object> properties = new HashMap<String, Object>();
