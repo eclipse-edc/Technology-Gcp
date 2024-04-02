@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import org.eclipse.edc.connector.transfer.spi.types.ProvisionedDataDestinationResource;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedDataDestinationResource;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.BUCKET_NAME;
@@ -26,7 +26,7 @@ import static org.eclipse.edc.gcp.storage.GcsStoreSchema.LOCATION;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.SERVICE_ACCOUNT_EMAIL;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.SERVICE_ACCOUNT_NAME;
 import static org.eclipse.edc.gcp.storage.GcsStoreSchema.STORAGE_CLASS;
-import static org.eclipse.edc.spi.CoreConstants.EDC_NAMESPACE;
+import static org.eclipse.edc.spi.constants.CoreConstants.EDC_NAMESPACE;
 
 @JsonDeserialize(builder = GcsProvisionedResource.Builder.class)
 @JsonTypeName("dataspaceconnector:gcsgrovisionedresource")

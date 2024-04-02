@@ -15,11 +15,11 @@
 package org.eclipse.edc.connector.provision.gcp;
 
 import com.google.common.collect.ImmutableList;
-import org.eclipse.edc.connector.transfer.spi.provision.Provisioner;
-import org.eclipse.edc.connector.transfer.spi.types.DeprovisionedResource;
-import org.eclipse.edc.connector.transfer.spi.types.ProvisionResponse;
-import org.eclipse.edc.connector.transfer.spi.types.ProvisionedResource;
-import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.Provisioner;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.DeprovisionedResource;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionResponse;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedResource;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
