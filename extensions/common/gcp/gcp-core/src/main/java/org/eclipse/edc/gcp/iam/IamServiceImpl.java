@@ -49,6 +49,10 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpServiceAccount getServiceAccount(String serviceAccountName) {
+        if (serviceAccountName == null) {
+            return ADC_SERVICE_ACCOUNT;
+        }
+
         try (var client = iamClientSupplier.get()) {
             var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpProjectId);
             var name = ServiceAccountName.of(gcpProjectId, serviceAccountEmail).toString();
