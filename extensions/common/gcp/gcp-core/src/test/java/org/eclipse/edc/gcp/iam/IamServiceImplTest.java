@@ -127,17 +127,6 @@ class IamServiceImplTest {
     }
 
     @Test
-    void testCreateDefaultAccessTokenFromNullAccount() {
-        var expectedTokenString = "test-access-token";
-        long timeout = 3600;
-        when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
-
-        var accessToken = iamApi.createAccessToken(null);
-        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
-        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
-    }
-
-    @Test
     void testCreateDefaultAccessTokenError() {
         when(accessTokenProvider.getAccessToken()).thenReturn(null);
 

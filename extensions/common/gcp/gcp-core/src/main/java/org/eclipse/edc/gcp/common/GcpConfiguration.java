@@ -32,7 +32,7 @@ public record GcpConfiguration(String projectId, String serviceAccountName, Stri
     /**
      * Service account name for the connector.
      *
-     * @return the default service account name of the connector, or an empty string if not available.
+     * @return the default service account name of the connector, or null if not available.
      */
     public String serviceAccountName() {
         return serviceAccountName;
@@ -41,7 +41,7 @@ public record GcpConfiguration(String projectId, String serviceAccountName, Stri
     /**
      * Service account JSON key file for the connector.
      *
-     * @return the default service account key file path of the connector, or an empty string if not available.
+     * @return the default service account key file path of the connector, or null if not available.
      */
     public String serviceAccountFile() {
         return serviceAccountFile;
@@ -50,7 +50,7 @@ public record GcpConfiguration(String projectId, String serviceAccountName, Stri
     /**
      * Universe domain for the connector.
      *
-     * @return the default universe domain of the connector, or an empty string if not available.
+     * @return the default universe domain of the connector, or null if not available.
      */
     public String universeDomain() {
         return universeDomain;

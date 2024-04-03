@@ -20,7 +20,6 @@ import org.eclipse.edc.connector.controlplane.transfer.spi.types.DeprovisionedRe
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -81,16 +80,14 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
 
             GcpServiceAccount serviceAccount = null;
-            GcpAccessToken token = null;
-
             var serviceAccountName = getServiceAccountName(resourceDefinition);
             if (serviceAccountName != null) {
                 serviceAccount = iamService.getServiceAccount(serviceAccountName);
             } else {
                 serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
             }
-            token = iamService.createAccessToken(serviceAccount);
 
+            var token = iamService.createAccessToken(serviceAccount);
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
 
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();

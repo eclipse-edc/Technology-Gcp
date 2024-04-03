@@ -36,7 +36,7 @@ public interface IamService {
      * Creates a temporary valid OAunth2.0 access token for the service account
      *
      * @param serviceAccount service account the token should be created for;
-     *                       if null or ADC_SERVICE_ACCOUNT, access token from ADC is created.
+     *                       if ADC_SERVICE_ACCOUNT, access token from ADC is created.
      * @return {@link GcpAccessToken}
      */
     GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount);

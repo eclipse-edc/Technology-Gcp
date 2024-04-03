@@ -21,7 +21,6 @@ import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedReso
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
-import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -92,12 +91,11 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             }
             monitor.info("BigQuery Provisioner table " + target.getTableName().toString() + " exists");
 
-            GcpAccessToken token = null;
-
             if (serviceAccount == null) {
                 serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
             }
-            token = iamService.createAccessToken(serviceAccount);
+
+            var token = iamService.createAccessToken(serviceAccount);
             monitor.info("BigQuery Provisioner token ready");
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, tableName, serviceAccount);
@@ -109,10 +107,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     }
 
     private BigQueryProvisionedResource getProvisionedResource(BigQueryResourceDefinition resourceDefinition, String resourceName, String table, GcpServiceAccount serviceAccount) {
-        String serviceAccountName = null;
-        if (serviceAccount != null) {
-            serviceAccountName = serviceAccount.getName();
-        }
+        var serviceAccountName = serviceAccount.getName();
 
         return BigQueryProvisionedResource.Builder.newInstance()
             .properties(resourceDefinition.getProperties())

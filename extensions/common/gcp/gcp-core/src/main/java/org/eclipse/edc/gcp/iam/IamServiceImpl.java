@@ -71,7 +71,7 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
-        if (serviceAccount == null || serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
+        if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
             return applicationDefaultCredentials.getAccessToken();
         }
 
