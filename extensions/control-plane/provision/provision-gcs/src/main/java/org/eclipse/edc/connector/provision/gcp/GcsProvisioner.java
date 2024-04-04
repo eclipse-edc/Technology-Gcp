@@ -78,15 +78,12 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         var processId = resourceDefinition.getTransferProcessId();
         try {
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
-
-            GcpServiceAccount serviceAccount = null;
-            var serviceAccountName = getServiceAccountName(resourceDefinition);
-            if (serviceAccountName != null) {
-                serviceAccount = iamService.getServiceAccount(serviceAccountName);
-            } else {
-                serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
+            var serviceAccountName = resourceDefinition.getServiceAccountName();
+            if (serviceAccountName == null) {
+                serviceAccountName = gcpConfiguration.serviceAccountName();
             }
 
+            var serviceAccount = iamService.getServiceAccount(serviceAccountName);
             var token = iamService.createAccessToken(serviceAccount);
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
 
@@ -95,15 +92,6 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         } catch (GcpException gcpException) {
             return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));
         }
-    }
-
-    private String getServiceAccountName(GcsResourceDefinition resourceDefinition) {
-        if (resourceDefinition.getServiceAccountName() != null) {
-            // TODO verify service account name from resource definition before returning.
-            return resourceDefinition.getServiceAccountName();
-        }
-
-        return gcpConfiguration.serviceAccountName();
     }
 
     @Override

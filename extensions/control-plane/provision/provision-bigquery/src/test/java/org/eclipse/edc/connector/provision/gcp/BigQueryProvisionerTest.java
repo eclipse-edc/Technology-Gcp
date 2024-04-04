@@ -123,7 +123,7 @@ class BigQueryProvisionerTest {
         var bqFactory = mock(BigQueryFactory.class);
         when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
 
-        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, null, monitor);
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
         var resourceDefinition = BigQueryResourceDefinition.Builder.newInstance()
                 .id(RESOURCE_ID)
@@ -171,19 +171,16 @@ class BigQueryProvisionerTest {
             useAdc = true;
             // When using defuault credentials, createBigQuery is executed passing a null argument.
             when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
-
             serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
-            serviceAccountName = serviceAccount.getName();
         } else {
             // Using credentials specified in the transfer request.
             resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
             // When using credentials from the transfer request, createBigQuery is executed passing
             // the name of the specified service account.
             when(bqFactory.createBigQuery(serviceAccountName)).thenReturn(bigQuery);
-
             serviceAccount = new GcpServiceAccount(TEST_EMAIL, serviceAccountName, TEST_DESCRIPTION);
-            when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
         }
+        when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
         when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
 
         var resourceDefinition = resourceDefinitionBuilder.build();
@@ -197,7 +194,7 @@ class BigQueryProvisionerTest {
                 .project(resourceDefinition.getProject())
                 .dataset(resourceDefinition.getDataset())
                 .table(TEST_TABLE)
-                .serviceAccountName(serviceAccountName)
+                .serviceAccountName(serviceAccount.getName())
                 .hasToken(true)
                 .build();
 
