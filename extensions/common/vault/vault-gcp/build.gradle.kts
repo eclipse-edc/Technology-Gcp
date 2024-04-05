@@ -18,7 +18,7 @@ plugins {
 
 dependencies {
     api(libs.edc.spi.core)
-    implementation(libs.edc.util)
+    implementation(libs.edc.lib.util)
 
     implementation(project(":extensions:common:gcp:gcp-core"))
 

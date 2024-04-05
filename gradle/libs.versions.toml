@@ -24,7 +24,7 @@ edc-spi-transfer = { module = "org.eclipse.edc:transfer-spi", version.ref = "edc
 edc-spi-web = { module = "org.eclipse.edc:web-spi", version.ref = "edc" }
 edc-spi-validator = { module = "org.eclipse.edc:validator-spi", version.ref = "edc" }
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
-edc-util = { module = "org.eclipse.edc:util", version.ref = "edc" }
+edc-lib-util = { module = "org.eclipse.edc:util-lib", version.ref = "edc" }
 
 # third-party dependencies
 failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }

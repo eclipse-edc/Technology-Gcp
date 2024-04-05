@@ -20,7 +20,7 @@ dependencies {
     api(libs.edc.spi.core)
     api(libs.edc.spi.dataplane)
     api(libs.edc.spi.transfer)
-    api(libs.edc.util)
+    api(libs.edc.lib.util)
     implementation(libs.edc.spi.validator)
 
 
