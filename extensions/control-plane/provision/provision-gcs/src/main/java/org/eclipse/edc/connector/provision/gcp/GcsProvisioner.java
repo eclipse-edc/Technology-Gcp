@@ -75,19 +75,13 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
 
         var bucketLocation = resourceDefinition.getLocation();
         var resourceName = bucketName + "-bucket";
-        var processId = resourceDefinition.getTransferProcessId();
         try {
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
-            var serviceAccountName = resourceDefinition.getServiceAccountName();
-            if (serviceAccountName == null) {
-                serviceAccountName = gcpConfiguration.serviceAccountName();
-            }
-
-            var serviceAccount = iamService.getServiceAccount(serviceAccountName);
+            var serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccountName());
             var token = iamService.createAccessToken(serviceAccount);
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
-
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();
+
             return CompletableFuture.completedFuture(StatusResult.success(response));
         } catch (GcpException gcpException) {
             return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));

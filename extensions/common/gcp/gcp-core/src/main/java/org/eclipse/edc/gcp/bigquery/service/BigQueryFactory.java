@@ -15,6 +15,7 @@
 package org.eclipse.edc.gcp.bigquery.service;
 
 import com.google.cloud.bigquery.BigQuery;
+import org.eclipse.edc.gcp.common.GcpServiceAccount;
 
 import java.io.IOException;
 
@@ -26,8 +27,8 @@ public interface BigQueryFactory {
     /**
      * Provides instances of the BigQuery service using specific service account name.
      *
-     * @param serviceAccountName the service account to use to execute bigquery calls
+     * @param serviceAccount the service account to use to execute bigquery calls
      * @return the instance of the service
      */
-    BigQuery createBigQuery(String serviceAccountName) throws IOException;
+    BigQuery createBigQuery(GcpServiceAccount serviceAccount) throws IOException;
 }

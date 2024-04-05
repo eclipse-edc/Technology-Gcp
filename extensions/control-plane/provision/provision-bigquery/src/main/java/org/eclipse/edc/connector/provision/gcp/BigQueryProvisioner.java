@@ -75,12 +75,8 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
 
         // TODO update target with the generated table name.
         try {
-            var serviceAccountName = resourceDefinition.getServiceAccountName();
-            if (serviceAccountName == null) {
-                serviceAccountName = gcpConfiguration.serviceAccountName();
-            }
-
-            var bigQuery = bqFactory.createBigQuery(serviceAccountName);
+            var serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccountName());
+            var bigQuery = bqFactory.createBigQuery(serviceAccount);
             var table = bigQuery.getTable(target.getTableId());
             if (table == null || !table.exists()) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
@@ -88,7 +84,6 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             }
             monitor.info("BigQuery Provisioner table " + target.getTableName().toString() + " exists");
 
-            var serviceAccount = iamService.getServiceAccount(serviceAccountName);
             var token = iamService.createAccessToken(serviceAccount);
             monitor.info("BigQuery Provisioner token ready");
 
