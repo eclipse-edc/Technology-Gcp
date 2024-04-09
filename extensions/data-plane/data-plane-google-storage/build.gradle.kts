@@ -19,7 +19,7 @@ plugins {
 dependencies {
     api(libs.edc.spi.dataplane)
     api(libs.edc.core.dataplane.util)
-    implementation(libs.edc.util)
+    implementation(libs.edc.lib.util)
     implementation(libs.edc.spi.validator)
 
     implementation(project(":extensions:common:gcp:gcp-core"))
