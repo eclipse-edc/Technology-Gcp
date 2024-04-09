@@ -108,12 +108,113 @@ class BigQueryProvisionerTest {
 
     @Test
     void provisionSuccessUsingAdc() throws IOException {
-        provisionSucceeds(null);
+        // Arrange test environment.
+
+        // Defaulting to ADC credentials.
+        GcpServiceAccount serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
+
+        var bqFactory = mock(BigQueryFactory.class);
+        var token = getTestToken();
+        var resourceDefinitionBuilder = BigQueryResourceDefinition.Builder.newInstance()
+                .id(RESOURCE_ID)
+                .transferProcessId(TRANSFER_ID)
+                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
+                .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME);
+
+        when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
+        when(iamService.getServiceAccount(null)).thenReturn(serviceAccount);
+        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
+
+        var resourceDefinition = resourceDefinitionBuilder.build();
+        var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
+                .properties(resourceDefinition.getProperties())
+                .id(resourceDefinition.getId())
+                .resourceDefinitionId(resourceDefinition.getId())
+                .transferProcessId(resourceDefinition.getTransferProcessId())
+                // TODO use proper constant.
+                .resourceName(TEST_TABLE + "-table")
+                .project(resourceDefinition.getProject())
+                .dataset(resourceDefinition.getDataset())
+                .table(TEST_TABLE)
+                .serviceAccountName(serviceAccount.getName())
+                .hasToken(true)
+                .build();
+
+        var table = mock(Table.class);
+        when(table.exists()).thenReturn(true);
+        when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
+
+        // Act.
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
+        var result = bigQueryProvisioner.provision(resourceDefinition, Policy.Builder.newInstance().build());
+
+        // Assert.
+        verify(iamService).createAccessToken(serviceAccount);
+
+        assertThat(result).succeedsWithin(1, SECONDS)
+                .extracting(StatusResult::getContent).satisfies(response -> {
+                    assertThat(response.getResource()).usingRecursiveComparison().isEqualTo(expectedResource);
+                    assertThat(response.getSecretToken()).usingRecursiveComparison().isEqualTo(token);
+                });
     }
 
     @Test
     void provisionSuccessUsingServiceAccount() throws IOException {
-        provisionSucceeds(TEST_SERVICE_ACCOUNT_NAME);
+        // Arrange test environment.
+        var bqFactory = mock(BigQueryFactory.class);
+        var token = getTestToken();
+        var resourceDefinitionBuilder = BigQueryResourceDefinition.Builder.newInstance()
+                .id(RESOURCE_ID)
+                .transferProcessId(TRANSFER_ID)
+                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
+                .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME);
+
+        // Using credentials specified in the transfer request.
+        resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, TEST_SERVICE_ACCOUNT_NAME);
+        // When using credentials from the transfer request, createBigQuery is executed passing
+        // the specified service account.
+        var serviceAccount = new GcpServiceAccount(TEST_EMAIL, TEST_SERVICE_ACCOUNT_NAME, TEST_DESCRIPTION);
+
+        when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
+        when(iamService.getServiceAccount(TEST_SERVICE_ACCOUNT_NAME)).thenReturn(serviceAccount);
+        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
+
+        var resourceDefinition = resourceDefinitionBuilder.build();
+        var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
+                .properties(resourceDefinition.getProperties())
+                .id(resourceDefinition.getId())
+                .resourceDefinitionId(resourceDefinition.getId())
+                .transferProcessId(resourceDefinition.getTransferProcessId())
+                // TODO use proper constant.
+                .resourceName(TEST_TABLE + "-table")
+                .project(resourceDefinition.getProject())
+                .dataset(resourceDefinition.getDataset())
+                .table(TEST_TABLE)
+                .serviceAccountName(serviceAccount.getName())
+                .hasToken(true)
+                .build();
+
+        var table = mock(Table.class);
+        when(table.exists()).thenReturn(true);
+        when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
+
+        // Act.
+        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
+        var result = bigQueryProvisioner.provision(resourceDefinition, Policy.Builder.newInstance().build());
+
+        // Assert.
+        verify(iamService).getServiceAccount(TEST_SERVICE_ACCOUNT_NAME);
+        verify(iamService).createAccessToken(serviceAccount);
+
+        assertThat(result).succeedsWithin(1, SECONDS)
+                .extracting(StatusResult::getContent).satisfies(response -> {
+                    assertThat(response.getResource()).usingRecursiveComparison().isEqualTo(expectedResource);
+                    assertThat(response.getSecretToken()).usingRecursiveComparison().isEqualTo(token);
+                });
     }
 
     @Test
@@ -148,72 +249,5 @@ class BigQueryProvisionerTest {
         var now = fromMillis(System.currentTimeMillis());
         var expirationMillis = (now.getSeconds() + 3600) * 1000;
         return new GcpAccessToken(TEST_TOKEN, expirationMillis);
-    }
-
-    private void provisionSucceeds(String serviceAccountName)  throws IOException {
-        // Arrange test environment.
-
-        // Defaulting to ADC credentials.
-        var useAdc = true;
-        GcpServiceAccount serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
-
-        var bqFactory = mock(BigQueryFactory.class);
-        var token = getTestToken();
-        var resourceDefinitionBuilder = BigQueryResourceDefinition.Builder.newInstance()
-                .id(RESOURCE_ID)
-                .transferProcessId(TRANSFER_ID)
-                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
-                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
-                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
-                .property(BigQueryServiceSchema.CUSTOMER_NAME, CUSTOMER_NAME);
-
-        if (serviceAccountName != null) {
-            useAdc = false;
-            // Using credentials specified in the transfer request.
-            resourceDefinitionBuilder.property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, serviceAccountName);
-            // When using credentials from the transfer request, createBigQuery is executed passing
-            // the specified service account.
-            serviceAccount = new GcpServiceAccount(TEST_EMAIL, serviceAccountName, TEST_DESCRIPTION);
-        }
-
-        when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
-        when(iamService.getServiceAccount(serviceAccountName)).thenReturn(serviceAccount);
-        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
-
-        var resourceDefinition = resourceDefinitionBuilder.build();
-        var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
-                .properties(resourceDefinition.getProperties())
-                .id(resourceDefinition.getId())
-                .resourceDefinitionId(resourceDefinition.getId())
-                .transferProcessId(resourceDefinition.getTransferProcessId())
-                // TODO use proper constant.
-                .resourceName(TEST_TABLE + "-table")
-                .project(resourceDefinition.getProject())
-                .dataset(resourceDefinition.getDataset())
-                .table(TEST_TABLE)
-                .serviceAccountName(serviceAccount.getName())
-                .hasToken(true)
-                .build();
-
-        var table = mock(Table.class);
-        when(table.exists()).thenReturn(true);
-        when(bigQuery.getTable(TEST_TARGET.getTableId())).thenReturn(table);
-
-        // Act.
-        var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
-        var result = bigQueryProvisioner.provision(resourceDefinition, Policy.Builder.newInstance().build());
-
-        // Assert.
-        if (!useAdc) {
-            verify(iamService).getServiceAccount(serviceAccountName);
-        }
-
-        verify(iamService).createAccessToken(serviceAccount);
-
-        assertThat(result).succeedsWithin(1, SECONDS)
-                .extracting(StatusResult::getContent).satisfies(response -> {
-                    assertThat(response.getResource()).usingRecursiveComparison().isEqualTo(expectedResource);
-                    assertThat(response.getSecretToken()).usingRecursiveComparison().isEqualTo(token);
-                });
     }
 }
