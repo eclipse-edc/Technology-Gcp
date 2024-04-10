@@ -24,6 +24,7 @@ import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
 import com.google.cloud.iam.credentials.v1.ServiceAccountName;
 import com.google.protobuf.Duration;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -37,21 +38,29 @@ import java.util.function.Supplier;
 public class IamServiceImpl implements IamService {
     private static final long ONE_HOUR_IN_S = TimeUnit.HOURS.toSeconds(1);
     private final Monitor monitor;
-    private final String gcpProjectId;
+    private final GcpConfiguration gcpConfiguration;
     private Supplier<IAMClient> iamClientSupplier;
     private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
     private AccessTokenProvider applicationDefaultCredentials;
 
-    private IamServiceImpl(Monitor monitor, String gcpProjectId) {
+    private IamServiceImpl(Monitor monitor, GcpConfiguration gcpConfiguration) {
         this.monitor = monitor;
-        this.gcpProjectId = gcpProjectId;
+        this.gcpConfiguration = gcpConfiguration;
     }
 
     @Override
     public GcpServiceAccount getServiceAccount(String serviceAccountName) {
+        if (serviceAccountName == null && gcpConfiguration.serviceAccountName() == null) {
+            return ADC_SERVICE_ACCOUNT;
+        }
+
+        if (serviceAccountName == null) {
+            serviceAccountName = gcpConfiguration.serviceAccountName();
+        }
+
         try (var client = iamClientSupplier.get()) {
-            var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpProjectId);
-            var name = ServiceAccountName.of(gcpProjectId, serviceAccountEmail).toString();
+            var serviceAccountEmail = getServiceAccountEmail(serviceAccountName, gcpConfiguration.projectId());
+            var name = ServiceAccountName.of(gcpConfiguration.projectId(), serviceAccountEmail).toString();
             var response = client.getServiceAccount(name);
 
             return new GcpServiceAccount(response.getEmail(), response.getName(), response.getDescription());
@@ -67,6 +76,10 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
+        if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
+            return applicationDefaultCredentials.getAccessToken();
+        }
+
         try (var iamCredentialsClient = iamCredentialsClientSupplier.get()) {
             var name = ServiceAccountName.of("-", serviceAccount.getEmail());
             var lifetime = Duration.newBuilder().setSeconds(ONE_HOUR_IN_S).build();
@@ -84,11 +97,6 @@ public class IamServiceImpl implements IamService {
         }
     }
 
-    @Override
-    public GcpAccessToken createDefaultAccessToken() {
-        return applicationDefaultCredentials.getAccessToken();
-    }
-
     private String getServiceAccountEmail(String name, String project) {
         return String.format("%s@%s.iam.gserviceaccount.com", name, project);
     }
@@ -96,12 +104,12 @@ public class IamServiceImpl implements IamService {
     public static class Builder {
         private IamServiceImpl iamServiceImpl;
 
-        private Builder(Monitor monitor, String gcpProjectId) {
-            iamServiceImpl = new IamServiceImpl(monitor, gcpProjectId);
+        private Builder(Monitor monitor, GcpConfiguration gcpConfiguration) {
+            iamServiceImpl = new IamServiceImpl(monitor, gcpConfiguration);
         }
 
-        public static IamServiceImpl.Builder newInstance(Monitor monitor, String gcpProjectId) {
-            return new Builder(monitor, gcpProjectId);
+        public static IamServiceImpl.Builder newInstance(Monitor monitor, GcpConfiguration gcpConfiguration) {
+            return new Builder(monitor, gcpConfiguration);
         }
 
         public Builder iamClientSupplier(Supplier<IAMClient> iamClientSupplier) {
@@ -120,7 +128,7 @@ public class IamServiceImpl implements IamService {
         }
 
         public IamServiceImpl build() {
-            Objects.requireNonNull(iamServiceImpl.gcpProjectId, "gcpProjectId");
+            Objects.requireNonNull(iamServiceImpl.gcpConfiguration, "gcpConfiguration");
             Objects.requireNonNull(iamServiceImpl.monitor, "monitor");
 
             if (iamServiceImpl.iamClientSupplier == null) {

@@ -21,7 +21,6 @@ import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedReso
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactory;
-import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -38,7 +37,6 @@ import java.util.concurrent.CompletableFuture;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefinition, BigQueryProvisionedResource> {
-    public static final GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
     private final GcpConfiguration gcpConfiguration;
     private final BigQueryFactory bqFactory;
     private final IamService iamService;
@@ -66,8 +64,6 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             BigQueryResourceDefinition resourceDefinition, Policy policy) {
         var target = getTarget(resourceDefinition);
         monitor.info("BigQuery Provisioner provision " + target.getTableName());
-        // TODO check if injected IAM service can be used (ADC / refresher).
-        var serviceAccountName = getServiceAccountName(resourceDefinition);
 
         var tableName = Optional.ofNullable(target.table())
                 .orElseGet(() -> {
@@ -78,14 +74,9 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         var resourceName = tableName + "-table";
 
         // TODO update target with the generated table name.
-
         try {
-            GcpServiceAccount serviceAccount = null;
-            if (serviceAccountName != null) {
-                serviceAccount = iamService.getServiceAccount(serviceAccountName);
-            }
-
-            var bigQuery = bqFactory.createBigQuery(serviceAccountName);
+            var serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccountName());
+            var bigQuery = bqFactory.createBigQuery(serviceAccount);
             var table = bigQuery.getTable(target.getTableId());
             if (table == null || !table.exists()) {
                 monitor.warning("BigQuery Provisioner table " + target.getTableName() + " DOESN'T exist");
@@ -93,14 +84,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             }
             monitor.info("BigQuery Provisioner table " + target.getTableName().toString() + " exists");
 
-            GcpAccessToken token = null;
-
-            if (serviceAccount != null) {
-                token = iamService.createAccessToken(serviceAccount);
-            } else {
-                serviceAccount = ADC_SERVICE_ACCOUNT;
-                token = iamService.createDefaultAccessToken();
-            }
+            var token = iamService.createAccessToken(serviceAccount);
             monitor.info("BigQuery Provisioner token ready");
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, tableName, serviceAccount);
@@ -112,10 +96,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
     }
 
     private BigQueryProvisionedResource getProvisionedResource(BigQueryResourceDefinition resourceDefinition, String resourceName, String table, GcpServiceAccount serviceAccount) {
-        String serviceAccountName = null;
-        if (serviceAccount != null) {
-            serviceAccountName = serviceAccount.getName();
-        }
+        var serviceAccountName = serviceAccount.getName();
 
         return BigQueryProvisionedResource.Builder.newInstance()
             .properties(resourceDefinition.getProperties())
@@ -136,15 +117,6 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
         return CompletableFuture.completedFuture(StatusResult.success(
             DeprovisionedResource.Builder.newInstance()
                 .provisionedResourceId(provisionedResource.getId()).build()));
-    }
-
-    private String getServiceAccountName(BigQueryResourceDefinition resourceDefinition) {
-        if (resourceDefinition.getServiceAccountName() != null) {
-            // TODO verify service account name from resource definition before returning.
-            return resourceDefinition.getServiceAccountName();
-        }
-
-        return gcpConfiguration.serviceAccountName();
     }
 
     private BigQueryTarget getTarget(BigQueryResourceDefinition resourceDefinition) {

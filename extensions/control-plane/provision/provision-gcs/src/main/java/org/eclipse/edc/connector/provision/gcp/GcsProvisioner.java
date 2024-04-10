@@ -20,7 +20,6 @@ import org.eclipse.edc.connector.controlplane.transfer.spi.types.DeprovisionedRe
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionResponse;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ProvisionedResource;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
@@ -76,38 +75,17 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
 
         var bucketLocation = resourceDefinition.getLocation();
         var resourceName = bucketName + "-bucket";
-        var processId = resourceDefinition.getTransferProcessId();
         try {
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
-
-            GcpServiceAccount serviceAccount = null;
-            GcpAccessToken token = null;
-
-            var serviceAccountName = getServiceAccountName(resourceDefinition);
-            if (serviceAccountName != null) {
-                serviceAccount = iamService.getServiceAccount(serviceAccountName);
-                token = iamService.createAccessToken(serviceAccount);
-            } else {
-                serviceAccount = new GcpServiceAccount("adc-email", "adc-name", "application default");
-                token = iamService.createDefaultAccessToken();
-            }
-
+            var serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccountName());
+            var token = iamService.createAccessToken(serviceAccount);
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
-
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();
+
             return CompletableFuture.completedFuture(StatusResult.success(response));
         } catch (GcpException gcpException) {
             return completedFuture(StatusResult.failure(ResponseStatus.FATAL_ERROR, gcpException.toString()));
         }
-    }
-
-    private String getServiceAccountName(GcsResourceDefinition resourceDefinition) {
-        if (resourceDefinition.getServiceAccountName() != null) {
-            // TODO verify service account name from resource definition before returning.
-            return resourceDefinition.getServiceAccountName();
-        }
-
-        return gcpConfiguration.serviceAccountName();
     }
 
     @Override

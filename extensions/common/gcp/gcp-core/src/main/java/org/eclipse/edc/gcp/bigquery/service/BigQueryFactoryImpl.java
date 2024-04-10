@@ -20,6 +20,8 @@ import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
+import org.eclipse.edc.gcp.common.GcpServiceAccount;
+import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.IOException;
@@ -35,21 +37,17 @@ public class BigQueryFactoryImpl implements BigQueryFactory {
     }
 
     @Override
-    public BigQuery createBigQuery(String serviceAccountName) throws IOException {
+    public BigQuery createBigQuery(GcpServiceAccount serviceAccount) throws IOException {
         var credentials = GoogleCredentials.getApplicationDefault()
                 .createScoped(IamScopes.CLOUD_PLATFORM);
         credentials.refreshIfExpired();
 
-        if (serviceAccountName == null) {
-            serviceAccountName = gcpConfiguration.serviceAccountName();
-        }
-
-        if (serviceAccountName != null) {
+        if (!serviceAccount.equals(IamService.ADC_SERVICE_ACCOUNT)) {
             monitor.debug("BigQuery Service for project '" + gcpConfiguration.projectId() +
-                    "' using service account '" + serviceAccountName + "'");
+                    "' using service account '" + serviceAccount.getName() + "'");
             credentials = ImpersonatedCredentials.create(
                 credentials,
-                serviceAccountName,
+                serviceAccount.getName(),
                 null,
                 Arrays.asList("https://www.googleapis.com/auth/bigquery"),
                 3600);
