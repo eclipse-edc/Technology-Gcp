@@ -16,8 +16,9 @@ package org.eclipse.edc.gcp.iam;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
-import com.google.api.services.iam.v2.IamScopes;
+import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
@@ -30,7 +31,8 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -75,9 +77,9 @@ public class IamServiceImpl implements IamService {
     }
 
     @Override
-    public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount) {
+    public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount, String... scopes) {
         if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
-            return applicationDefaultCredentials.getAccessToken();
+            return applicationDefaultCredentials.getAccessToken(scopes);
         }
 
         try (var iamCredentialsClient = iamCredentialsClientSupplier.get()) {
@@ -85,7 +87,7 @@ public class IamServiceImpl implements IamService {
             var lifetime = Duration.newBuilder().setSeconds(ONE_HOUR_IN_S).build();
             var request = GenerateAccessTokenRequest.newBuilder()
                     .setName(name.toString())
-                    .addAllScope(Collections.singleton(IamScopes.CLOUD_PLATFORM))
+                    .addAllScope(Arrays.asList(scopes))
                     .setLifetime(lifetime)
                     .build();
             var response = iamCredentialsClient.generateAccessToken(request);
@@ -94,6 +96,45 @@ public class IamServiceImpl implements IamService {
             return new GcpAccessToken(response.getAccessToken(), expirationMillis);
         } catch (Exception e) {
             throw new GcpException("Error creating service account token:\n" + e);
+        }
+    }
+
+    @Override
+    public GoogleCredentials getCredentials(GcpAccessToken accessToken) {
+        return GoogleCredentials.create(
+                new AccessToken(accessToken.getToken(), new Date(accessToken.getExpiration()))
+        );
+    }
+
+    @Override
+    public GoogleCredentials getCredentials(String serviceAccountName, String... scopes) {
+        if (serviceAccountName == null) {
+            serviceAccountName = gcpConfiguration.serviceAccountName();
+        }
+
+        try {
+            var sourceCredentials = GoogleCredentials.getApplicationDefault();
+            sourceCredentials.refreshIfExpired();
+
+            if (serviceAccountName == null) {
+                var adcCredentials = sourceCredentials.createScoped(scopes);
+                monitor.debug(
+                        "Credentials for project '" + gcpConfiguration.projectId() + "' using ADC");
+                return adcCredentials;
+            }
+
+            sourceCredentials = sourceCredentials.createScoped(
+                "https://www.googleapis.com/auth/iam");
+            monitor.debug("Credentials for project '" + gcpConfiguration.projectId() +
+                    "' using service account '" + serviceAccountName + "'");
+            return ImpersonatedCredentials.create(
+                sourceCredentials,
+                serviceAccountName,
+                null,
+                Arrays.asList(scopes),
+                3600);
+        } catch (IOException ioException) {
+            throw new GcpException("Cannot get credentials", ioException);
         }
     }
 
@@ -174,9 +215,12 @@ public class IamServiceImpl implements IamService {
 
     private record ApplicationDefaultCredentials(Monitor monitor) implements AccessTokenProvider {
         @Override
-        public GcpAccessToken getAccessToken() {
+        public GcpAccessToken getAccessToken(String... scopes) {
             try {
-                var credentials = GoogleCredentials.getApplicationDefault().createScoped(IamScopes.CLOUD_PLATFORM);
+                var credentials = GoogleCredentials.getApplicationDefault();
+                if (scopes != null) {
+                    credentials = credentials.createScoped(scopes);
+                }
                 credentials.refreshIfExpired();
                 var token = credentials.getAccessToken();
                 return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());

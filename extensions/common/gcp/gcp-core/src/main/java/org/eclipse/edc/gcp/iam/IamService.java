@@ -15,6 +15,7 @@
 package org.eclipse.edc.gcp.iam;
 
 
+import com.google.auth.oauth2.GoogleCredentials;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 
@@ -33,11 +34,32 @@ public interface IamService {
     GcpServiceAccount getServiceAccount(String serviceAccountName);
 
     /**
-     * Creates a temporary valid OAunth2.0 access token for the service account
+     * Creates a temporary valid OAuth2.0 access token for the service account
      *
      * @param serviceAccount service account the token should be created for;
      *                       if ADC_SERVICE_ACCOUNT, access token from ADC is created.
+     * @param scopes list of scopes to be requested for the access token, see
+     *               https://developers.google.com/identity/protocols/oauth2/scopes
      * @return {@link GcpAccessToken}
      */
-    GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount);
+    GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount, String... scopes);
+
+
+    /**
+     * Generates the credentials from a temporary valid OAuth2.0 access token
+     *
+     * @param accessToken token created by e.g. provisioner
+     * @return {@link GoogleCredentials} corresponding to the given access token
+     */
+    GoogleCredentials getCredentials(GcpAccessToken accessToken);
+
+    /**
+     * Generates the credentials for a service account
+     *
+     * @param serviceAccount service account name for the credentials, or null, to get default credentials
+     * @param scopes list of scopes to be requested for the access token, see
+     *               https://developers.google.com/identity/protocols/oauth2/scopes
+     * @return {@link GoogleCredentials} corresponding to the give service account
+     */
+    GoogleCredentials getCredentials(String serviceAccount, String... scopes);
 }

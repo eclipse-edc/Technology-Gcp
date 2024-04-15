@@ -23,7 +23,8 @@ public interface AccessTokenProvider {
     /**
      * Returns the access token generated for the credentials.
      *
+     * @param scopes list of scopes to be requested for the access token.
      * @return the {@link GcpAccessToken} for the credentials, null if error occurs.
      */
-    GcpAccessToken getAccessToken();
+    GcpAccessToken getAccessToken(String... scopes);
 }

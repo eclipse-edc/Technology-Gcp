@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -83,14 +84,14 @@ class GcsProvisionerTest {
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
         when(iamServiceMock.getServiceAccount(null)).thenReturn(IamService.ADC_SERVICE_ACCOUNT);
-        when(iamServiceMock.createAccessToken(IamService.ADC_SERVICE_ACCOUNT)).thenReturn(token);
+        when(iamServiceMock.createAccessToken(IamService.ADC_SERVICE_ACCOUNT, "https://www.googleapis.com/auth/devstorage.read_write")).thenReturn(token);
         doNothing().when(storageServiceMock).addProviderPermissions(bucket, serviceAccount);
 
         var response = provisioner.provision(resourceDefinition, testPolicy).join().getContent();
 
         verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
         verify(iamServiceMock).getServiceAccount(null);
-        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
+        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT, "https://www.googleapis.com/auth/devstorage.read_write");
 
         assertThat(response.getResource()).isInstanceOfSatisfying(GcsProvisionedResource.class, resource -> {
             assertThat(resource.getId()).isEqualTo(resourceDefinitionId);
@@ -122,7 +123,7 @@ class GcsProvisionerTest {
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
         when(iamServiceMock.getServiceAccount(serviceAccount.getName())).thenReturn(serviceAccount);
-        when(iamServiceMock.createAccessToken(serviceAccount)).thenReturn(token);
+        when(iamServiceMock.createAccessToken(serviceAccount, "https://www.googleapis.com/auth/devstorage.read_write")).thenReturn(token);
         doNothing().when(storageServiceMock).addProviderPermissions(bucket, serviceAccount);
 
         var response = provisioner.provision(resourceDefinition, testPolicy).join().getContent();
@@ -138,7 +139,7 @@ class GcsProvisionerTest {
         });
 
         verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
-        verify(iamServiceMock).createAccessToken(any());
+        verify(iamServiceMock).createAccessToken(any(), eq("https://www.googleapis.com/auth/devstorage.read_write"));
     }
 
     @Test
@@ -157,7 +158,7 @@ class GcsProvisionerTest {
         assertThat(response.failed()).isFalse();
 
         verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
-        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
+        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT, "https://www.googleapis.com/auth/devstorage.read_write");
     }
 
     @Test
