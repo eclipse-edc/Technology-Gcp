@@ -40,7 +40,7 @@ class GcsDataSinkFactoryTest {
             mock(ExecutorService.class),
             mock(Monitor.class),
             mock(Vault.class),
-            new TypeManager()
+            mock(TypeManager.class)
     );
 
     @Test
