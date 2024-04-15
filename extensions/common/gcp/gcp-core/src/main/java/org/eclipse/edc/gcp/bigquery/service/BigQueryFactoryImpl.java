@@ -47,7 +47,7 @@ public class BigQueryFactoryImpl implements BigQueryFactory {
                     "' using service account '" + serviceAccount.getName() + "'");
             credentials = ImpersonatedCredentials.create(
                 credentials,
-                serviceAccount.getName(),
+                serviceAccount.getEmail(),
                 null,
                 Arrays.asList("https://www.googleapis.com/auth/bigquery"),
                 3600);

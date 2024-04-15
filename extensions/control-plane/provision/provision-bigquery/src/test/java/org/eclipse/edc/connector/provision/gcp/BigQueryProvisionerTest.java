@@ -219,8 +219,11 @@ class BigQueryProvisionerTest {
 
     @Test
     void provisionFailsIfTableDoesntExist() throws IOException {
+        var serviceAccount = new GcpServiceAccount(TEST_EMAIL, TEST_SERVICE_ACCOUNT_NAME, TEST_DESCRIPTION);
+        when(iamService.getServiceAccount(null)).thenReturn(serviceAccount);
+
         var bqFactory = mock(BigQueryFactory.class);
-        when(bqFactory.createBigQuery(null)).thenReturn(bigQuery);
+        when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
 
         var bigQueryProvisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
