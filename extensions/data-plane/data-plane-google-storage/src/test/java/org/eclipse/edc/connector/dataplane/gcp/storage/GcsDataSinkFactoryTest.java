@@ -15,9 +15,9 @@
 package org.eclipse.edc.connector.dataplane.gcp.storage;
 
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
+import org.eclipse.edc.json.JacksonTypeManager;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.security.Vault;
-import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class GcsDataSinkFactoryTest {
             mock(ExecutorService.class),
             mock(Monitor.class),
             mock(Vault.class),
-            new TypeManager()
+            new JacksonTypeManager()
     );
 
     @Test

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -34,7 +34,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,17 +75,22 @@ class GcsProvisionerTest {
         var bucketLocation = resourceDefinition.getLocation();
 
         var bucket = new GcsBucket(bucketName);
-        var serviceAccount = new GcpServiceAccount("test-sa", "sa-name", "description");
+        var serviceAccount = IamService.ADC_SERVICE_ACCOUNT;
         var token = new GcpAccessToken("token", 123);
 
         when(gcpConfiguration.serviceAccountName()).thenReturn(null);
 
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(bucket);
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(true);
-        when(iamServiceMock.createDefaultAccessToken()).thenReturn(token);
+        when(iamServiceMock.getServiceAccount(null)).thenReturn(IamService.ADC_SERVICE_ACCOUNT);
+        when(iamServiceMock.createAccessToken(IamService.ADC_SERVICE_ACCOUNT)).thenReturn(token);
         doNothing().when(storageServiceMock).addProviderPermissions(bucket, serviceAccount);
 
         var response = provisioner.provision(resourceDefinition, testPolicy).join().getContent();
+
+        verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
+        verify(iamServiceMock).getServiceAccount(null);
+        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
 
         assertThat(response.getResource()).isInstanceOfSatisfying(GcsProvisionedResource.class, resource -> {
             assertThat(resource.getId()).isEqualTo(resourceDefinitionId);
@@ -97,9 +101,6 @@ class GcsProvisionerTest {
         assertThat(response.getSecretToken()).isInstanceOfSatisfying(GcpAccessToken.class, secretToken -> {
             assertThat(secretToken.getToken()).isEqualTo("token");
         });
-
-        verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
-        verify(iamServiceMock).createDefaultAccessToken();
     }
 
     @Test
@@ -146,6 +147,7 @@ class GcsProvisionerTest {
         var bucketName = resourceDefinition.getId();
         var bucketLocation = resourceDefinition.getLocation();
 
+        when(iamServiceMock.getServiceAccount(null)).thenReturn(IamService.ADC_SERVICE_ACCOUNT);
         when(gcpConfiguration.serviceAccountName()).thenReturn(null);
         when(storageServiceMock.getOrCreateBucket(bucketName, bucketLocation)).thenReturn(new GcsBucket(bucketName));
         when(storageServiceMock.isEmpty(bucketName)).thenReturn(false);
@@ -155,7 +157,7 @@ class GcsProvisionerTest {
         assertThat(response.failed()).isFalse();
 
         verify(storageServiceMock).getOrCreateBucket(bucketName, bucketLocation);
-        verify(iamServiceMock, times(1)).createDefaultAccessToken();
+        verify(iamServiceMock).createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
     }
 
     @Test

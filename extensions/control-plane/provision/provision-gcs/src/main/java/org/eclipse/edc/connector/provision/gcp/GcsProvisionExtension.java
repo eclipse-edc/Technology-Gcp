@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -16,8 +16,8 @@ package org.eclipse.edc.connector.provision.gcp;
 
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import org.eclipse.edc.connector.transfer.spi.provision.ProvisionManager;
-import org.eclipse.edc.connector.transfer.spi.provision.ResourceManifestGenerator;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ProvisionManager;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ResourceManifestGenerator;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.gcp.storage.StorageServiceImpl;

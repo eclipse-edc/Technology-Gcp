@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -24,6 +24,7 @@ import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
 import com.google.cloud.iam.credentials.v1.ServiceAccountName;
 import com.google.iam.admin.v1.ServiceAccount;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
+import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -42,13 +43,15 @@ class IamServiceImplTest {
     private final String projectId = "test-project-Id";
     private final String serviceAccountName = "test-service-account";
     private final String serviceAccountEmail = String.format("%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId);
+    private final String cfgServiceAccountName = "cfg-service-account";
+    private final String cfgServiceAccountEmail =  String.format("%s@%s.iam.gserviceaccount.com", cfgServiceAccountName, projectId);
     private final String serviceAccountDescription = "service-account-description";
     private IamService iamApi;
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
-
     private AccessTokenProvider accessTokenProvider;
     private GcpServiceAccount testServiceAccount;
+    private GcpConfiguration gcpConfiguration;
     private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
     @BeforeEach
@@ -57,8 +60,10 @@ class IamServiceImplTest {
         iamClient = mock();
         iamCredentialsClient = mock();
         accessTokenProvider = mock();
+        gcpConfiguration = mock();
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
-        iamApi = IamServiceImpl.Builder.newInstance(monitor, projectId)
+
+        iamApi = IamServiceImpl.Builder.newInstance(monitor, gcpConfiguration)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
                 .applicationDefaultCredentials(accessTokenProvider)
@@ -73,6 +78,7 @@ class IamServiceImplTest {
                 .setDescription(serviceAccountDescription)
                 .build();
         when(iamClient.getServiceAccount(name)).thenReturn(serviceAccount);
+        when(gcpConfiguration.projectId()).thenReturn(projectId);
 
         var createdServiceAccount = iamApi.getServiceAccount(serviceAccountName);
 
@@ -81,14 +87,37 @@ class IamServiceImplTest {
     }
 
     @Test
-    void testGetServiceAccountThatDoesntExist() {
-        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
+    void testGetConfigServiceAccount() {
+        var name = ServiceAccountName.of(projectId, cfgServiceAccountEmail).toString();
         var serviceAccount = ServiceAccount.newBuilder()
-                .setEmail(serviceAccountEmail)
+                .setName(cfgServiceAccountName)
+                .setEmail(cfgServiceAccountEmail)
                 .setDescription(serviceAccountDescription)
                 .build();
+        when(iamClient.getServiceAccount(name)).thenReturn(serviceAccount);
+        when(gcpConfiguration.projectId()).thenReturn(projectId);
+        when(gcpConfiguration.serviceAccountName()).thenReturn(cfgServiceAccountName);
+
+        var returnedServiceAccount = iamApi.getServiceAccount(null);
+
+        assertThat(returnedServiceAccount.getEmail()).isEqualTo(cfgServiceAccountEmail);
+        assertThat(returnedServiceAccount.getName()).isEqualTo(cfgServiceAccountName);
+        assertThat(returnedServiceAccount.getDescription()).isEqualTo(serviceAccountDescription);
+    }
+
+    @Test
+    void testGetDefaultServiceAccount() {
+        var returnedServiceAccount = iamApi.getServiceAccount(null);
+
+        assertThat(returnedServiceAccount).isEqualTo(IamService.ADC_SERVICE_ACCOUNT);
+    }
+
+    @Test
+    void testGetServiceAccountThatDoesntExist() {
+        var name = ServiceAccountName.of(projectId, serviceAccountEmail).toString();
         var getError = apiExceptionWithStatusCode(StatusCode.Code.NOT_FOUND);
         when(iamClient.getServiceAccount(name)).thenThrow(getError);
+        when(gcpConfiguration.projectId()).thenReturn(projectId);
 
         assertThatThrownBy(() -> iamApi.getServiceAccount(serviceAccountName)).isInstanceOf(GcpException.class);
     }
@@ -114,7 +143,7 @@ class IamServiceImplTest {
         long timeout = 3600;
         when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
-        var accessToken = iamApi.createDefaultAccessToken();
+        var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
         assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
         assertThat(accessToken.getExpiration()).isEqualTo(timeout);
     }
@@ -123,7 +152,7 @@ class IamServiceImplTest {
     void testCreateDefaultAccessTokenError() {
         when(accessTokenProvider.getAccessToken()).thenReturn(null);
 
-        var accessToken = iamApi.createDefaultAccessToken();
+        var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
         assertThat(accessToken).isNull();
     }
 

@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *       ZF Friedrichshafen AG - improvements (refactoring of generate method)
  *       SAP SE - refactoring
  *
@@ -16,9 +16,9 @@
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.transfer.spi.provision.ConsumerResourceDefinitionGenerator;
-import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
-import org.eclipse.edc.connector.transfer.spi.types.TransferProcess;
+import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ConsumerResourceDefinitionGenerator;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.TransferProcess;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.policy.model.Policy;
 import org.jetbrains.annotations.Nullable;

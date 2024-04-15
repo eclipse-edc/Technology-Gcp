@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -18,7 +18,7 @@ plugins {
 
 dependencies {
     api(libs.edc.spi.core)
-    implementation(libs.edc.util)
+    implementation(libs.edc.lib.util)
 
     implementation(project(":extensions:common:gcp:gcp-core"))
 

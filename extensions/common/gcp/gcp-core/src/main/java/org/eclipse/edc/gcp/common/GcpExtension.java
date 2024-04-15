@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -59,7 +59,7 @@ public class GcpExtension implements ServiceExtension {
         var universeDomain = context.getSetting(UNIVERSE_DOMAIN, null);
 
         gcpConfiguration = new GcpConfiguration(projectId, serviceAccountName, serviceAccountFile, universeDomain);
-        iamService = IamServiceImpl.Builder.newInstance(context.getMonitor(), gcpConfiguration.projectId()).build();
+        iamService = IamServiceImpl.Builder.newInstance(context.getMonitor(), gcpConfiguration).build();
     }
 
     @Provider

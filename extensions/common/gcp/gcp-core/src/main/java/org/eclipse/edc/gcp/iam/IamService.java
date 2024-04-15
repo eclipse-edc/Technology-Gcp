@@ -8,7 +8,7 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
@@ -22,6 +22,8 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
  * Wrapper around GCP IAM-API for decoupling.
  */
 public interface IamService {
+    GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
+
     /**
      * Returns the existing service account with the matching name.
      *
@@ -33,15 +35,9 @@ public interface IamService {
     /**
      * Creates a temporary valid OAunth2.0 access token for the service account
      *
-     * @param serviceAccount The service account the token should be created for
+     * @param serviceAccount service account the token should be created for;
+     *                       if ADC_SERVICE_ACCOUNT, access token from ADC is created.
      * @return {@link GcpAccessToken}
      */
     GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount);
-
-    /**
-     * Creates a temporary valid OAunth2.0 access token using the application default account credentials.
-     *
-     * @return {@link GcpAccessToken}
-     */
-    GcpAccessToken createDefaultAccessToken();
 }

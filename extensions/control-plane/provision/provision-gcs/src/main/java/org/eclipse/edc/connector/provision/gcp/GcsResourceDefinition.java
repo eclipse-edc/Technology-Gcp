@@ -8,13 +8,14 @@
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Contributors:
- *       Google LCC - Initial implementation
+ *       Google LLC - Initial implementation
  *
  */
 
 package org.eclipse.edc.connector.provision.gcp;
 
-import org.eclipse.edc.connector.transfer.spi.types.ResourceDefinition;
+
+import org.eclipse.edc.connector.controlplane.transfer.spi.types.ResourceDefinition;
 
 import java.util.Objects;
 
