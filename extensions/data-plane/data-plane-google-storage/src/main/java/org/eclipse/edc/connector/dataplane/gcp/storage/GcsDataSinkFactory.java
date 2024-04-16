@@ -92,7 +92,7 @@ public class GcsDataSinkFactory implements DataSinkFactory {
             var gcsAccessToken = typeManager.readValue(credentialsContent, GcpAccessToken.class);
             googleCredentials = iamService.getCredentials(gcsAccessToken);
         } else {
-            googleCredentials = iamService.getCredentials(null, "https://www.googleapis.com/auth/devstorage.read_write");
+            googleCredentials = iamService.getCredentials(IamService.ADC_SERVICE_ACCOUNT, IamService.GCS_SCOPE);
         }
 
         return StorageOptions.newBuilder()

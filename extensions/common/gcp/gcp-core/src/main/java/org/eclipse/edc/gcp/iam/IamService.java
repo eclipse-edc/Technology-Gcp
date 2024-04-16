@@ -23,7 +23,18 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
  * Wrapper around GCP IAM-API for decoupling.
  */
 public interface IamService {
+    /**
+     * Service account representing Application Default Credentials.
+     */
     GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
+    /**
+     * OAUTH2 scope for GCS read/write access.
+     */
+    String GCS_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
+    /**
+     * OAUTH2 scope for BigQuery access.
+     */
+    String BQ_SCOPE = "https://www.googleapis.com/auth/bigquery";
 
     /**
      * Returns the existing service account with the matching name.
@@ -56,10 +67,10 @@ public interface IamService {
     /**
      * Generates the credentials for a service account
      *
-     * @param serviceAccount service account name for the credentials, or null, to get default credentials
+     * @param serviceAccount service account for the credentials, or null, to get default credentials
      * @param scopes list of scopes to be requested for the access token, see
      *               https://developers.google.com/identity/protocols/oauth2/scopes
      * @return {@link GoogleCredentials} corresponding to the give service account
      */
-    GoogleCredentials getCredentials(String serviceAccount, String... scopes);
+    GoogleCredentials getCredentials(GcpServiceAccount serviceAccount, String... scopes);
 }

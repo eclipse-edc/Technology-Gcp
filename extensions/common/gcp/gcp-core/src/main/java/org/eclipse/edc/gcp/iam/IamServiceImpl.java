@@ -107,16 +107,12 @@ public class IamServiceImpl implements IamService {
     }
 
     @Override
-    public GoogleCredentials getCredentials(String serviceAccountName, String... scopes) {
-        if (serviceAccountName == null) {
-            serviceAccountName = gcpConfiguration.serviceAccountName();
-        }
-
+    public GoogleCredentials getCredentials(GcpServiceAccount serviceAccount, String... scopes) {
         try {
             var sourceCredentials = GoogleCredentials.getApplicationDefault();
             sourceCredentials.refreshIfExpired();
 
-            if (serviceAccountName == null) {
+            if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
                 var adcCredentials = sourceCredentials.createScoped(scopes);
                 monitor.debug(
                         "Credentials for project '" + gcpConfiguration.projectId() + "' using ADC");
@@ -126,10 +122,10 @@ public class IamServiceImpl implements IamService {
             sourceCredentials = sourceCredentials.createScoped(
                 "https://www.googleapis.com/auth/iam");
             monitor.debug("Credentials for project '" + gcpConfiguration.projectId() +
-                    "' using service account '" + serviceAccountName + "'");
+                    "' using service account '" + serviceAccount.getName() + "'");
             return ImpersonatedCredentials.create(
                 sourceCredentials,
-                serviceAccountName,
+                serviceAccount.getEmail(),
                 null,
                 Arrays.asList(scopes),
                 3600);
@@ -217,10 +213,8 @@ public class IamServiceImpl implements IamService {
         @Override
         public GcpAccessToken getAccessToken(String... scopes) {
             try {
-                var credentials = GoogleCredentials.getApplicationDefault();
-                if (scopes != null) {
-                    credentials = credentials.createScoped(scopes);
-                }
+                var credentials = GoogleCredentials.getApplicationDefault()
+                        .createScoped(scopes);
                 credentials.refreshIfExpired();
                 var token = credentials.getAccessToken();
                 return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
