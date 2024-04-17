@@ -17,6 +17,8 @@ package org.eclipse.edc.gcp.iam;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.ApiExceptionFactory;
 import com.google.api.gax.rpc.StatusCode;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenResponse;
@@ -33,16 +35,22 @@ import org.eclipse.edc.spi.monitor.Monitor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class IamServiceImplTest {
-
+    private final String testTokenValue = "test-access-token";
+    private final long testTokenExpirationTime = 433454334;
+    private final String testScopes = "test-scopes";
     private final String projectId = "test-project-Id";
     private final String serviceAccountName = "test-service-account";
     private final String serviceAccountEmail = String.format("%s@%s.iam.gserviceaccount.com", serviceAccountName, projectId);
@@ -52,25 +60,39 @@ class IamServiceImplTest {
     private IamService iamApi;
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
-    private AccessTokenProvider accessTokenProvider;
+    private CredentialsUtil credentialsUtil;
     private GcpServiceAccount testServiceAccount;
     private GcpConfiguration gcpConfiguration;
-    private final String iamServiceAccountName = "projects/" + projectId + "/serviceAccounts/" + serviceAccountEmail;
 
     @BeforeEach
     void setUp() {
         var monitor = mock(Monitor.class);
         iamClient = mock();
         iamCredentialsClient = mock();
-        accessTokenProvider = mock();
+        credentialsUtil = mock();
         gcpConfiguration = mock();
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
 
         iamApi = IamServiceImpl.Builder.newInstance(monitor, gcpConfiguration)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
-                .applicationDefaultCredentials(accessTokenProvider)
+                .credentialUtil(credentialsUtil)
                 .build();
+
+        var credentialAccessToken = AccessToken.newBuilder()
+                .setTokenValue(testTokenValue)
+                .setExpirationTime(new Date(testTokenExpirationTime))
+                .build();
+        var googleCredentials = GoogleCredentials.create(credentialAccessToken);
+        when(credentialsUtil.getApplicationDefaultCredentials())
+                .thenReturn(googleCredentials);
+        when(credentialsUtil.createScoped(any(GoogleCredentials.class), any(String[].class)))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(credentialsUtil.createImpersonated(
+            any(GoogleCredentials.class),
+            any(GcpServiceAccount.class),
+            anyInt(),
+            any(String[].class))).thenAnswer(i -> i.getArguments()[0]);
     }
 
     @Test
@@ -127,10 +149,11 @@ class IamServiceImplTest {
 
     @Test
     void testCreateAccessToken() {
-        var expectedTokenString = "test-access-token";
         long timeout = 3600;
-        var expectedKey = GenerateAccessTokenResponse.newBuilder().setAccessToken(expectedTokenString).setExpireTime(
-                Timestamp.newBuilder().setSeconds(timeout)).build();
+        var expectedKey = GenerateAccessTokenResponse.newBuilder()
+                .setAccessToken(testTokenValue)
+                .setExpireTime(Timestamp.newBuilder().setSeconds(timeout))
+                .build();
         String[] scope = {};
         var expectedRequest = GenerateAccessTokenRequest.newBuilder()
                 .setName("projects/-/serviceAccounts/" + serviceAccountEmail)
@@ -141,16 +164,17 @@ class IamServiceImplTest {
 
         var accessToken = iamApi.createAccessToken(testServiceAccount);
 
-        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
+        assertThat(accessToken.getToken()).isEqualTo(testTokenValue);
         assertThat(accessToken.getExpiration()).isEqualTo(timeout * 1000);
     }
 
     @Test
     void testCreateAccessTokenWithScope() {
-        var expectedTokenString = "test-access-token";
         long timeout = 3600;
-        var expectedKey = GenerateAccessTokenResponse.newBuilder().setAccessToken(expectedTokenString).setExpireTime(
-                Timestamp.newBuilder().setSeconds(timeout)).build();
+        var expectedKey = GenerateAccessTokenResponse.newBuilder()
+                .setAccessToken(testTokenValue)
+                .setExpireTime(Timestamp.newBuilder().setSeconds(timeout))
+                .build();
         var scope = "test_scope";
         var expectedRequest = GenerateAccessTokenRequest.newBuilder()
                 .setName("projects/-/serviceAccounts/" + serviceAccountEmail)
@@ -162,39 +186,61 @@ class IamServiceImplTest {
 
         var accessToken = iamApi.createAccessToken(testServiceAccount, scope);
 
-        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
-        assertThat(accessToken.getExpiration()).isEqualTo(timeout * 1000);
+        assertThat(accessToken.getToken()).isEqualTo(testTokenValue);
+        assertThat(accessToken.getExpiration()).isEqualTo(timeout  * 1000);
     }
 
     @Test
     void testCreateDefaultAccessToken() {
-        var expectedTokenString = "test-access-token";
-        long timeout = 3600;
-        when(accessTokenProvider.getAccessToken()).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
-
         var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
-        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
-        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
+        assertThat(accessToken.getToken()).isEqualTo(testTokenValue);
+        assertThat(accessToken.getExpiration()).isEqualTo(testTokenExpirationTime);
     }
 
     @Test
     void testCreateDefaultAccessTokenWithScope() {
-        var expectedTokenString = "test-access-token";
         var scope = "test_scope";
-        long timeout = 3600;
-        when(accessTokenProvider.getAccessToken(scope)).thenReturn(new GcpAccessToken(expectedTokenString, timeout));
 
         var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT, scope);
-        assertThat(accessToken.getToken()).isEqualTo(expectedTokenString);
-        assertThat(accessToken.getExpiration()).isEqualTo(timeout);
+        assertThat(accessToken.getToken()).isEqualTo(testTokenValue);
+        assertThat(accessToken.getExpiration()).isEqualTo(testTokenExpirationTime);
     }
 
     @Test
     void testCreateDefaultAccessTokenError() {
-        when(accessTokenProvider.getAccessToken()).thenReturn(null);
+        when(credentialsUtil.getApplicationDefaultCredentials()).thenThrow(new GcpException("Cannot get credentials"));
+        assertThatThrownBy(() -> iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT)).isInstanceOf(GcpException.class);
+    }
 
-        var accessToken = iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT);
-        assertThat(accessToken).isNull();
+    @Test
+    void testGetCredentialsFromTokenSucceeds() {
+        var expectedTokenString = "test-access-token";
+        long timeout = 3600;
+        var passedAccessToken = new GcpAccessToken(expectedTokenString, timeout);
+        var credentials = iamApi.getCredentials(passedAccessToken);
+        assertThat(credentials).isNotNull().extracting(GoogleCredentials::getAccessToken).satisfies(accessToken -> {
+            assertThat(accessToken.getTokenValue()).isEqualTo(expectedTokenString);
+            assertThat(accessToken.getExpirationTime()).isEqualTo(Instant.ofEpochMilli(timeout));
+        });
+    }
+
+    @Test
+    void testGetCredentialsWithAdcSucceeds() {
+        var credentials = iamApi.getCredentials(IamService.ADC_SERVICE_ACCOUNT, testScopes);
+        assertThat(credentials).isNotNull().extracting(GoogleCredentials::getAccessToken).satisfies(accessToken -> {
+            assertThat(accessToken.getTokenValue()).isEqualTo(testTokenValue);
+            assertThat(accessToken.getExpirationTime()).isEqualTo(new Date(testTokenExpirationTime));
+        });
+    }
+
+    @Test
+    void testGetCredentialsWithServiceAccountSucceeds() {
+        var serviceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
+        var credentials = iamApi.getCredentials(serviceAccount, testScopes);
+        assertThat(credentials).isNotNull().extracting(GoogleCredentials::getAccessToken).satisfies(accessToken -> {
+            assertThat(accessToken.getTokenValue()).isEqualTo(testTokenValue);
+            assertThat(accessToken.getExpirationTime()).isEqualTo(new Date(testTokenExpirationTime));
+        });
     }
 
     private ApiException apiExceptionWithStatusCode(StatusCode.Code code) {
