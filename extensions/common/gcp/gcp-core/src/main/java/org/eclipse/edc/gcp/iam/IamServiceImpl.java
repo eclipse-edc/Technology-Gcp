@@ -18,7 +18,6 @@ import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.StatusCode;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.ImpersonatedCredentials;
 import com.google.cloud.iam.admin.v1.IAMClient;
 import com.google.cloud.iam.credentials.v1.GenerateAccessTokenRequest;
 import com.google.cloud.iam.credentials.v1.IamCredentialsClient;
@@ -43,7 +42,7 @@ public class IamServiceImpl implements IamService {
     private final GcpConfiguration gcpConfiguration;
     private Supplier<IAMClient> iamClientSupplier;
     private Supplier<IamCredentialsClient> iamCredentialsClientSupplier;
-    private CredentialsUtil credentialsUtil;
+    private CredentialsManager credentialsManager;
 
     private IamServiceImpl(Monitor monitor, GcpConfiguration gcpConfiguration) {
         this.monitor = monitor;
@@ -79,9 +78,9 @@ public class IamServiceImpl implements IamService {
     @Override
     public GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount, String... scopes) {
         if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
-            var credentials = credentialsUtil.getApplicationDefaultCredentials();
-            credentials = credentialsUtil.createScoped(credentials, scopes);
-            credentialsUtil.refreshCredentials(credentials);
+            var credentials = credentialsManager.getApplicationDefaultCredentials()
+                    .createScoped(scopes);
+            credentialsManager.refreshCredentials(credentials);
             var token = credentials.getAccessToken();
             return new GcpAccessToken(token.getTokenValue(), token.getExpirationTime().getTime());
         }
@@ -112,22 +111,21 @@ public class IamServiceImpl implements IamService {
 
     @Override
     public GoogleCredentials getCredentials(GcpServiceAccount serviceAccount, String... scopes) {
-        var sourceCredentials = credentialsUtil.getApplicationDefaultCredentials();
-        credentialsUtil.refreshCredentials(sourceCredentials);
+        var sourceCredentials = credentialsManager.getApplicationDefaultCredentials();
+        credentialsManager.refreshCredentials(sourceCredentials);
 
         if (serviceAccount.equals(ADC_SERVICE_ACCOUNT)) {
-            var adcCredentials = credentialsUtil.createScoped(sourceCredentials, scopes);
+            var adcCredentials = sourceCredentials.createScoped(scopes);
             monitor.debug(
                     "Credentials for project '" + gcpConfiguration.projectId() + "' using ADC");
             return adcCredentials;
         }
 
-        sourceCredentials = credentialsUtil.createScoped(sourceCredentials,
-            "https://www.googleapis.com/auth/iam");
+        sourceCredentials = sourceCredentials.createScoped(IAM_SCOPE);
         monitor.debug("Credentials for project '" + gcpConfiguration.projectId() +
                 "' using service account '" + serviceAccount.getName() + "'");
 
-        return credentialsUtil.createImpersonated(
+        return credentialsManager.createImpersonated(
             sourceCredentials,
             serviceAccount,
             3600,
@@ -159,8 +157,8 @@ public class IamServiceImpl implements IamService {
             return this;
         }
 
-        public Builder credentialUtil(CredentialsUtil credentialUtil) {
-            iamServiceImpl.credentialsUtil = credentialUtil;
+        public Builder credentialUtil(CredentialsManager credentialUtil) {
+            iamServiceImpl.credentialsManager = credentialUtil;
             return this;
         }
 
@@ -175,8 +173,8 @@ public class IamServiceImpl implements IamService {
                 iamServiceImpl.iamCredentialsClientSupplier = defaultIamCredentialsClientSupplier();
             }
 
-            if (iamServiceImpl.credentialsUtil == null) {
-                iamServiceImpl.credentialsUtil = new DefaultCredentialsUtil(iamServiceImpl.monitor);
+            if (iamServiceImpl.credentialsManager == null) {
+                iamServiceImpl.credentialsManager = new DefaultCredentialsManager(iamServiceImpl.monitor);
             }
 
             return iamServiceImpl;
@@ -206,43 +204,6 @@ public class IamServiceImpl implements IamService {
                     throw new GcpException("Error while creating IamCredentialsClient", e);
                 }
             };
-        }
-    }
-
-    private record DefaultCredentialsUtil(Monitor monitor) implements CredentialsUtil {
-        @Override
-        public GoogleCredentials getApplicationDefaultCredentials() {
-            try {
-                return GoogleCredentials.getApplicationDefault();
-            } catch (IOException ioException) {
-                monitor.severe("Cannot get application default credentials", ioException);
-                throw new GcpException(ioException);
-            }
-        }
-
-        @Override
-        public void refreshCredentials(GoogleCredentials credentials) {
-            try {
-                credentials.refreshIfExpired();
-            } catch (IOException ioException) {
-                monitor.severe("Cannot get refresh the credentials", ioException);
-                throw new GcpException(ioException);
-            }
-        }
-
-        @Override
-        public GoogleCredentials createScoped(GoogleCredentials credentials, String... scopes) {
-            return credentials.createScoped(scopes);
-        }
-
-        @Override
-        public GoogleCredentials createImpersonated(GoogleCredentials sourceCredentials, GcpServiceAccount serviceAccount, int lifeTime, String... scopes) {
-            return ImpersonatedCredentials.create(
-                    sourceCredentials,
-                    serviceAccount.getEmail(),
-                    null,
-                    Arrays.asList(scopes),
-                    lifeTime);
         }
     }
 }

@@ -60,7 +60,7 @@ class IamServiceImplTest {
     private IamService iamApi;
     private IAMClient iamClient;
     private IamCredentialsClient iamCredentialsClient;
-    private CredentialsUtil credentialsUtil;
+    private CredentialsManager credentialsManager;
     private GcpServiceAccount testServiceAccount;
     private GcpConfiguration gcpConfiguration;
 
@@ -69,26 +69,26 @@ class IamServiceImplTest {
         var monitor = mock(Monitor.class);
         iamClient = mock();
         iamCredentialsClient = mock();
-        credentialsUtil = mock();
+        credentialsManager = mock();
         gcpConfiguration = mock();
         testServiceAccount = new GcpServiceAccount(serviceAccountEmail, serviceAccountName, serviceAccountDescription);
 
         iamApi = IamServiceImpl.Builder.newInstance(monitor, gcpConfiguration)
                 .iamClientSupplier(() -> iamClient)
                 .iamCredentialsClientSupplier(() -> iamCredentialsClient)
-                .credentialUtil(credentialsUtil)
+                .credentialUtil(credentialsManager)
                 .build();
 
         var credentialAccessToken = AccessToken.newBuilder()
                 .setTokenValue(testTokenValue)
                 .setExpirationTime(new Date(testTokenExpirationTime))
                 .build();
-        var googleCredentials = GoogleCredentials.create(credentialAccessToken);
-        when(credentialsUtil.getApplicationDefaultCredentials())
+        var googleCredentials = mock(GoogleCredentials.class);
+        when(credentialsManager.getApplicationDefaultCredentials())
                 .thenReturn(googleCredentials);
-        when(credentialsUtil.createScoped(any(GoogleCredentials.class), any(String[].class)))
-                .thenAnswer(i -> i.getArguments()[0]);
-        when(credentialsUtil.createImpersonated(
+        when(googleCredentials.createScoped(any(String[].class))).thenReturn(googleCredentials);
+        when(googleCredentials.getAccessToken()).thenReturn(credentialAccessToken);
+        when(credentialsManager.createImpersonated(
             any(GoogleCredentials.class),
             any(GcpServiceAccount.class),
             anyInt(),
@@ -208,7 +208,7 @@ class IamServiceImplTest {
 
     @Test
     void testCreateDefaultAccessTokenError() {
-        when(credentialsUtil.getApplicationDefaultCredentials()).thenThrow(new GcpException("Cannot get credentials"));
+        when(credentialsManager.getApplicationDefaultCredentials()).thenThrow(new GcpException("Cannot get credentials"));
         assertThatThrownBy(() -> iamApi.createAccessToken(IamService.ADC_SERVICE_ACCOUNT)).isInstanceOf(GcpException.class);
     }
 

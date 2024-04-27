@@ -28,13 +28,17 @@ public interface IamService {
      */
     GcpServiceAccount ADC_SERVICE_ACCOUNT = new GcpServiceAccount("adc-email", "adc-name", "application default");
     /**
+     * OAUTH2 scope for BigQuery access.
+     */
+    String BQ_SCOPE = "https://www.googleapis.com/auth/bigquery";
+    /**
      * OAUTH2 scope for GCS read/write access.
      */
     String GCS_SCOPE = "https://www.googleapis.com/auth/devstorage.read_write";
     /**
-     * OAUTH2 scope for BigQuery access.
+     * OAUTH2 scope for IAM access, used to then impersonate a service account.
      */
-    String BQ_SCOPE = "https://www.googleapis.com/auth/bigquery";
+    String IAM_SCOPE = "https://www.googleapis.com/auth/iam";
 
     /**
      * Returns the existing service account with the matching name.
@@ -54,7 +58,6 @@ public interface IamService {
      * @return {@link GcpAccessToken}
      */
     GcpAccessToken createAccessToken(GcpServiceAccount serviceAccount, String... scopes);
-
 
     /**
      * Generates the credentials from a temporary valid OAuth2.0 access token

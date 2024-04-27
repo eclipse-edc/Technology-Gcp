@@ -48,7 +48,7 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-        var bqFactory = new BigQueryFactoryImpl(gcpConfiguration, monitor, iamService);
+        var bqFactory = new BigQueryFactoryImpl(gcpConfiguration, iamService);
         var provisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
         provisionManager.register(provisioner);

@@ -20,23 +20,18 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpServiceAccount;
 import org.eclipse.edc.gcp.iam.IamService;
-import org.eclipse.edc.spi.monitor.Monitor;
-
-import java.io.IOException;
 
 public class BigQueryFactoryImpl implements BigQueryFactory {
     private final GcpConfiguration gcpConfiguration;
-    private final Monitor monitor;
     private final IamService iamService;
 
-    public BigQueryFactoryImpl(GcpConfiguration gcpConfiguration, Monitor monitor, IamService iamService) {
+    public BigQueryFactoryImpl(GcpConfiguration gcpConfiguration, IamService iamService) {
         this.gcpConfiguration = gcpConfiguration;
-        this.monitor = monitor;
         this.iamService = iamService;
     }
 
     @Override
-    public BigQuery createBigQuery(GcpServiceAccount serviceAccount) throws IOException {
+    public BigQuery createBigQuery(GcpServiceAccount serviceAccount) {
         var credentials = iamService.getCredentials(serviceAccount,
                 IamService.BQ_SCOPE);
         return createBigQuery(credentials);

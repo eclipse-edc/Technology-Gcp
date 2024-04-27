@@ -20,7 +20,7 @@ import org.eclipse.edc.gcp.common.GcpServiceAccount;
 /**
  * Interface for credentials providing access tokens.
  */
-public interface CredentialsUtil {
+public interface CredentialsManager {
     /**
      * Returns the default credentials.
      *
@@ -34,15 +34,6 @@ public interface CredentialsUtil {
      * @param credentials the credentials to be refreshed.
      */
     void refreshCredentials(GoogleCredentials credentials);
-
-    /**
-     * Returns the credentials scoped to specific APIs.
-     *
-     * @param credentials the credentials to be scoped.
-     * @param scopes the list of scopes to be added to the credentials.
-     * @return the scoped {@link GoogleCredentials}.
-     */
-    GoogleCredentials createScoped(GoogleCredentials credentials, String... scopes);
 
     /**
      * Returns the impersonated credentials.

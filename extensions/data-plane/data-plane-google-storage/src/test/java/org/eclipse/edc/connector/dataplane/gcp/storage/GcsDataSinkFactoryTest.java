@@ -25,7 +25,6 @@ import org.eclipse.edc.spi.security.Vault;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,22 +44,15 @@ import static org.mockito.Mockito.when;
 
 class GcsDataSinkFactoryTest {
     private final TypeManager typeManager = new JacksonTypeManager();
-    private Vault vault;
-    private IamService iamService;
-    private GcsDataSinkFactory factory;
-
-    @BeforeEach
-    void instantiateMocksAndVault() {
-        vault = mock();
-        iamService = mock();
-        factory = new GcsDataSinkFactory(
-                mock(ExecutorService.class),
-                mock(Monitor.class),
-                vault,
-                typeManager,
-                iamService
+    private Vault vault = mock();
+    private IamService iamService = mock();
+    private GcsDataSinkFactory factory = new GcsDataSinkFactory(
+            mock(ExecutorService.class),
+            mock(Monitor.class),
+            vault,
+            typeManager,
+            iamService
         );
-    }
 
     @Test
     void canHandle_returnsTrueWhenExpectedType() {
