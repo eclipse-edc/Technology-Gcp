@@ -84,7 +84,7 @@ public class BigQueryProvisioner implements Provisioner<BigQueryResourceDefiniti
             }
             monitor.info("BigQuery Provisioner table " + target.getTableName().toString() + " exists");
 
-            var token = iamService.createAccessToken(serviceAccount);
+            var token = iamService.createAccessToken(serviceAccount, IamService.BQ_SCOPE);
             monitor.info("BigQuery Provisioner token ready");
 
             var resource = getProvisionedResource(resourceDefinition, resourceName, tableName, serviceAccount);

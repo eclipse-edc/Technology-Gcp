@@ -78,7 +78,7 @@ public class GcsProvisioner implements Provisioner<GcsResourceDefinition, GcsPro
         try {
             var bucket = storageService.getOrCreateBucket(bucketName, bucketLocation);
             var serviceAccount = iamService.getServiceAccount(resourceDefinition.getServiceAccountName());
-            var token = iamService.createAccessToken(serviceAccount);
+            var token = iamService.createAccessToken(serviceAccount, IamService.GCS_SCOPE);
             var resource = getProvisionedResource(resourceDefinition, resourceName, bucketName, serviceAccount);
             var response = ProvisionResponse.Builder.newInstance().resource(resource).secretToken(token).build();
 
