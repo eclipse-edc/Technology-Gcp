@@ -125,7 +125,7 @@ class BigQueryProvisionerTest {
 
         when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
         when(iamService.getServiceAccount(null)).thenReturn(serviceAccount);
-        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
+        when(iamService.createAccessToken(serviceAccount, "https://www.googleapis.com/auth/bigquery")).thenReturn(token);
 
         var resourceDefinition = resourceDefinitionBuilder.build();
         var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
@@ -151,7 +151,7 @@ class BigQueryProvisionerTest {
         var result = bigQueryProvisioner.provision(resourceDefinition, Policy.Builder.newInstance().build());
 
         // Assert.
-        verify(iamService).createAccessToken(serviceAccount);
+        verify(iamService).createAccessToken(serviceAccount, "https://www.googleapis.com/auth/bigquery");
 
         assertThat(result).succeedsWithin(1, SECONDS)
                 .extracting(StatusResult::getContent).satisfies(response -> {
@@ -181,7 +181,7 @@ class BigQueryProvisionerTest {
 
         when(bqFactory.createBigQuery(serviceAccount)).thenReturn(bigQuery);
         when(iamService.getServiceAccount(TEST_SERVICE_ACCOUNT_NAME)).thenReturn(serviceAccount);
-        when(iamService.createAccessToken(serviceAccount)).thenReturn(token);
+        when(iamService.createAccessToken(serviceAccount, "https://www.googleapis.com/auth/bigquery")).thenReturn(token);
 
         var resourceDefinition = resourceDefinitionBuilder.build();
         var expectedResource = BigQueryProvisionedResource.Builder.newInstance()
@@ -208,7 +208,7 @@ class BigQueryProvisionerTest {
 
         // Assert.
         verify(iamService).getServiceAccount(TEST_SERVICE_ACCOUNT_NAME);
-        verify(iamService).createAccessToken(serviceAccount);
+        verify(iamService).createAccessToken(serviceAccount, "https://www.googleapis.com/auth/bigquery");
 
         assertThat(result).succeedsWithin(1, SECONDS)
                 .extracting(StatusResult::getContent).satisfies(response -> {
