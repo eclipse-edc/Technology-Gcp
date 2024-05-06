@@ -16,6 +16,7 @@ package org.eclipse.edc.connector.dataplane.gcp.storage;
 
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataTransferExecutorServiceContainer;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.PipelineService;
+import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.security.Vault;
@@ -40,6 +41,9 @@ public class DataPlaneGcsExtension implements ServiceExtension {
     @Inject
     private DataTransferExecutorServiceContainer executorContainer;
 
+    @Inject
+    private IamService iamService;
+
     @Override
     public String name() {
         return NAME;
@@ -53,7 +57,7 @@ public class DataPlaneGcsExtension implements ServiceExtension {
         var sourceFactory = new GcsDataSourceFactory(monitor);
         pipelineService.registerFactory(sourceFactory);
 
-        var sinkFactory = new GcsDataSinkFactory(executorContainer.getExecutorService(), monitor, vault, typeManager);
+        var sinkFactory = new GcsDataSinkFactory(executorContainer.getExecutorService(), monitor, vault, typeManager, iamService);
         pipelineService.registerFactory(sinkFactory);
     }
 }

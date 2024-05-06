@@ -18,13 +18,14 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ProvisionManager;
 import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ResourceManifestGenerator;
+import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.gcp.storage.StorageServiceImpl;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
-
+import org.eclipse.edc.spi.types.TypeManager;
 
 public class GcsProvisionExtension implements ServiceExtension {
     @Inject
@@ -44,6 +45,9 @@ public class GcsProvisionExtension implements ServiceExtension {
     @Inject
     private GcpConfiguration gcpConfiguration;
 
+    @Inject
+    private TypeManager typeManager;
+
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
@@ -54,6 +58,8 @@ public class GcsProvisionExtension implements ServiceExtension {
         provisionManager.register(provisioner);
 
         manifestGenerator.registerGenerator(new GcsConsumerResourceDefinitionGenerator());
+
+        typeManager.registerTypes(GcsProvisionedResource.class, GcsResourceDefinition.class, GcpAccessToken.class);
     }
 
 
