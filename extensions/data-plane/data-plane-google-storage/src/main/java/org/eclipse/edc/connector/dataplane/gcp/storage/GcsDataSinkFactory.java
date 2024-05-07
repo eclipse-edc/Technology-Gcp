@@ -54,6 +54,11 @@ public class GcsDataSinkFactory implements DataSinkFactory {
     }
 
     @Override
+    public String supportedType() {
+        return GcsStoreSchema.TYPE;
+    }
+
+    @Override
     public boolean canHandle(DataFlowStartMessage request) {
         return GcsStoreSchema.TYPE.equals(request.getDestinationDataAddress().getType());
     }
