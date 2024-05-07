@@ -38,6 +38,11 @@ public class GcsDataSourceFactory implements DataSourceFactory {
 
 
     @Override
+    public String supportedType() {
+        return GcsStoreSchema.TYPE;
+    }
+
+    @Override
     public boolean canHandle(DataFlowStartMessage request) {
         return GcsStoreSchema.TYPE.equals(request.getSourceDataAddress().getType());
     }
