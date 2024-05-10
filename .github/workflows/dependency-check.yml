@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
 
 permissions:
   contents: read
@@ -11,3 +11,4 @@ permissions:
 jobs:
   check:
     uses: eclipse-edc/.github/.github/workflows/dependency-check.yml@main
+    secrets: inherit
