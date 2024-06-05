@@ -22,6 +22,10 @@ public record BigQueryTarget(String project, String dataset, String table) {
         return TableId.of(project, dataset, table);
     }
 
+    public TableId getTableId(String tableName) {
+        return TableId.of(project, dataset, tableName);
+    }
+
     public TableName getTableName() {
         return TableName.of(project, dataset, table);
     }

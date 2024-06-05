@@ -15,6 +15,7 @@
 package org.eclipse.edc.gcp.bigquery.service;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.NoCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
@@ -38,9 +39,15 @@ public class BigQueryFactoryImpl implements BigQueryFactory {
     }
 
     private BigQuery createBigQuery(GoogleCredentials credentials) {
-        return BigQueryOptions.newBuilder()
-                .setProjectId(gcpConfiguration.projectId())
-                .setCredentials(credentials)
-                .build().getService();
+        var bqBuilder = BigQueryOptions.newBuilder();
+        var host = System.getProperty("EDC_GCP_BQREST");
+        if (host != null) {
+            bqBuilder.setHost(host);
+            bqBuilder.setLocation(host);
+            bqBuilder.setCredentials(NoCredentials.getInstance());
+        } else {
+            bqBuilder.setCredentials(credentials);
+        }
+        return bqBuilder.build().getService();
     }
 }

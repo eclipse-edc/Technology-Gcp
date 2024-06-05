@@ -1,0 +1,113 @@
+projects:
+- id: edc-test-project
+  datasets:
+    - id: edc-test-dataset
+      tables:
+        - id: table_src
+          columns:
+            - name: id
+              type: INTEGER
+              mode: required
+            - name: name
+              type: STRING
+              mode: required
+            - name: structvalue
+              type: STRUCT
+              mode: repeated
+              fields:
+                - name: key
+                  type: STRING
+                - name: value
+                  type: JSON
+            - name: birthday
+              type: DATE
+            - name: skillNum
+              type: NUMERIC
+            - name: created_at
+              type: TIMESTAMP
+          data:
+            - id: 1
+              name: name1
+              structvalue:
+                - key: info1
+                  value: '{"age": 56}'
+              birthday: "1970-01-01"
+              skillNum: 3
+              created_at: '1970-01-01T12:00:00'
+            - id: 2
+              name: name2
+              structvalue:
+                - key: info2
+                  value: '{"age": 34}'
+              birthday: "1970-01-01"
+              skillNum: 5
+              created_at: '1970-01-01T18:00:00'
+        - id: table_dst
+          columns:
+            - name: id
+              type: INTEGER
+              mode: required
+            - name: name
+              type: STRING
+              mode: required
+            - name: structvalue
+              type: STRUCT
+              mode: repeated
+              fields:
+                - name: key
+                  type: STRING
+                - name: value
+                  type: JSON
+            - name: birthday
+              type: DATE
+            - name: skillNum
+              type: NUMERIC
+            - name: created_at
+              type: TIMESTAMP
+          data:
+        - id: table_temp_1
+          columns:
+            - name: id
+              type: INTEGER
+              mode: REQUIRED
+            - name: name
+              type: STRING
+              mode: required
+            - name: structvalue
+              type: STRUCT
+              mode: repeated
+              fields:
+                - name: key
+                  type: STRING
+                - name: value
+                  type: JSON
+            - name: birthday
+              type: DATE
+            - name: skillNum
+              type: NUMERIC
+            - name: created_at
+              type: TIMESTAMP
+          data:
+        - id: table_temp_2
+          columns:
+            - name: id
+              type: INTEGER
+              mode: required
+            - name: name
+              type: STRING
+              mode: required
+            - name: structvalue
+              type: STRUCT
+              mode: repeated
+              fields:
+                - name: key
+                  type: STRING
+                - name: value
+                  type: JSON
+            - name: birthday
+              type: DATE
+            - name: skillNum
+              type: NUMERIC
+            - name: created_at
+              type: TIMESTAMP
+          data:
