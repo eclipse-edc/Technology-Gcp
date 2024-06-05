@@ -65,9 +65,8 @@ public class BigQuerySinkServiceImpl implements BigQuerySinkService {
 
         var errorWhileAppending = false;
         for (var part : parts) {
-            try (var inputStream = part.openStream()) {
-                var jsonParser = new JsonStreamParser(new InputStreamReader(inputStream));
-                boolean done = false;
+            try (var inputStreamReader = new InputStreamReader(part.openStream())) {
+                var jsonParser = new JsonStreamParser(inputStreamReader);
                 while (jsonParser.hasNext()) {
                     var element = jsonParser.next();
                     var jsonString = element.toString();
