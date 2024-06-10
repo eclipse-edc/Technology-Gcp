@@ -42,6 +42,18 @@ projects:
               birthday: "1970-01-01"
               skillNum: 5
               created_at: '1970-01-01T18:00:00'
+        - id: table_src_wrong
+          columns:
+            - name: name
+              type: STRING
+              mode: required
+            - name: birthday
+              type: DATE
+          data:
+            - name: name1
+              birthday: "1970-01-01"
+            - name: name2
+              birthday: "1970-01-01"
         - id: table_dst
           columns:
             - name: id
@@ -110,4 +122,12 @@ projects:
               type: NUMERIC
             - name: created_at
               type: TIMESTAMP
+          data:
+        - id: table_temp_wrong
+          columns:
+            - name: name
+              type: STRING
+              mode: required
+            - name: birthday
+              type: DATE
           data:

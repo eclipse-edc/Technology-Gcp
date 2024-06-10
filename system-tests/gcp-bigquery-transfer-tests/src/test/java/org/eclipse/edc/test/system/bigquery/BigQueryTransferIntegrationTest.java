@@ -181,8 +181,8 @@ SELECT * from edc-test-dataset.table_src;
         var transferProcessId = consumerClient.requestAssetAndTransferToBigQuery(providerClient, assetId,
                 "edc-test-project", "edc-test-dataset", "table_dst");
 
-        Duration pollInterval = Duration.ofSeconds(2);
-        Duration timeout = Duration.ofMinutes(5);
+        Duration pollInterval = Duration.ofSeconds(4);
+        Duration timeout = Duration.ofMinutes(3);
         await().pollInterval(pollInterval).atMost(timeout).untilAsserted(() -> {
             var state = consumerClient.getTransferProcessState(transferProcessId);
             assertThat(TransferProcessStates.valueOf(state).code()).isGreaterThanOrEqualTo(TransferProcessStates.COMPLETED.code());
@@ -212,5 +212,69 @@ SELECT * from edc-test-dataset.table_src;
         } catch (InterruptedException interruptedException) {
             fail("Interrupted exception while waiting for results");
         }
+    }
+
+    @Test
+    void transferTable_sinkFail() throws InterruptedException {
+        assertTrue(BQ_CONTAINER.isRunning());
+
+        var ports = BQ_CONTAINER.getExposedPorts();
+        System.setProperty("EDC_GCP_BQREST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("EDC_GCP_BQRPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+
+        var assetId = providerClient.createBigQueryAsset(
+                "Test asset",
+                "edc-test-project",
+                "edc-test-dataset",
+                "sample_model",
+                "table_temp_wrong",
+                """
+#standardSQL
+SELECT * from edc-test-dataset.table_src_wrong;
+                """);
+
+        var policyId = providerClient.createPolicyDefinition(PolicyFixtures.noConstraintPolicy());
+        providerClient.createContractDefinition(assetId, UUID.randomUUID().toString(), policyId, policyId);
+        var transferProcessId = consumerClient.requestAssetAndTransferToBigQuery(providerClient, assetId,
+                "edc-test-project", "edc-test-dataset", "table_dst");
+
+        Duration pollInterval = Duration.ofSeconds(4);
+        Duration timeout = Duration.ofMinutes(2);
+        await().pollInterval(pollInterval).atMost(timeout).untilAsserted(() -> {
+            var state = consumerClient.getTransferProcessState(transferProcessId);
+            assertThat(TransferProcessStates.valueOf(state).code()).isGreaterThanOrEqualTo(TransferProcessStates.TERMINATED.code());
+        });
+    }
+
+    @Test
+    void transferTable_sourceFail() throws InterruptedException {
+        assertTrue(BQ_CONTAINER.isRunning());
+
+        var ports = BQ_CONTAINER.getExposedPorts();
+        System.setProperty("EDC_GCP_BQREST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("EDC_GCP_BQRPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+
+        var assetId = providerClient.createBigQueryAsset(
+                "Test asset",
+                "edc-test-project",
+                "edc-test-dataset",
+                "sample_model",
+                "table_temp_1",
+                """
+#standardSQL
+SELECT * from edc-test-dataset.table_src_wrong;
+                """);
+
+        var policyId = providerClient.createPolicyDefinition(PolicyFixtures.noConstraintPolicy());
+        providerClient.createContractDefinition(assetId, UUID.randomUUID().toString(), policyId, policyId);
+        var transferProcessId = consumerClient.requestAssetAndTransferToBigQuery(providerClient, assetId,
+                "edc-test-project", "edc-test-dataset", "table_dst");
+
+        Duration pollInterval = Duration.ofSeconds(4);
+        Duration timeout = Duration.ofMinutes(2);
+        await().pollInterval(pollInterval).atMost(timeout).untilAsserted(() -> {
+            var state = consumerClient.getTransferProcessState(transferProcessId);
+            assertThat(TransferProcessStates.valueOf(state).code()).isGreaterThanOrEqualTo(TransferProcessStates.TERMINATED.code());
+        });
     }
 }

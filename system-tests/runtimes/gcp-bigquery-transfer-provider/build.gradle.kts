@@ -25,8 +25,8 @@ dependencies {
   implementation(libs.edc.configuration.filesystem)
   implementation(libs.edc.iam.mock)
   implementation(libs.edc.management.api)
-  implementation(libs.edc.transfer.data.plane)
-  implementation(libs.edc.control.plane.api)
+  implementation(libs.edc.data.plane.self.registration)
+  implementation(libs.edc.transfer.data.plane.signaling)
   implementation(libs.edc.auth.spi)
   implementation(libs.edc.control.api.configuration)
 

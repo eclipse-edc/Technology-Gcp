@@ -26,6 +26,7 @@ edc-control-plane-api = { module = "org.eclipse.edc:control-plane-api", version.
 edc-control-plane-api-client = { module = "org.eclipse.edc:control-plane-api-client", version.ref = "edc" }
 edc-control-plane-core = { module = "org.eclipse.edc:control-plane-core", version.ref = "edc" }
 edc-controlplane-spi = { module = "org.eclipse.edc:control-plane-spi", version.ref = "edc" }
+edc-core-connector = { module = "org.eclipse.edc:connector-core", version.ref = "edc" }
 edc-core-controlplane = { module = "org.eclipse.edc:control-plane-core", version.ref = "edc" }
 edc-core-controlplane-api = { module = "org.eclipse.edc:control-plane-api", version.ref = "edc" }
 edc-core-controlplane-apiclient = { module = "org.eclipse.edc:control-plane-api-client", version.ref = "edc" }
@@ -38,9 +39,10 @@ edc-data-plane-public-api = { module = "org.eclipse.edc:data-plane-public-api-v2
 edc-data-plane-selector-api = { module = "org.eclipse.edc:data-plane-selector-api", version.ref = "edc" }
 edc-data-plane-selector-core = { module = "org.eclipse.edc:data-plane-selector-core", version.ref = "edc" }
 edc-data-plane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
-edc-dataplane-client = { module = "org.eclipse.edc:data-plane-client", version.ref = "edc" }
-edc-dataplane-selector-api = { module = "org.eclipse.edc:data-plane-selector-api", version.ref = "edc" }
+edc-data-plane-client = { module = "org.eclipse.edc:data-plane-client", version.ref = "edc" }
+edc-data-plane-self-registration = { module = "org.eclipse.edc:data-plane-self-registration", version.ref = "edc" }
 edc-dpf-client = { module = "org.eclipse.edc:data-plane-client", version.ref = "edc" }
+edc-dpf-selector-client = { module = "org.eclipse.edc:data-plane-selector-client", version.ref = "edc" }
 edc-dpf-selector-core = { module = "org.eclipse.edc:data-plane-selector-core", version.ref = "edc" }
 edc-dsp = { module = "org.eclipse.edc:dsp", version.ref = "edc" }
 edc-iam-mock = { module = "org.eclipse.edc:iam-mock", version.ref = "edc" }
@@ -70,7 +72,7 @@ edc-sql-participant-store = { module = "org.eclipse.edc:participant-store-sql", 
 edc-sql-policydefinition = { module = "org.eclipse.edc:policy-definition-store-sql", version.ref = "edc" }
 edc-sql-transferprocess = { module = "org.eclipse.edc:transfer-process-store-sql", version.ref = "edc" }
 edc-transfer-data-plane = { module = "org.eclipse.edc:transfer-data-plane", version.ref = "edc" }
-edc-transfer-dataplane = { module = "org.eclipse.edc:transfer-data-plane", version.ref = "edc" }
+edc-transfer-data-plane-signaling = { module = "org.eclipse.edc:transfer-data-plane-signaling", version.ref = "edc" }
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
 
 # third-party dependencies

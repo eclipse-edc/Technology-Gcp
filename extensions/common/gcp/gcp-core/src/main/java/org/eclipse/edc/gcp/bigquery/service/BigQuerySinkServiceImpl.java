@@ -186,7 +186,7 @@ public class BigQuerySinkServiceImpl implements BigQuerySinkService {
 
             var builder = JsonStreamWriter.newBuilder(writeStream.getName(), writeClient);
 
-            if (System.getProperty("EDC_GCP_HOST") != null) {
+            if (System.getProperty("EDC_GCP_BQRPC") != null) {
                 builder.setCredentialsProvider(NoCredentialsProvider.create());
             } else {
                 builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
@@ -199,7 +199,7 @@ public class BigQuerySinkServiceImpl implements BigQuerySinkService {
             // TODO re-create the writer for a maximum, specified number of times.
             monitor.info("BigQuery Sink stream writer closed, recreating it for stream " + streamWriter.getStreamName());
             var builder = JsonStreamWriter.newBuilder(streamWriter.getStreamName(), writeClient);
-            if (System.getProperty("EDC_GCP_HOST") != null) {
+            if (System.getProperty("EDC_GCP_BQRPC") != null) {
                 builder.setCredentialsProvider(NoCredentialsProvider.create());
             } else {
                 builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
