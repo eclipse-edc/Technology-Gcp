@@ -5,7 +5,7 @@ format.version = "1.1"
 edc = "0.7.1-SNAPSHOT"
 failsafe = "3.3.1"
 googleCloudBom = "26.38.0"
-googleApisIam = "v2-rev20240108-2.0.0"
+googleApisIam = "v2-rev20240530-2.0.0"
 googleApiGax = "2.48.0"
 
 [libraries]
