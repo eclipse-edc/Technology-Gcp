@@ -15,8 +15,8 @@
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProviderImpl;
+import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
-import org.eclipse.edc.gcp.bigquery.service.BigQuerySourceService;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 
@@ -48,26 +49,23 @@ public class BigQueryDataSourceFactoryTest {
     private static final String TEST_PARAM_NAME = "argument";
     private static final String TEST_PARAM_VALUE = "argValue";
     private final ExecutorService executionPool = Executors.newFixedThreadPool(2);
-    private GcpConfiguration gcpConfiguration = mock();
+    private GcpConfiguration gcpConfiguration = new GcpConfiguration(TEST_PROJECT, TEST_SINK_SERVICE_ACCOUNT_NAME, null, null);
+    private BigQueryConfiguration configuration = new BigQueryConfiguration(gcpConfiguration, "testEndpoint", null, 0);
     private TypeManager typeManager = mock();
-    private BigQuerySourceService bqSourceService = mock();
     private Monitor monitor = mock();
     private IamService iamService = mock();
 
     @BeforeEach
     void setup() {
-        reset(bqSourceService);
         reset(monitor);
         reset(typeManager);
-        reset(gcpConfiguration);
         reset(iamService);
     }
 
     @Test
     void testCanHandle() {
         var provider = new BigQueryRequestParamsProviderImpl();
-        var factory = BigQueryDataSourceFactory.Builder.newInstance(gcpConfiguration, monitor, provider, typeManager, executionPool, iamService)
-                  .build();
+        var factory = new BigQueryDataSourceFactory(configuration, monitor, provider, typeManager, executionPool, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 
@@ -86,23 +84,17 @@ public class BigQueryDataSourceFactoryTest {
     @Test
     void testCreateSource() {
         var provider = new BigQueryRequestParamsProviderImpl();
-        var factory = BigQueryDataSourceFactory.Builder.newInstance(gcpConfiguration, monitor, provider, typeManager, executionPool, iamService)
-                .sourceService(bqSourceService)
-                .build();
+        var factory = new BigQueryDataSourceFactory(configuration, monitor, provider, typeManager, executionPool, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 
         try (var bqSource = factory.createSource(bqDataFlowRequest)) {
             assertThat(bqSource).isNotNull();
         } catch (Exception e) {
-            assertThat(true).isFalse();
-            System.out.println("Doesn't enter here");
-        } finally {
-            System.out.println("Resource clean-up");
+            fail(e.getMessage());
         }
 
         var otherDataFlowRequest = getDataFlowRequest(TEST_OTHER_TYPE);
-
         var exception = assertThrows(GcpException.class, () -> factory.createSource(otherDataFlowRequest));
         assertThat(exception.getMessage()).isEqualTo("BigQuery Data Source cannot create source for request type " + TEST_OTHER_TYPE);
     }

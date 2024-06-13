@@ -15,9 +15,8 @@
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProviderImpl;
+import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
-import org.eclipse.edc.gcp.bigquery.service.BigQuerySinkService;
-import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -44,9 +43,8 @@ public class BigQueryDataSinkFactoryTest {
     private static final String TEST_PROCESS_ID = "process-id";
     private static final String TEST_CUSTOMER_NAME = "customer-name";
     private static final String TEST_SINK_SERVICE_ACCOUNT_NAME = "sinkAccount";
-    private GcpConfiguration gcpConfiguration = mock();
+    private BigQueryConfiguration bigQueryConfiguration = new BigQueryConfiguration(null, null, "testEndpoint", 0);
     private TypeManager typeManager = mock();
-    private BigQuerySinkService bqSinkService = mock();
     private Monitor monitor = mock();
     private ExecutorService executorService = mock();
     private Vault vault = mock();
@@ -54,10 +52,8 @@ public class BigQueryDataSinkFactoryTest {
 
     @BeforeEach
     void setup() {
-        reset(bqSinkService);
         reset(monitor);
         reset(typeManager);
-        reset(gcpConfiguration);
         reset(executorService);
         reset(vault);
         reset(iamService);
@@ -66,8 +62,7 @@ public class BigQueryDataSinkFactoryTest {
     @Test
     void testCanHandle() {
         var provider = new BigQueryRequestParamsProviderImpl();
-        var factory = BigQueryDataSinkFactory.Builder.newInstance(gcpConfiguration, executorService, monitor, vault, typeManager, provider, iamService)
-                .build();
+        var factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService, monitor, vault, typeManager, provider, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 
@@ -86,9 +81,7 @@ public class BigQueryDataSinkFactoryTest {
     @Test
     void testCreateSink() {
         var provider = new BigQueryRequestParamsProviderImpl();
-        var factory = BigQueryDataSinkFactory.Builder.newInstance(gcpConfiguration, executorService, monitor, vault, typeManager, provider, iamService)
-                .sinkService(bqSinkService)
-                .build();
+        var factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService, monitor, vault, typeManager, provider, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 

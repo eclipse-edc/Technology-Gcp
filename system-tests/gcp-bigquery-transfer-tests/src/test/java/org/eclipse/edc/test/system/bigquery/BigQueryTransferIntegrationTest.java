@@ -162,8 +162,11 @@ public class BigQueryTransferIntegrationTest  {
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
-        System.setProperty("EDC_GCP_BQREST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
-        System.setProperty("EDC_GCP_BQRPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+        System.setProperty("EDC_GCP_BQ_REST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("EDC_GCP_BQ_RPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+
+        System.setProperty("edc.gcp.bq.rest", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("edc.gcp.bq.rpc", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
 
         var assetId = providerClient.createBigQueryAsset(
                 "Test asset",
@@ -219,8 +222,11 @@ SELECT * from edc-test-dataset.table_src;
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
-        System.setProperty("EDC_GCP_BQREST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
-        System.setProperty("EDC_GCP_BQRPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+        System.setProperty("EDC_GCP_BQ_REST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("EDC_GCP_BQ_RPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+
+        System.setProperty("edc.gcp.bq.rest", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("edc.gcp.bq.rpc", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
 
         var assetId = providerClient.createBigQueryAsset(
                 "Test asset",
@@ -251,8 +257,11 @@ SELECT * from edc-test-dataset.table_src_wrong;
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
-        System.setProperty("EDC_GCP_BQREST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
-        System.setProperty("EDC_GCP_BQRPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+        System.setProperty("EDC_GCP_BQ_REST", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("EDC_GCP_BQ_RPC", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
+
+        System.setProperty("edc.gcp.bq.rest", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(0)));
+        System.setProperty("edc.gcp.bq.rpc", "http://localhost:" + BQ_CONTAINER.getMappedPort(ports.get(1)));
 
         var assetId = providerClient.createBigQueryAsset(
                 "Test asset",

@@ -18,10 +18,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProvider;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
+import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
-import org.eclipse.edc.gcp.bigquery.service.BigQuerySourceService;
-import org.eclipse.edc.gcp.bigquery.service.BigQuerySourceServiceImpl;
-import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -38,19 +36,18 @@ import static org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema.BIGQUER
  * Instantiates {@link BigQueryDataSource}s for requests whose source data type is BigQueryRequest.
  */
 public class BigQueryDataSourceFactory implements DataSourceFactory {
-    private final GcpConfiguration gcpConfiguration;
+    private final BigQueryConfiguration configuration;
     private final BigQueryRequestParamsProvider requestParamsProvider;
     private final Monitor monitor;
     private final TypeManager typeManager;
     private final ExecutorService executorService;
-    private BigQuerySourceService bqSourceService;
     private IamService iamService;
 
-    public BigQueryDataSourceFactory(GcpConfiguration gcpConfiguration, Monitor monitor,
+    public BigQueryDataSourceFactory(BigQueryConfiguration configuration, Monitor monitor,
                                      BigQueryRequestParamsProvider requestParamsProvider,
                                      TypeManager typeManager, ExecutorService executorService,
                                      IamService iamService) {
-        this.gcpConfiguration = gcpConfiguration;
+        this.configuration = configuration;
         this.monitor = monitor;
         this.requestParamsProvider = requestParamsProvider;
         this.typeManager = typeManager;
@@ -87,60 +84,20 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
         var params = requestParamsProvider.provideSourceParams(message);
         var target = params.getTarget();
 
-        if (bqSourceService != null) {
-            monitor.info("BigQuery Data Source Factory reusing existing connecting service");
-            return BigQueryDataSource.Builder.newInstance()
-                .monitor(monitor)
-                .requestId(message.getId())
-                .params(params)
-                .sourceService(bqSourceService)
-                .build();
-        }
-
         GoogleCredentials credentials = null;
-        if (System.getProperty("EDC_GCP_BQREST") == null) {
+        if (configuration.restEndpoint() == null) {
             var serviceAccount = iamService.getServiceAccount(params.getServiceAccountName());
             credentials = iamService.getCredentials(serviceAccount, IamService.BQ_SCOPE);
         }
-        var bqSourceServiceBuilder = BigQuerySourceServiceImpl.Builder.newInstance(gcpConfiguration,
-                target, monitor, executorService, credentials);
-        var bqSourceService = bqSourceServiceBuilder.build();
-        monitor.info("BigQuery Data Source Factory connecting service ready");
 
         return BigQueryDataSource.Builder.newInstance()
             .monitor(monitor)
+            .executorService(executorService)
+            .credentials(credentials)
+            .target(target)
+            .configuration(configuration)
             .requestId(message.getId())
             .params(params)
-            .sourceService(bqSourceService)
             .build();
-    }
-
-    public static class Builder {
-        private BigQueryDataSourceFactory factory;
-
-        private Builder(
-                GcpConfiguration gcpConfiguration,
-                Monitor monitor,
-                BigQueryRequestParamsProvider requestParamsProvider,
-                TypeManager typeManager, ExecutorService executorService, IamService iamService) {
-            factory = new BigQueryDataSourceFactory(gcpConfiguration, monitor, requestParamsProvider, typeManager, executorService, iamService);
-        }
-
-        public static Builder newInstance(
-                GcpConfiguration gcpConfiguration,
-                Monitor monitor,
-                BigQueryRequestParamsProvider requestParamsProvider,
-                TypeManager typeManager, ExecutorService executorService, IamService iamService) {
-            return new Builder(gcpConfiguration, monitor, requestParamsProvider, typeManager, executorService, iamService);
-        }
-
-        public Builder sourceService(BigQuerySourceService bqSourceService) {
-            factory.bqSourceService = bqSourceService;
-            return this;
-        }
-
-        public BigQueryDataSourceFactory build() {
-            return factory;
-        }
     }
 }

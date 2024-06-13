@@ -20,10 +20,12 @@ import org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline.BigQueryDataSin
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline.BigQueryDataSourceFactory;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataTransferExecutorServiceContainer;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.PipelineService;
+import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.runtime.metamodel.annotation.Extension;
 import org.eclipse.edc.runtime.metamodel.annotation.Inject;
+import org.eclipse.edc.runtime.metamodel.annotation.Provider;
 import org.eclipse.edc.runtime.metamodel.annotation.Provides;
 import org.eclipse.edc.runtime.metamodel.annotation.Setting;
 import org.eclipse.edc.spi.security.Vault;
@@ -31,6 +33,7 @@ import org.eclipse.edc.spi.system.ExecutorInstrumentation;
 import org.eclipse.edc.spi.system.ServiceExtension;
 import org.eclipse.edc.spi.system.ServiceExtensionContext;
 import org.eclipse.edc.spi.types.TypeManager;
+import org.eclipse.edc.util.configuration.ConfigurationFunctions;
 
 import java.util.concurrent.Executors;
 
@@ -41,9 +44,13 @@ import java.util.concurrent.Executors;
 @Extension(value = DataPlaneBigQueryExtension.NAME)
 public class DataPlaneBigQueryExtension implements ServiceExtension {
     public static final String NAME = "Data Plane BigQuery";
-    @Setting(value = "BigQuery source thread pool size", required = false, type = "int")
+    static final int DEFAULT_THREAD_POOL_SIZE = 5;
+    @Setting(value = "BigQuery source thread pool size", required = false, type = "int", defaultValue = "" + DEFAULT_THREAD_POOL_SIZE)
     public static final String BIGQUERY_THREAD_POOL = "edc.gcp.bq.threads";
-    private static final int DEFAULT_THREAD_POOL_SIZE = 5;
+    @Setting(value = "BigQuery API REST host, for testing purpose", required = false, type = "string")
+    public static final String BIGQUERY_REST_ENDPOINT = "edc.gcp.bq.rest";
+    @Setting(value = "BigQuery API RPC host, for testing purpose", required = false, type = "string")
+    public static final String BIGQUERY_RPC_ENDPOINT = "edc.gcp.bq.rpc";
     @Inject
     private PipelineService pipelineService;
     @Inject
@@ -58,6 +65,7 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
     private ExecutorInstrumentation executorInstrumentation;
     @Inject
     private IamService iamService;
+    private BigQueryConfiguration bigQueryConfiguration;
 
     @Override
     public String name() {
@@ -69,15 +77,34 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
         var monitor = context.getMonitor();
         var paramsProvider = new BigQueryRequestParamsProviderImpl();
         context.registerService(BigQueryRequestParamsProvider.class, paramsProvider);
+        bigQueryConfiguration = getBigQueryConfiguration(gcpConfiguration, context);
 
-        var threadPoolSize = context.getSetting(BIGQUERY_THREAD_POOL, DEFAULT_THREAD_POOL_SIZE);
         var executorService = executorInstrumentation.instrument(
-                Executors.newFixedThreadPool(threadPoolSize), "BigQuery Source");
+                Executors.newFixedThreadPool(bigQueryConfiguration.threadPoolSize()), "BigQuery Source");
 
-        var sourceFactory = new BigQueryDataSourceFactory(gcpConfiguration, monitor, paramsProvider, typeManager, executorService, iamService);
+        var sourceFactory = new BigQueryDataSourceFactory(bigQueryConfiguration, monitor, paramsProvider, typeManager, executorService, iamService);
         pipelineService.registerFactory(sourceFactory);
 
-        var sinkFactory = new BigQueryDataSinkFactory(gcpConfiguration, executorContainer.getExecutorService(), monitor, vault, typeManager, paramsProvider, iamService);
+        var sinkFactory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorContainer.getExecutorService(), monitor, vault, typeManager, paramsProvider, iamService);
         pipelineService.registerFactory(sinkFactory);
+    }
+
+    @Provider
+    public BigQueryConfiguration getBigQueryConfiguration() {
+        return bigQueryConfiguration;
+    }
+
+    private BigQueryConfiguration getBigQueryConfiguration(GcpConfiguration gcpConfiguration,
+            ServiceExtensionContext context) {
+        var restEndpoint = context.getSetting(BIGQUERY_REST_ENDPOINT, null);
+        if (restEndpoint == null) {
+            ConfigurationFunctions.propOrEnv(BIGQUERY_REST_ENDPOINT, null);
+        }
+        var rpcEndpoint = context.getSetting(BIGQUERY_RPC_ENDPOINT, null);
+        if (rpcEndpoint == null) {
+            ConfigurationFunctions.propOrEnv(BIGQUERY_RPC_ENDPOINT, null);
+        }
+        var threadPoolSize = context.getSetting(BIGQUERY_THREAD_POOL, DataPlaneBigQueryExtension.DEFAULT_THREAD_POOL_SIZE);
+        return new BigQueryConfiguration(gcpConfiguration, restEndpoint, rpcEndpoint, threadPoolSize);
     }
 }
