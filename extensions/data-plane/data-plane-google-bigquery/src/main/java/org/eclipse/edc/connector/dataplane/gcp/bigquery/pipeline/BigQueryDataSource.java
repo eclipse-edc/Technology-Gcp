@@ -56,6 +56,9 @@ import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.erro
 import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.success;
 import static org.eclipse.edc.spi.constants.CoreConstants.EDC_NAMESPACE;
 
+/**
+ * Reads data using the BigQuery API (REST) and transfer it in JSON format.
+ */
 public class BigQueryDataSource implements DataSource {
     private BigQueryRequestParams params;
     private String requestId;

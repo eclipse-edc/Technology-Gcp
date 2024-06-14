@@ -17,6 +17,9 @@ package org.eclipse.edc.gcp.bigquery;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
 import org.eclipse.edc.util.configuration.ConfigurationFunctions;
 
+/**
+ * Configuration class embedding the common GcpConfiguration and BigQuery-specific parameters.
+ */
 public class BigQueryConfiguration {
     private GcpConfiguration gcpConfiguration;
     private String restEndpoint;
@@ -36,10 +39,21 @@ public class BigQueryConfiguration {
         this(gcpConfiguration, null, null, 0);
     }
 
+    /**
+     * The common GCP configuration.
+     *
+     * @return the GcpConfiguration object.
+     */
     public GcpConfiguration gcpConfiguration() {
         return gcpConfiguration;
     }
 
+    /**
+     * The BigQuery REST API endpoint host if defined in the EDC configuration or, if not
+     * found in the EDC configuration, as defined in the system properties "edc.gcp.bq.rest".
+     *
+     * @return the REST endpoint as http://host:port.
+     */
     public String restEndpoint() {
         if (restEndpoint != null) {
             return restEndpoint;
@@ -48,6 +62,12 @@ public class BigQueryConfiguration {
         return ConfigurationFunctions.propOrEnv("edc.gcp.bq.rest", null);
     }
 
+    /**
+     * The BigQuery Storage RPC API endpoint host if defined in the EDC configuration or, if not
+     * found in the EDC configuration, as defined in the system properties "edc.gcp.bq.rpc".
+     *
+     * @return the RPC endpoint as http://host:port.
+     */
     public String rpcEndpoint() {
         if (rpcEndpoint != null) {
             return rpcEndpoint;
@@ -56,6 +76,11 @@ public class BigQueryConfiguration {
         return ConfigurationFunctions.propOrEnv("edc.gcp.bq.rpc", null);
     }
 
+    /**
+     * The thread pool size used to prepare the ExecutorService for the BigQuery source.
+     *
+     * @return the number of threads in the pool.
+     */
     public int threadPoolSize() {
         return threadPoolSize;
     }

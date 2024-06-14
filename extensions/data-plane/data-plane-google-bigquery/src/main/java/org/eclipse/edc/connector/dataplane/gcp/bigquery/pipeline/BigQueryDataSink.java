@@ -14,6 +14,8 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
@@ -30,7 +32,6 @@ import com.google.cloud.bigquery.storage.v1.CreateWriteStreamRequest;
 import com.google.cloud.bigquery.storage.v1.JsonStreamWriter;
 import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.gson.JsonStreamParser;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
@@ -43,13 +44,12 @@ import org.eclipse.edc.gcp.common.GcpException;
 import org.json.JSONArray;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Writes data in a streaming fashion to an HTTP endpoint.
+ * Writes JSON data in a streaming fashion using the BigQuery Storage API (RPC).
  */
 public class BigQueryDataSink extends ParallelSink {
     private BigQueryConfiguration configuration;
@@ -68,15 +68,17 @@ public class BigQueryDataSink extends ParallelSink {
 
         var errorWhileAppending = false;
         for (var part : parts) {
-            try (var inputStreamReader = new InputStreamReader(part.openStream())) {
-                var jsonParser = new JsonStreamParser(inputStreamReader);
-                while (jsonParser.hasNext()) {
-                    var element = jsonParser.next();
-                    var jsonString = element.toString();
-                    var page = new JSONArray(jsonString);
-                    append(page);
+            try (var inputStream = part.openStream()) {
+                var mapper = new ObjectMapper();
+                var jsonParser2 = mapper.createParser(inputStream);
+                if (jsonParser2.nextToken() != JsonToken.START_ARRAY) {
+                    throw new IllegalStateException("BigQuery sink JSON array expected");
                 }
-            } catch (IOException | InterruptedException | DescriptorValidationException exception) {
+                var element = mapper.readTree(jsonParser2);
+                var jsonString = element.toString();
+                var page = new JSONArray(jsonString);
+                append(page);
+            } catch (Exception exception) {
                 errorWhileAppending = true;
                 monitor.severe("BigQuery Sink error while appending", exception);
                 break;
