@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
+import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
 import org.eclipse.edc.connector.dataplane.util.sink.ParallelSink;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
@@ -47,6 +48,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
+
+import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure.Reason.GENERAL_ERROR;
 
 /**
  * Writes JSON data in a streaming fashion using the BigQuery Storage API (RPC).
@@ -66,8 +69,18 @@ public class BigQueryDataSink extends ParallelSink {
             return StreamResult.success();
         }
 
+        Exception appendException = null;
         var errorWhileAppending = false;
         for (var part : parts) {
+            if (part instanceof BigQueryPart bigQueryPart) {
+                if (bigQueryPart.getException() != null) {
+                    errorWhileAppending = true;
+                    appendException = bigQueryPart.getException();
+                    monitor.severe("BigQuery Sink error from source: ", appendException);
+                    break;
+                }
+            }
+
             try (var inputStream = part.openStream()) {
                 var mapper = new ObjectMapper();
                 var jsonParser2 = mapper.createParser(inputStream);
@@ -80,16 +93,9 @@ public class BigQueryDataSink extends ParallelSink {
                 append(page);
             } catch (Exception exception) {
                 errorWhileAppending = true;
-                monitor.severe("BigQuery Sink error while appending", exception);
+                appendException = exception;
+                monitor.severe("BigQuery Sink error while appending: ", appendException);
                 break;
-            }
-
-            if (part instanceof BigQueryPart bigQueryPart) {
-                if (bigQueryPart.getException() != null) {
-                    errorWhileAppending = true;
-                    monitor.severe("BigQuery Sink error from source :", bigQueryPart.getException());
-                    break;
-                }
             }
         }
 
@@ -124,6 +130,14 @@ public class BigQueryDataSink extends ParallelSink {
         } else {
             monitor.warning("BigQuery Sink write client NOT shut down after timeout");
         }
+
+        if (errorWhileAppending) {
+            if (appendException != null) {
+                return StreamResult.failure(new StreamFailure(List.of("BigQuery Sink error :" + appendException), GENERAL_ERROR));
+            }
+            return StreamResult.failure(new StreamFailure(List.of("BigQuery Sink error"), GENERAL_ERROR));
+        }
+
         return StreamResult.success();
     }
 
