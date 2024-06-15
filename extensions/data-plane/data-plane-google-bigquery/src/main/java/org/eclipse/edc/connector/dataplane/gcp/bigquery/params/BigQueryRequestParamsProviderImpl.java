@@ -22,18 +22,6 @@ public class BigQueryRequestParamsProviderImpl implements BigQueryRequestParamsP
     public BigQueryRequestParamsProviderImpl() {
     }
 
-    private BigQueryRequestParams.Builder getParamsBuilder(DataAddress address) {
-        var bqAddress = BigQueryDataAddress.Builder.newInstance()
-                .copyFrom(address)
-                .build();
-        return BigQueryRequestParams.Builder.newInstance()
-            .project(bqAddress.getProject())
-            .dataset(bqAddress.getDataset())
-            .table(bqAddress.getTable())
-            .query(bqAddress.getQuery())
-            .serviceAccountName(bqAddress.getServiceAccountName());
-    }
-
     @Override
     public BigQueryRequestParams provideSourceParams(DataFlowStartMessage message) {
         var bqAddress = BigQueryDataAddress.Builder.newInstance()
@@ -48,5 +36,17 @@ public class BigQueryRequestParamsProviderImpl implements BigQueryRequestParamsP
     @Override
     public BigQueryRequestParams provideSinkParams(DataFlowStartMessage message) {
         return getParamsBuilder(message.getDestinationDataAddress()).build();
+    }
+
+    private BigQueryRequestParams.Builder getParamsBuilder(DataAddress address) {
+        var bqAddress = BigQueryDataAddress.Builder.newInstance()
+                .copyFrom(address)
+                .build();
+        return BigQueryRequestParams.Builder.newInstance()
+                .project(bqAddress.getProject())
+                .dataset(bqAddress.getDataset())
+                .table(bqAddress.getTable())
+                .query(bqAddress.getQuery())
+                .serviceAccountName(bqAddress.getServiceAccountName());
     }
 }

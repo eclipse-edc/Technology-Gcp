@@ -17,8 +17,8 @@ package org.eclipse.edc.connector.dataplane.gcp.bigquery.params;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 
 /**
- * Provides {@link DataFlowStartMessage} methods to prepare start message parameters from a transfer
- * request.
+ * Provides {@link DataFlowStartMessage} methods to prepare start message parameters from a
+ * BigQuery transfer request.
  */
 public interface BigQueryRequestParamsProvider {
 

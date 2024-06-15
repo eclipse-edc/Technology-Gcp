@@ -38,7 +38,7 @@ import org.eclipse.edc.util.configuration.ConfigurationFunctions;
 import java.util.concurrent.Executors;
 
 /**
- * Provides interfaces for reading and writing BigQuery data.
+ * Registers source and sink factories for BigQuery data transfers.
  */
 @Provides(BigQueryRequestParamsProvider.class)
 @Extension(value = DataPlaneBigQueryExtension.NAME)
@@ -49,7 +49,7 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
     public static final String BIGQUERY_THREAD_POOL = "edc.gcp.bq.threads";
     @Setting(value = "BigQuery API REST host, for testing purpose", required = false, type = "string")
     public static final String BIGQUERY_REST_ENDPOINT = "edc.gcp.bq.rest";
-    @Setting(value = "BigQuery API RPC host, for testing purpose", required = false, type = "string")
+    @Setting(value = "BigQuery Storage API RPC host, for testing purpose", required = false, type = "string")
     public static final String BIGQUERY_RPC_ENDPOINT = "edc.gcp.bq.rpc";
     @Inject
     private PipelineService pipelineService;

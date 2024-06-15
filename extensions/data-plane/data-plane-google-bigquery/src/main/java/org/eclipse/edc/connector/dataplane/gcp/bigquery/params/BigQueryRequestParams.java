@@ -20,7 +20,7 @@ import org.eclipse.edc.spi.types.domain.DataAddress;
 import java.util.Objects;
 
 /**
- * Data class that represent the parameters of an HTTP request
+ * Data class that represent the parameters of an BigQuery transfer request.
  */
 public class  BigQueryRequestParams {
     private String project;

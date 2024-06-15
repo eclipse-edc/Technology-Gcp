@@ -25,6 +25,7 @@ import com.google.cloud.bigquery.FieldValue;
 import com.google.cloud.bigquery.FieldValue.Attribute;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobException;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.JobStatus;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -55,6 +56,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -123,13 +125,186 @@ public class BigQueryDataSourceTest {
     }
 
     @Test
-    void testRunSourceQueryWithBigQuerySink() throws InterruptedException, IOException {
-        testRunSourceQuery("BigQueryData", false);
+    void testOpenPartsWithBigQuerySink() throws InterruptedException {
+        var schema = Schema.of(FieldList.of(TEST_FIELDS));
+
+        var tableResult = mock(TableResult.class);
+        when(tableResult.getSchema()).thenReturn(schema);
+        when(tableResult.getValues()).thenReturn(Arrays.asList(
+                FieldValueList.of(TEST_ROW_1),
+                FieldValueList.of(TEST_ROW_2)));
+
+        var jobStatus = mock(JobStatus.class);
+        when(jobStatus.getError()).thenReturn(null);
+
+        var queryJob = mock(Job.class);
+        when(queryJob.getStatus()).thenReturn(jobStatus);
+
+        when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
+        when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenReturn(tableResult);
+
+        var options = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(TEST_PROJECT).build();
+        when(bigQuery.getOptions()).thenReturn(options);
+
+        var params = BigQueryRequestParams.Builder.newInstance()
+                .project(TEST_PROJECT)
+                .dataset(TEST_DATASET)
+                .table(TEST_TABLE)
+                .query(TEST_QUERY_NO_PARAMS)
+                .sinkAddress(getDestinationDataAddress("BigQueryData"))
+                .build();
+
+        var dataSource = BigQueryDataSource.Builder.newInstance()
+                .monitor(monitor)
+                .requestId(REQUEST_ID)
+                .params(params)
+                .executorService(executorService)
+                .credentials(credentials)
+                .target(target)
+                .configuration(configuration)
+                .bigQuery(bigQuery)
+                .build();
+
+        var partStream = dataSource.openPartStream();
+        assertThat(partStream.succeeded()).isTrue();
+        var receivedParts = partStream.getContent();
+
+        verify(bigQuery).create(any(JobInfo.class));
+
+        var receivedList = receivedParts.toList();
+        var rows = Arrays.asList(TEST_ROW_1, TEST_ROW_2);
+        var expectedParts = Arrays.asList(getPart(TEST_FIELDS, rows));
+
+        assertThat(receivedList.size()).isEqualTo(expectedParts.size());
+        for (var i = 0; i < receivedList.size(); i++) {
+            if (receivedList.get(i) instanceof BigQueryPart bigQueryPart) {
+                assertThat(bigQueryPart.getException()).isNull();
+            }
+            assertThat(receivedList.get(i)).usingRecursiveComparison().ignoringFields("inputStream").isEqualTo(expectedParts.get(i));
+        }
     }
 
     @Test
-    void testRunSourceQueryWithStandardSink() throws InterruptedException, IOException {
-        testRunSourceQuery("StandardSink", false);
+    void testOpenPartsWithStandardSink() throws InterruptedException {
+        var schema = Schema.of(FieldList.of(TEST_FIELDS));
+
+        var tableResult = mock(TableResult.class);
+        when(tableResult.getSchema()).thenReturn(schema);
+        when(tableResult.getValues()).thenReturn(Arrays.asList(
+                FieldValueList.of(TEST_ROW_1),
+                FieldValueList.of(TEST_ROW_2)));
+
+        var jobStatus = mock(JobStatus.class);
+        when(jobStatus.getError()).thenReturn(null);
+
+        var queryJob = mock(Job.class);
+        when(queryJob.getStatus()).thenReturn(jobStatus);
+
+        when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
+        when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenReturn(tableResult);
+
+        var options = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(TEST_PROJECT).build();
+        when(bigQuery.getOptions()).thenReturn(options);
+
+        var params = BigQueryRequestParams.Builder.newInstance()
+                .project(TEST_PROJECT)
+                .dataset(TEST_DATASET)
+                .table(TEST_TABLE)
+                .query(TEST_QUERY_NO_PARAMS)
+                .sinkAddress(getDestinationDataAddress("StandardSink"))
+                .build();
+
+        var dataSource = BigQueryDataSource.Builder.newInstance()
+                .monitor(monitor)
+                .requestId(REQUEST_ID)
+                .params(params)
+                .executorService(executorService)
+                .credentials(credentials)
+                .target(target)
+                .configuration(configuration)
+                .bigQuery(bigQuery)
+                .build();
+
+        var partStream = dataSource.openPartStream();
+        assertThat(partStream.succeeded()).isTrue();
+        var receivedParts = partStream.getContent();
+
+        verify(bigQuery).create(any(JobInfo.class));
+
+        var receivedList = receivedParts.toList();
+
+        var rows = Arrays.asList(TEST_ROW_1, TEST_ROW_2);
+        var expectedParts = Arrays.asList(getPart(TEST_FIELDS, rows));
+
+        assertThat(receivedList.size()).isEqualTo(expectedParts.size());
+        for (var i = 0; i < receivedList.size(); i++) {
+            if (receivedList.get(i) instanceof BigQueryPart bigQueryPart) {
+                assertThat(bigQueryPart.getException()).isNull();
+            }
+            assertThat(receivedList.get(i)).usingRecursiveComparison().ignoringFields("inputStream").isEqualTo(expectedParts.get(i));
+        }
+    }
+
+    @Test
+    void testOpenPartsThrowsException() throws InterruptedException {
+        var schema = Schema.of(FieldList.of(TEST_FIELDS));
+
+        var tableResult = mock(TableResult.class);
+        when(tableResult.getSchema()).thenReturn(schema);
+        when(tableResult.getValues()).thenReturn(Arrays.asList(
+                FieldValueList.of(TEST_ROW_1),
+                FieldValueList.of(TEST_ROW_2)));
+
+        var jobStatus = mock(JobStatus.class);
+        when(jobStatus.getError()).thenReturn(null);
+
+        var queryJob = mock(Job.class);
+        when(queryJob.getStatus()).thenReturn(jobStatus);
+
+        when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
+        var jobException = mock(JobException.class);
+        when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenThrow(jobException);
+
+        var options = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(TEST_PROJECT).build();
+        when(bigQuery.getOptions()).thenReturn(options);
+
+        var params = BigQueryRequestParams.Builder.newInstance()
+                .project(TEST_PROJECT)
+                .dataset(TEST_DATASET)
+                .table(TEST_TABLE)
+                .query(TEST_QUERY_NO_PARAMS)
+                .sinkAddress(getDestinationDataAddress("BigQueryData"))
+                .build();
+
+        var dataSource = BigQueryDataSource.Builder.newInstance()
+                .monitor(monitor)
+                .requestId(REQUEST_ID)
+                .params(params)
+                .executorService(executorService)
+                .credentials(credentials)
+                .target(target)
+                .configuration(configuration)
+                .bigQuery(bigQuery)
+                .build();
+
+        var partStream = dataSource.openPartStream();
+        assertThat(partStream.succeeded()).isTrue();
+        var receivedParts = partStream.getContent();
+
+        verify(bigQuery).create(any(JobInfo.class));
+
+        var receivedList = receivedParts.toList();
+        for (var i = 0; i < receivedList.size(); i++) {
+            if (receivedList.get(i) instanceof BigQueryPart bigQueryPart) {
+                try {
+                    bigQueryPart.openStream().read();
+                    verify(queryJob).getQueryResults(QueryResultsOption.pageSize(4));
+                    assertThat(bigQueryPart.getException()).isNotNull();
+                } catch (IOException ioException) {
+                    fail("Error reading input stream", ioException);
+                }
+            }
+        }
     }
 
     private JSONObject buildRecord(List<Field> fields, List<FieldValue> values) {
@@ -142,11 +317,6 @@ public class BigQueryDataSourceTest {
     }
 
     private void testRunSourceQuery(String sinkType, boolean queryException) throws InterruptedException, IOException {
-        var sinkAddress = DataAddress.Builder.newInstance()
-                .type(sinkType)
-                .property("customerName", TEST_CUSTOMER_NAME)
-                .build();
-
         var schema = Schema.of(FieldList.of(TEST_FIELDS));
 
         var tableResult = mock(TableResult.class);
@@ -176,7 +346,7 @@ public class BigQueryDataSourceTest {
                 .dataset(TEST_DATASET)
                 .table(TEST_TABLE)
                 .query(TEST_QUERY_NO_PARAMS)
-                .sinkAddress(getDestinationDataAddress())
+                .sinkAddress(getDestinationDataAddress(sinkType))
                 .build();
 
         var dataSource = BigQueryDataSource.Builder.newInstance()
@@ -248,17 +418,14 @@ public class BigQueryDataSourceTest {
         return record;
     }
 
-    private static DataAddress.Builder getDefaultAddressBuilder() {
+    private static DataAddress getDestinationDataAddress(String type) {
         return DataAddress.Builder.newInstance()
-                .type(BigQueryServiceSchema.BIGQUERY_DATA)
-                .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
-                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
-                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
-                .property(BigQueryServiceSchema.CUSTOMER_NAME, TEST_CUSTOMER_NAME)
-                .property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, TEST_SOURCE_SERVICE_ACCOUNT_NAME);
-    }
-
-    private static DataAddress getDestinationDataAddress() {
-        return getDefaultAddressBuilder().build();
+            .type(type)
+            .property(BigQueryServiceSchema.PROJECT, TEST_PROJECT)
+            .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+            .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
+            .property(BigQueryServiceSchema.CUSTOMER_NAME, TEST_CUSTOMER_NAME)
+            .property(BigQueryServiceSchema.SERVICE_ACCOUNT_NAME, TEST_SOURCE_SERVICE_ACCOUNT_NAME)
+            .build();
     }
 }

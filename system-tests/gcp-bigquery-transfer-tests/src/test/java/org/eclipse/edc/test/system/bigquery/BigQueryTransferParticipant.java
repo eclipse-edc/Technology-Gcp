@@ -24,7 +24,6 @@ import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static jakarta.json.Json.createObjectBuilder;
-// import static java.lang.String.format;
 
 public class BigQueryTransferParticipant extends Participant {
 

@@ -46,6 +46,7 @@ import org.json.JSONArray;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 
@@ -62,6 +63,12 @@ public class BigQueryDataSink extends ParallelSink {
     private BigQueryWriteClient writeClient;
     private JsonStreamWriter streamWriter;
 
+    private BigQueryDataSink() {
+    }
+
+    void testAppendSignal() {
+        inflightRequestCount.arriveAndDeregister();
+    }
 
     @Override
     protected StreamResult<Object> transferParts(List<DataSource.Part> parts) {
@@ -139,9 +146,6 @@ public class BigQueryDataSink extends ParallelSink {
         }
 
         return StreamResult.success();
-    }
-
-    private BigQueryDataSink() {
     }
 
     private void checkStreamWriter()
@@ -254,10 +258,6 @@ public class BigQueryDataSink extends ParallelSink {
         }
     }
 
-    void testAppendSignal() {
-        inflightRequestCount.arriveAndDeregister();
-    }
-
     private class AppendCompleteCallback implements ApiFutureCallback<AppendRowsResponse> {
         AppendCompleteCallback() {
             inflightRequestCount.register();
@@ -277,6 +277,9 @@ public class BigQueryDataSink extends ParallelSink {
     }
 
     public static class Builder extends ParallelSink.Builder<Builder, BigQueryDataSink> {
+        private Builder() {
+            super(new BigQueryDataSink());
+        }
 
         public static Builder newInstance() {
             return new Builder();
@@ -297,25 +300,6 @@ public class BigQueryDataSink extends ParallelSink {
             return this;
         }
 
-        public Builder writeClient(BigQueryWriteClient writeClient) {
-            sink.writeClient = writeClient;
-            return this;
-        }
-
-        public Builder streamWriter(JsonStreamWriter streamWriter) {
-            sink.streamWriter = streamWriter;
-            return this;
-        }
-
-        private Builder() {
-            super(new BigQueryDataSink());
-        }
-
-        @Override
-        protected void validate() {
-            // TODO add check for required items.
-        }
-
         @Override
         public BigQueryDataSink build() {
             var sink = super.build();
@@ -325,6 +309,22 @@ public class BigQueryDataSink extends ParallelSink {
             } catch (IOException ioException) {
                 throw new GcpException(ioException);
             }
+        }
+
+        @Override
+        protected void validate() {
+            Objects.requireNonNull(sink.configuration, "configuration");
+            Objects.requireNonNull(sink.target, "target");
+        }
+
+        Builder writeClient(BigQueryWriteClient writeClient) {
+            sink.writeClient = writeClient;
+            return this;
+        }
+
+        Builder streamWriter(JsonStreamWriter streamWriter) {
+            sink.streamWriter = streamWriter;
+            return this;
         }
     }
 }

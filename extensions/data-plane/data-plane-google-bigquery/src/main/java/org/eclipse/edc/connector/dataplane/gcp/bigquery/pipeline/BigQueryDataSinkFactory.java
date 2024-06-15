@@ -33,7 +33,8 @@ import java.util.concurrent.ExecutorService;
 import static org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema.BIGQUERY_DATA;
 
 /**
- * Instantiates {@link BigQueryDataSink}
+ * Instantiates the BigQuery data transfer sink {@link BigQueryDataSink}, this factory is registered
+ * by the BigQuery Data Plane Extension.
  */
 public class BigQueryDataSinkFactory implements DataSinkFactory {
     private final BigQueryConfiguration configuration;

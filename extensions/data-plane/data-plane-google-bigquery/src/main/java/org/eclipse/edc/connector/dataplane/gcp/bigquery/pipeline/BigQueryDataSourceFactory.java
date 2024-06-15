@@ -33,7 +33,8 @@ import java.util.concurrent.ExecutorService;
 import static org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema.BIGQUERY_DATA;
 
 /**
- * Instantiates {@link BigQueryDataSource}s for requests whose source data type is BigQueryRequest.
+ * Instantiates the BigQuery data transfer source {@link BigQueryDataSource} for requests whose
+ * source data type is BigQueryData. This factory is registered by the BigQuery Data Plane Extension.
  */
 public class BigQueryDataSourceFactory implements DataSourceFactory {
     private final BigQueryConfiguration configuration;

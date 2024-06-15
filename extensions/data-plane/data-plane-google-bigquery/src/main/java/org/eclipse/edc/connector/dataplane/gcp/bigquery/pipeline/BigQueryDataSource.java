@@ -69,6 +69,9 @@ public class BigQueryDataSource implements DataSource {
     private BigQuery bigQuery;
     private GoogleCredentials credentials;
 
+    private BigQueryDataSource() {
+    }
+
     @Override
     public void close() {
     }
@@ -118,7 +121,7 @@ public class BigQueryDataSource implements DataSource {
                         outputPage(outputStream, paginatedResults);
                     }
                     monitor.debug("BigQuery Source all pages fetched");
-                } catch (IOException | InterruptedException exception) {
+                } catch (Exception exception) {
                     part.setException(exception);
                     monitor.severe("BigQuery Source exception while sourcing", exception);
                 } finally {
@@ -126,7 +129,7 @@ public class BigQueryDataSource implements DataSource {
                 }
             });
 
-            return success(Stream.of(new BigQueryPart("allRows", inputStream)));
+            return success(Stream.of(part));
         } catch (GcpException gcpException) {
             monitor.severe("BigQuery Source error while building the query", gcpException);
             return error("BigQuery Source error while building the query");
@@ -224,16 +227,13 @@ public class BigQueryDataSource implements DataSource {
         }
     }
 
-    void closeSourceStream(PipedOutputStream outputStream) {
+    private void closeSourceStream(PipedOutputStream outputStream) {
         try {
             outputStream.close();
             monitor.debug("BigQuery Source output stream closed");
         } catch (IOException ioException) {
             monitor.severe("BigQuery Source exception closing the output stream", ioException);
         }
-    }
-
-    private BigQueryDataSource() {
     }
 
     public static class Builder {
@@ -293,8 +293,15 @@ public class BigQueryDataSource implements DataSource {
             } catch (IOException ioException) {
                 throw new GcpException("Cannot create BigQuery service", ioException);
             }
+
             Objects.requireNonNull(dataSource.requestId, "requestId");
             Objects.requireNonNull(dataSource.monitor, "monitor");
+            Objects.requireNonNull(dataSource.params, "params");
+            Objects.requireNonNull(dataSource.executorService, "executorService");
+            Objects.requireNonNull(dataSource.target, "target");
+            Objects.requireNonNull(dataSource.configuration, "configuration");
+            Objects.requireNonNull(dataSource.monitor, "monitor");
+
             return dataSource;
         }
     }
