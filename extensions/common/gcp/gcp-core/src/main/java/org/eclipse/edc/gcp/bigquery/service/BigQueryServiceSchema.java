@@ -28,6 +28,8 @@ public interface BigQueryServiceSchema {
     String DATASET = "dataset";
     /** Table name for the BigQuery DataAddress. */
     String TABLE = "table";
+    /** Destination table name used by the BigQuery source to store data. */
+    String DESTINATION_TABLE = "destination_table";
     /** Query used to extract data by the BigQuery source. */
     String QUERY = "query";
     /** Service account used to access BigQuery service, overrides the service account defined in connector config. */
