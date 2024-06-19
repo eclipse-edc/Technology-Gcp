@@ -51,6 +51,8 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
 
 import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure.Reason.GENERAL_ERROR;
+import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.failure;
+import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.success;
 
 /**
  * Writes JSON data in a streaming fashion using the BigQuery Storage API (RPC).
@@ -79,15 +81,6 @@ public class BigQueryDataSink extends ParallelSink {
         Exception appendException = null;
         var errorWhileAppending = false;
         for (var part : parts) {
-            if (part instanceof BigQueryPart bigQueryPart) {
-                if (bigQueryPart.getException() != null) {
-                    errorWhileAppending = true;
-                    appendException = bigQueryPart.getException();
-                    monitor.severe("BigQuery Sink error from source: ", appendException);
-                    break;
-                }
-            }
-
             try (var inputStream = part.openStream()) {
                 var mapper = new ObjectMapper();
                 var jsonParser2 = mapper.createParser(inputStream);
@@ -103,6 +96,15 @@ public class BigQueryDataSink extends ParallelSink {
                 appendException = exception;
                 monitor.severe("BigQuery Sink error while appending: ", appendException);
                 break;
+            }
+
+            if (part instanceof BigQueryPart bigQueryPart) {
+                if (bigQueryPart.getException() != null) {
+                    errorWhileAppending = true;
+                    appendException = bigQueryPart.getException();
+                    monitor.severe("BigQuery Sink error from source: ", appendException);
+                    break;
+                }
             }
         }
 
@@ -140,12 +142,12 @@ public class BigQueryDataSink extends ParallelSink {
 
         if (errorWhileAppending) {
             if (appendException != null) {
-                return StreamResult.failure(new StreamFailure(List.of("BigQuery Sink error :" + appendException), GENERAL_ERROR));
+                return failure(new StreamFailure(List.of("BigQuery Sink error :" + appendException), GENERAL_ERROR));
             }
-            return StreamResult.failure(new StreamFailure(List.of("BigQuery Sink error"), GENERAL_ERROR));
+            return failure(new StreamFailure(List.of("BigQuery Sink error"), GENERAL_ERROR));
         }
 
-        return StreamResult.success();
+        return success();
     }
 
     private void checkStreamWriter()
