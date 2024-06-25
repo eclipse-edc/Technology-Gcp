@@ -83,14 +83,19 @@ public class BigQueryDataSink extends ParallelSink {
         for (var part : parts) {
             try (var inputStream = part.openStream()) {
                 var mapper = new ObjectMapper();
-                var jsonParser2 = mapper.createParser(inputStream);
-                if (jsonParser2.nextToken() != JsonToken.START_ARRAY) {
+                var jsonParser = mapper.createParser(inputStream);
+                var token = jsonParser.nextToken();
+                while (token != null && token == JsonToken.START_ARRAY) {
+                    var element = mapper.readTree(jsonParser);
+                    var jsonString = element.toString();
+                    var page = new JSONArray(jsonString);
+                    append(page);
+                    token = jsonParser.nextToken();
+                }
+
+                if (token != null && token != JsonToken.START_ARRAY) {
                     throw new IllegalStateException("BigQuery sink JSON array expected");
                 }
-                var element = mapper.readTree(jsonParser2);
-                var jsonString = element.toString();
-                var page = new JSONArray(jsonString);
-                append(page);
             } catch (Exception exception) {
                 errorWhileAppending = true;
                 appendException = exception;

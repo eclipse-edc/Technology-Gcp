@@ -77,7 +77,52 @@ public class BigQueryTransferIntegrationTest  {
                 FieldValue.of(Attribute.PRIMITIVE, "1970-01-01"),
                 FieldValue.of(Attribute.PRIMITIVE, null),
                 FieldValue.of(Attribute.PRIMITIVE, "64.800000")
-        )));
+        )),
+            FieldValueList.of(Arrays.asList(
+                FieldValue.of(Attribute.PRIMITIVE, "3"),
+                FieldValue.of(Attribute.PRIMITIVE, "name3"),
+                FieldValue.of(Attribute.REPEATED,
+                    FieldValueList.of(Arrays.asList(
+                        FieldValue.of(Attribute.RECORD,
+                            FieldValueList.of(Arrays.asList(
+                                    FieldValue.of(Attribute.PRIMITIVE, "info3"),
+                                    FieldValue.of(Attribute.PRIMITIVE, "{\"age\": 33}")
+                                )
+                            ))))),
+                FieldValue.of(Attribute.PRIMITIVE, "1970-01-01"),
+                FieldValue.of(Attribute.PRIMITIVE, null),
+                FieldValue.of(Attribute.PRIMITIVE, "64.800000")
+                )),
+            FieldValueList.of(Arrays.asList(
+                FieldValue.of(Attribute.PRIMITIVE, "4"),
+                FieldValue.of(Attribute.PRIMITIVE, "name4"),
+                FieldValue.of(Attribute.REPEATED,
+                    FieldValueList.of(Arrays.asList(
+                        FieldValue.of(Attribute.RECORD,
+                            FieldValueList.of(Arrays.asList(
+                                    FieldValue.of(Attribute.PRIMITIVE, "info4"),
+                                    FieldValue.of(Attribute.PRIMITIVE, "{\"age\": 44}")
+                                )
+                            ))))),
+                FieldValue.of(Attribute.PRIMITIVE, "1970-01-01"),
+                FieldValue.of(Attribute.PRIMITIVE, null),
+                FieldValue.of(Attribute.PRIMITIVE, "64.800000")
+            )),
+            FieldValueList.of(Arrays.asList(
+                FieldValue.of(Attribute.PRIMITIVE, "5"),
+                FieldValue.of(Attribute.PRIMITIVE, "name5"),
+                FieldValue.of(Attribute.REPEATED,
+                    FieldValueList.of(Arrays.asList(
+                        FieldValue.of(Attribute.RECORD,
+                            FieldValueList.of(Arrays.asList(
+                                    FieldValue.of(Attribute.PRIMITIVE, "info5"),
+                                    FieldValue.of(Attribute.PRIMITIVE, "{\"age\": 55}")
+                                )
+                            ))))),
+                FieldValue.of(Attribute.PRIMITIVE, "1970-01-01"),
+                FieldValue.of(Attribute.PRIMITIVE, null),
+                FieldValue.of(Attribute.PRIMITIVE, "64.800000")
+            )));
 
     @Container
     private static final BigQueryEmulatorContainer BQ_CONTAINER = new BigQueryEmulatorContainer("ghcr.io/goccy/bigquery-emulator")
