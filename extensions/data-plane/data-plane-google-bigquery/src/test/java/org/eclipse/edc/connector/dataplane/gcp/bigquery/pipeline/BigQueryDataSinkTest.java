@@ -54,6 +54,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -134,10 +135,14 @@ public class BigQueryDataSinkTest {
     }
 
     @Test
-    void testTransferPartsSucceeds() throws DescriptorValidationException, IOException, InterruptedException, ExecutionException, TimeoutException {
+    void testTransferPartsSinglePageSucceeds() throws DescriptorValidationException, IOException, InterruptedException, ExecutionException, TimeoutException {
         var parts = new ArrayList<Part>();
-        parts.add(getPart(TEST_FIELDS, Arrays.asList(TEST_ROW_1, TEST_ROW_2)));
-        var partsCount = parts.stream().mapToLong(o -> o.size()).sum();
+        var partsRows =  Arrays.asList(
+                Arrays.asList(TEST_ROW_1, TEST_ROW_2));
+
+        parts.add(getPartFromPages(TEST_FIELDS, partsRows));
+
+        var rowsCount = partsRows.stream().mapToLong(o -> o.size()).sum();
 
         ApiFuture<AppendRowsResponse> future = mock();
         AppendRowsResponse response = mock();
@@ -152,7 +157,7 @@ public class BigQueryDataSinkTest {
         when(streamWriter.isClosed()).thenReturn(false);
         when(streamWriter.getStreamName()).thenReturn("name");
         when(writeClient.finalizeWriteStream(streamWriter.getStreamName())).thenReturn(
-                FinalizeWriteStreamResponse.newBuilder().setRowCount(partsCount).build());
+                FinalizeWriteStreamResponse.newBuilder().setRowCount(rowsCount).build());
 
         var commitResponse = mock(BatchCommitWriteStreamsResponse.class);
         when(commitResponse.hasCommitTime()).thenReturn(true);
@@ -171,16 +176,64 @@ public class BigQueryDataSinkTest {
     }
 
     @Test
+    void testTransferPartsMultiPageSucceeds() throws DescriptorValidationException, IOException, InterruptedException, ExecutionException, TimeoutException {
+        var parts = new ArrayList<Part>();
+        var partsRows =  Arrays.asList(
+                Arrays.asList(TEST_ROW_1, TEST_ROW_2, TEST_ROW_1, TEST_ROW_2),
+                Arrays.asList(TEST_ROW_1, TEST_ROW_2));
+
+        parts.add(getPartFromPages(TEST_FIELDS, partsRows));
+
+        var rowsCount = partsRows.stream().mapToLong(o -> o.size()).sum();
+
+        ApiFuture<AppendRowsResponse> future = mock();
+        AppendRowsResponse response = mock();
+        when(future.isDone()).thenReturn(true);
+        when(future.cancel(anyBoolean())).thenReturn(false);
+        when(future.isCancelled()).thenReturn(false);
+        doNothing().when(future).addListener(any(Runnable.class), any(Executor.class));
+        when(future.get()).thenReturn(response);
+        when(future.get(anyLong(), any())).thenReturn(response);
+        when(streamWriter.append(any())).thenReturn(future);
+
+        when(streamWriter.isClosed()).thenReturn(false);
+        when(streamWriter.getStreamName()).thenReturn("name");
+        when(writeClient.finalizeWriteStream(streamWriter.getStreamName())).thenReturn(
+                FinalizeWriteStreamResponse.newBuilder().setRowCount(rowsCount).build());
+
+        var commitResponse = mock(BatchCommitWriteStreamsResponse.class);
+        when(commitResponse.hasCommitTime()).thenReturn(true);
+        when(commitResponse.getStreamErrorsList()).thenReturn(Arrays.asList());
+        when(writeClient.batchCommitWriteStreams(any(BatchCommitWriteStreamsRequest.class))).thenReturn(commitResponse);
+        when(writeClient.awaitTermination(anyInt(), any(TimeUnit.class))).thenReturn(true);
+
+        var executorService = Executors.newSingleThreadScheduledExecutor();
+        executorService.schedule(() -> dataSink.testAppendSignal(), 2, TimeUnit.SECONDS);
+        executorService.schedule(() -> dataSink.testAppendSignal(), 3, TimeUnit.SECONDS);
+
+        dataSink.transferParts(parts);
+
+        verify(streamWriter, times(partsRows.size())).append(any());
+        verify(streamWriter).close();
+        verify(writeClient).finalizeWriteStream("name");
+        verify(writeClient).batchCommitWriteStreams(any(BatchCommitWriteStreamsRequest.class));
+    }
+
+    @Test
     void testTransferPartsFailsNoCommit() throws DescriptorValidationException, IOException, InterruptedException, ExecutionException, TimeoutException {
         var parts = new ArrayList<Part>();
-        parts.add(getPart(TEST_FIELDS, Arrays.asList(TEST_ROW_1, TEST_ROW_2)));
-        var partsCount = parts.stream().mapToLong(o -> o.size()).sum();
+        var partsRows =  Arrays.asList(
+                Arrays.asList(TEST_ROW_1, TEST_ROW_2));
+
+        parts.add(getPartFromPages(TEST_FIELDS, partsRows));
+
+        var rowsCount = partsRows.stream().mapToLong(o -> o.size()).sum();
 
         when(streamWriter.append(any())).thenThrow(new IOException());
         when(streamWriter.isClosed()).thenReturn(false);
         when(streamWriter.getStreamName()).thenReturn("name");
         when(writeClient.finalizeWriteStream(streamWriter.getStreamName())).thenReturn(
-                FinalizeWriteStreamResponse.newBuilder().setRowCount(partsCount).build());
+                FinalizeWriteStreamResponse.newBuilder().setRowCount(rowsCount).build());
 
         var commitResponse = mock(BatchCommitWriteStreamsResponse.class);
         when(commitResponse.hasCommitTime()).thenReturn(true);
@@ -208,12 +261,17 @@ public class BigQueryDataSinkTest {
         return record;
     }
 
-    private BigQueryPart getPart(List<Field> fieldList, List<List<FieldValue>> fieldValueLists) {
-        var array = new JSONArray();
-        for (var row : fieldValueLists) {
-            array.put(buildRecord(fieldList, row));
+    private BigQueryPart getPartFromPages(List<Field> fieldList, List<List<List<FieldValue>>> pages) {
+        var json = "";
+        for (var page : pages) {
+            var array = new JSONArray();
+            for (var row : page) {
+                array.put(buildRecord(fieldList, row));
+            }
+            json += array.toString();
         }
+
         return new BigQueryPart("allRows", new ByteArrayInputStream(
-            array.toString().getBytes()));
+            json.getBytes()));
     }
 }

@@ -60,6 +60,7 @@ import static org.eclipse.edc.spi.constants.CoreConstants.EDC_NAMESPACE;
  * Reads data using the BigQuery API (REST) and transfer it in JSON format.
  */
 public class BigQueryDataSource implements DataSource {
+    static final int BIGQUERY_PAGE_SIZE = 4;
     private BigQueryRequestParams params;
     private String requestId;
     private Monitor monitor;
@@ -113,7 +114,7 @@ public class BigQueryDataSource implements DataSource {
                 try {
                     // TODO set the page size as optional parameter.
                     var paginatedResults = queryJob.getQueryResults(
-                            QueryResultsOption.pageSize(4));
+                            QueryResultsOption.pageSize(BIGQUERY_PAGE_SIZE));
                     outputPage(outputStream, paginatedResults);
 
                     while (paginatedResults.hasNextPage()) {

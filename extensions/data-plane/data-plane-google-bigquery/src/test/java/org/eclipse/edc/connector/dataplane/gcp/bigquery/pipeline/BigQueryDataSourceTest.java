@@ -316,77 +316,6 @@ public class BigQueryDataSourceTest {
         return record;
     }
 
-    private void testRunSourceQuery(String sinkType, boolean queryException) throws InterruptedException, IOException {
-        var schema = Schema.of(FieldList.of(TEST_FIELDS));
-
-        var tableResult = mock(TableResult.class);
-        when(tableResult.getSchema()).thenReturn(schema);
-        when(tableResult.getValues()).thenReturn(Arrays.asList(
-                FieldValueList.of(TEST_ROW_1),
-                FieldValueList.of(TEST_ROW_2)));
-
-        var jobStatus = mock(JobStatus.class);
-        when(jobStatus.getError()).thenReturn(null);
-
-        var queryJob = mock(Job.class);
-        when(queryJob.getStatus()).thenReturn(jobStatus);
-
-        when(bigQuery.create(any(JobInfo.class))).thenReturn(queryJob);
-        if (!queryException) {
-            when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenReturn(tableResult);
-        } else {
-            when(queryJob.getQueryResults(QueryResultsOption.pageSize(4))).thenThrow(new IOException());
-        }
-
-        var options = BigQueryOptions.newBuilder().setCredentials(credentials).setProjectId(TEST_PROJECT).build();
-        when(bigQuery.getOptions()).thenReturn(options);
-
-        var params = BigQueryRequestParams.Builder.newInstance()
-                .project(TEST_PROJECT)
-                .dataset(TEST_DATASET)
-                .table(TEST_TABLE)
-                .query(TEST_QUERY_NO_PARAMS)
-                .sinkAddress(getDestinationDataAddress(sinkType))
-                .build();
-
-        var dataSource = BigQueryDataSource.Builder.newInstance()
-                .monitor(monitor)
-                .requestId(REQUEST_ID)
-                .params(params)
-                .executorService(executorService)
-                .credentials(credentials)
-                .target(target)
-                .configuration(configuration)
-                .bigQuery(bigQuery)
-                .build();
-
-        var partStream = dataSource.openPartStream();
-        assertThat(partStream.succeeded()).isTrue();
-        var receivedParts = partStream.getContent();
-
-        verify(bigQuery).create(any(JobInfo.class));
-
-        var receivedList = receivedParts.toList();
-        if (!queryException) {
-            var rows = Arrays.asList(TEST_ROW_1, TEST_ROW_2);
-            var expectedParts = Arrays.asList(getPart(TEST_FIELDS, rows));
-
-            assertThat(receivedList.size()).isEqualTo(expectedParts.size());
-            for (var i = 0; i < receivedList.size(); i++) {
-                if (receivedList.get(i) instanceof BigQueryPart bigQueryPart) {
-                    assertThat(bigQueryPart.getException()).isNull();
-                }
-                assertThat(receivedList.get(i)).usingRecursiveComparison().ignoringFields("inputStream").isEqualTo(expectedParts.get(i));
-            }
-        } else {
-            for (var i = 0; i < receivedList.size(); i++) {
-                if (receivedList.get(i) instanceof BigQueryPart bigQueryPart) {
-                    assertThat(bigQueryPart.getException()).isNotNull();
-                }
-            }
-        }
-    }
-
     private BigQueryPart getPart(List<Field> fieldList, List<List<FieldValue>> fieldValueLists) {
         var array = new JSONArray();
         for (var row : fieldValueLists) {
@@ -394,28 +323,6 @@ public class BigQueryDataSourceTest {
         }
         return new BigQueryPart("allRows", new ByteArrayInputStream(
             array.toString().getBytes()));
-    }
-
-    private JSONObject buildRecord(FieldList fields, FieldValueList values) {
-        var record = new JSONObject();
-        int colCount = fields.size();
-        for (int i = 0; i < colCount; i++) {
-            var field = fields.get(i);
-            var name = field.getName();
-            var value = values.get(i).getValue();
-            if (field.getType() == LegacySQLTypeName.RECORD) {
-                var newFields = field.getSubFields();
-                var fieldValueList = (FieldValueList) value;
-                var recordValue = fieldValueList.get(0).getRecordValue();
-                var recordArray = new JSONArray();
-                recordArray.put(buildRecord(newFields, recordValue));
-                record.put(name, recordArray);
-            } else {
-                record.put(name, value);
-            }
-        }
-
-        return record;
     }
 
     private static DataAddress getDestinationDataAddress(String type) {
