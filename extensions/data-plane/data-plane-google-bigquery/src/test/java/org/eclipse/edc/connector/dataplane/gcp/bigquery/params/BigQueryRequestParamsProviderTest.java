@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BigQueryRequestParamsProviderImplTest {
-    private BigQueryRequestParamsProviderImpl provider;
+class BigQueryRequestParamsProviderTest {
+    private BigQueryRequestParamsProvider provider;
     private static final String TEST_PROJECT = "test-project";
     private static final String TEST_DATASET = "test-dataset";
     private static final String TEST_TABLE = "test-table";
@@ -33,7 +33,7 @@ class BigQueryRequestParamsProviderImplTest {
 
     @BeforeEach
     void setup() {
-        provider = new BigQueryRequestParamsProviderImpl();
+        provider = new BigQueryRequestParamsProvider();
     }
 
     @Test

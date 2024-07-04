@@ -14,10 +14,18 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
+import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
+import com.google.cloud.bigquery.storage.v1.BigQueryWriteSettings;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProvider;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSink;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSinkFactory;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
+import org.eclipse.edc.gcp.bigquery.validation.BigQuerySinkDataAddressValidator;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
@@ -28,6 +36,7 @@ import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
 import static org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema.BIGQUERY_DATA;
@@ -43,6 +52,7 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
     private final Vault vault;
     private final TypeManager typeManager;
     private final BigQueryRequestParamsProvider requestParamsProvider;
+    private final BigQuerySinkDataAddressValidator sinkDataAddressValidator = new BigQuerySinkDataAddressValidator();
     private IamService iamService;
 
     public BigQueryDataSinkFactory(
@@ -70,8 +80,10 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
     @Override
     public @NotNull Result<Void> validateRequest(DataFlowStartMessage message) {
         // canHandle has been already invoked to have this factory selected.
-        // BigQuerySinkDataAddressValidator has already checked message.getDestinationDataAddress().
-        // BigQuerySourceDataAddressValidator has already checked message.getSourceDataAddress().
+        var sinkValidationresult = sinkDataAddressValidator.validate(message.getDestinationDataAddress());
+        if (sinkValidationresult.failed()) {
+            return Result.failure(sinkValidationresult.getFailureDetail());
+        }
 
         return Result.success();
     }
@@ -90,7 +102,10 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
         monitor.info("BigQuery Data Sink Factory " + message.getId());
         var params = requestParamsProvider.provideSinkParams(message);
         var target = params.getTarget();
+
         var dataSinkBuilder = BigQueryDataSink.Builder.newInstance();
+        var writeSettingsBuilder = BigQueryWriteSettings.newBuilder();
+
         var keyName = message.getDestinationDataAddress().getKeyName();
         var usingProvisionerAccessToken = false;
         if (keyName != null && !keyName.isEmpty()) {
@@ -99,7 +114,9 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
                 var gcsAccessToken = typeManager.readValue(credentialsContent,
                         GcpAccessToken.class);
                 var credentials  = iamService.getCredentials(gcsAccessToken);
+
                 dataSinkBuilder.credentials(credentials);
+
                 usingProvisionerAccessToken = true;
                 monitor.info("BigQuery Data Sink using provisioner's access token");
             } else {
@@ -107,19 +124,45 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
             }
         }
 
-        if (!usingProvisionerAccessToken && configuration.rpcEndpoint() == null) {
+        var host = configuration.rpcEndpoint();
+        if (!usingProvisionerAccessToken && host == null) {
             var serviceAccount = iamService.getServiceAccount(params.getServiceAccountName());
             var credentials = iamService.getCredentials(serviceAccount, IamService.BQ_SCOPE);
             dataSinkBuilder.credentials(credentials);
+            writeSettingsBuilder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
             monitor.info("BigQuery Data Sink using service account from data address: " + serviceAccount.getName());
+        } else if (!usingProvisionerAccessToken) {
+            var index = host.indexOf("//");
+            if (index != -1) {
+                host = host.substring(index + 2);
+            }
+
+            writeSettingsBuilder.setEndpoint(host);
+            writeSettingsBuilder.setTransportChannelProvider(
+                    FixedTransportChannelProvider.create(
+                        GrpcTransportChannel.create(
+                            NettyChannelBuilder.forTarget(host).usePlaintext().build()
+                        )
+                    )
+            );
+
+            writeSettingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
         }
 
-        return dataSinkBuilder
-            .requestId(message.getId())
-            .executorService(executorService)
-            .monitor(monitor)
-            .bigQueryTarget(target)
-            .configuration(configuration)
-            .build();
+        try {
+            var writeClient = BigQueryWriteClient.create(writeSettingsBuilder.build());
+
+            return dataSinkBuilder
+                .requestId(message.getId())
+                .executorService(executorService)
+                .monitor(monitor)
+                .bigQueryTarget(target)
+                .configuration(configuration)
+                .objectMapper(typeManager.getMapper())
+                .writeClient(writeClient)
+                .build();
+        } catch (IOException ioException) {
+            throw new GcpException("BigQuery Data Sink cannot create write client", ioException);
+        }
     }
 }

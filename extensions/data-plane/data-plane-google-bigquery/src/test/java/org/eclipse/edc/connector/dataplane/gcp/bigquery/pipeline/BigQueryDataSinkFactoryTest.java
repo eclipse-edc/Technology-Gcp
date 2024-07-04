@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
-import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProviderImpl;
+import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProvider;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.gcp.common.GcpException;
@@ -31,8 +31,10 @@ import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 public class BigQueryDataSinkFactoryTest {
     private static final String TEST_PROJECT = "test-project";
@@ -57,11 +59,13 @@ public class BigQueryDataSinkFactoryTest {
         reset(executorService);
         reset(vault);
         reset(iamService);
+
+        when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
     }
 
     @Test
     void testCanHandle() {
-        var provider = new BigQueryRequestParamsProviderImpl();
+        var provider = new BigQueryRequestParamsProvider();
         var factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService, monitor, vault, typeManager, provider, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
@@ -80,7 +84,7 @@ public class BigQueryDataSinkFactoryTest {
 
     @Test
     void testCreateSink() {
-        var provider = new BigQueryRequestParamsProviderImpl();
+        var provider = new BigQueryRequestParamsProvider();
         var factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService, monitor, vault, typeManager, provider, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);

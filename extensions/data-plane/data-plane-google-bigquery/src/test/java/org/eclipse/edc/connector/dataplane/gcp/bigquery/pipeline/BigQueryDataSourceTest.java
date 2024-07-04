@@ -117,6 +117,8 @@ public class BigQueryDataSourceTest {
         reset(table);
         reset(typeManager);
 
+        when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
+
         when(credentials.createScoped(any(String[].class))).thenReturn(credentials);
         when(credentials.getAccessToken()).thenReturn(credentialAccessToken);
 

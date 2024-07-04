@@ -15,13 +15,13 @@
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.NoCredentials;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.FieldList;
 import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.LegacySQLTypeName;
@@ -29,7 +29,6 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryParameterValue;
 import com.google.cloud.bigquery.StandardSQLTypeName;
 import com.google.cloud.bigquery.TableResult;
-import com.google.common.collect.ImmutableMap;
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParams;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
@@ -47,6 +46,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +60,10 @@ import static org.eclipse.edc.spi.constants.CoreConstants.EDC_NAMESPACE;
  * Reads data using the BigQuery API (REST) and transfer it in JSON format.
  */
 public class BigQueryDataSource implements DataSource {
-    static final int BIGQUERY_PAGE_SIZE = 4;
+    /**
+     * Maximum number of rows per page retrieved by the query.
+     */
+    private static final int BIGQUERY_PAGE_SIZE = 4;
     private BigQueryRequestParams params;
     private String requestId;
     private Monitor monitor;
@@ -86,7 +89,7 @@ public class BigQueryDataSource implements DataSource {
             var destinationTable = params.getDestinationTable();
             var customerName = sinkAddress.getStringProperty(BigQueryServiceSchema.CUSTOMER_NAME);
             if (customerName != null) {
-                queryConfigBuilder.setLabels(ImmutableMap.of("customer", customerName));
+                queryConfigBuilder.setLabels(Map.of("customer", customerName));
             }
 
             setNamedParameters(queryConfigBuilder, sinkAddress);
@@ -103,40 +106,25 @@ public class BigQueryDataSource implements DataSource {
             var queryConfig = queryConfigBuilder.build();
             var jobId = JobId.of(UUID.randomUUID().toString());
             var jobInfo = JobInfo.newBuilder(queryConfig).setJobId(jobId).build();
-            final var queryJob = bigQuery.create(jobInfo);
+            var queryJob = bigQuery.create(jobInfo);
 
             // The output stream object is passed to the thread lambda, do not use try with resources.
-            final var outputStream = new PipedOutputStream();
+            var outputStream = new PipedOutputStream();
             // The input stream object is passed to the sink thread, do not use try with resources.
             var inputStream = new PipedInputStream(outputStream);
-            final var part = new BigQueryPart("allRows", inputStream);
-            executorService.submit(() -> {
-                try {
-                    // TODO set the page size as optional parameter.
-                    var paginatedResults = queryJob.getQueryResults(
-                            QueryResultsOption.pageSize(BIGQUERY_PAGE_SIZE));
-                    outputPage(outputStream, paginatedResults);
+            var part = new BigQueryPart("allRows", inputStream);
 
-                    while (paginatedResults.hasNextPage()) {
-                        paginatedResults = paginatedResults.getNextPage();
-                        outputPage(outputStream, paginatedResults);
-                    }
-                    monitor.debug("BigQuery Source all pages fetched");
-                } catch (Exception exception) {
-                    part.setException(exception);
-                    monitor.severe("BigQuery Source exception while sourcing", exception);
-                } finally {
-                    closeSourceStream(outputStream);
-                }
+            executorService.submit(() -> {
+                serializeResults(queryJob, outputStream, part);
             });
 
             return success(Stream.of(part));
         } catch (GcpException gcpException) {
-            monitor.severe("BigQuery Source error while building the query", gcpException);
-            return error("BigQuery Source error while building the query");
+            monitor.severe("Error while building the query", gcpException);
+            return error("Error while building the query");
         } catch (IOException ioException) {
-            monitor.severe("BigQuery Source error while opening input stream", ioException);
-            return error("BigQuery Source error while opening input stream");
+            monitor.severe("Error while opening input stream", ioException);
+            return error("Error while opening input stream");
         }
     }
 
@@ -160,6 +148,26 @@ public class BigQueryDataSource implements DataSource {
         bigQuery = bqBuilder.build().getService();
     }
 
+    private void serializeResults(Job queryJob, PipedOutputStream outputStream, BigQueryPart part) {
+        try {
+            // TODO set the page size as optional parameter.
+            var paginatedResults = queryJob.getQueryResults(
+                    QueryResultsOption.pageSize(BIGQUERY_PAGE_SIZE));
+            outputPage(outputStream, paginatedResults);
+
+            while (paginatedResults.hasNextPage()) {
+                paginatedResults = paginatedResults.getNextPage();
+                outputPage(outputStream, paginatedResults);
+            }
+            monitor.debug("All pages fetched");
+        } catch (Exception exception) {
+            part.setException(exception);
+            monitor.severe("Exception while sourcing", exception);
+        } finally {
+            closeSourceStream(outputStream);
+        }
+    }
+
     private JSONObject buildRecord(FieldList fields, FieldValueList values) {
         var record = new JSONObject();
         int colCount = fields.size();
@@ -180,23 +188,6 @@ public class BigQueryDataSource implements DataSource {
         }
 
         return record;
-    }
-
-    private void refreshBigQueryCredentials() {
-        if (configuration.restEndpoint() != null) {
-            // If emulator / system test, skip credential refresh.
-            return;
-        }
-
-        var credentials = bigQuery.getOptions().getCredentials();
-        if (credentials instanceof OAuth2Credentials authCredentials) {
-            try {
-                // TODO check margin and refresh if too close to expire.
-                authCredentials.refreshIfExpired();
-            } catch (IOException ioException) {
-                monitor.warning("BigQuery Service cannot refresh credentials", ioException);
-            }
-        }
     }
 
     private void outputPage(OutputStream outputStream, TableResult tableResult) throws IOException {
@@ -231,9 +222,9 @@ public class BigQueryDataSource implements DataSource {
     private void closeSourceStream(PipedOutputStream outputStream) {
         try {
             outputStream.close();
-            monitor.debug("BigQuery Source output stream closed");
+            monitor.debug("Output stream closed");
         } catch (IOException ioException) {
-            monitor.severe("BigQuery Source exception closing the output stream", ioException);
+            monitor.severe("Exception closing the output stream", ioException);
         }
     }
 
@@ -254,7 +245,7 @@ public class BigQueryDataSource implements DataSource {
         }
 
         public Builder monitor(Monitor monitor) {
-            dataSource.monitor = monitor;
+            dataSource.monitor = monitor.withPrefix("BigQuery Source");
             return this;
         }
 

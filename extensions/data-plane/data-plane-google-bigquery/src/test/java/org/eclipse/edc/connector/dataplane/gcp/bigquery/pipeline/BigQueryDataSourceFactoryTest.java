@@ -14,7 +14,7 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
-import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProviderImpl;
+import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProvider;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
@@ -33,8 +33,10 @@ import java.util.concurrent.Executors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 
 public class BigQueryDataSourceFactoryTest {
     private static final String TEST_PROJECT = "test-project";
@@ -60,11 +62,13 @@ public class BigQueryDataSourceFactoryTest {
         reset(monitor);
         reset(typeManager);
         reset(iamService);
+
+        when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
     }
 
     @Test
     void testCanHandle() {
-        var provider = new BigQueryRequestParamsProviderImpl();
+        var provider = new BigQueryRequestParamsProvider();
         var factory = new BigQueryDataSourceFactory(configuration, monitor, provider, typeManager, executionPool, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
@@ -83,7 +87,7 @@ public class BigQueryDataSourceFactoryTest {
 
     @Test
     void testCreateSource() {
-        var provider = new BigQueryRequestParamsProviderImpl();
+        var provider = new BigQueryRequestParamsProvider();
         var factory = new BigQueryDataSourceFactory(configuration, monitor, provider, typeManager, executionPool, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);

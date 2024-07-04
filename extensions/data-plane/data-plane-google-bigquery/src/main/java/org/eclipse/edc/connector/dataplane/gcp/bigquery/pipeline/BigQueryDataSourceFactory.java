@@ -20,6 +20,7 @@ import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
+import org.eclipse.edc.gcp.bigquery.validation.BigQuerySourceDataAddressValidator;
 import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.spi.monitor.Monitor;
@@ -42,6 +43,7 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
     private final Monitor monitor;
     private final TypeManager typeManager;
     private final ExecutorService executorService;
+    private final BigQuerySourceDataAddressValidator sourceDataAddressValidator = new BigQuerySourceDataAddressValidator();
     private IamService iamService;
 
     public BigQueryDataSourceFactory(BigQueryConfiguration configuration, Monitor monitor,
@@ -64,8 +66,10 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
     @Override
     public @NotNull Result<Void> validateRequest(DataFlowStartMessage message) {
         // canHandle has been already invoked to have this factory selected.
-        // BigQuerySinkDataAddressValidator has already checked message.getDestinationDataAddress().
-        // BigQuerySourceDataAddressValidator has already checked message.getSourceDataAddress().
+        var sourceValidationresult = sourceDataAddressValidator.validate(message.getSourceDataAddress());
+        if (sourceValidationresult.failed()) {
+            return Result.failure(sourceValidationresult.getFailureDetail());
+        }
 
         return Result.success();
     }
@@ -81,7 +85,6 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
             throw new GcpException("BigQuery Data Source cannot create source for request type " + message.getSourceDataAddress().getType());
         }
 
-        monitor.info("BigQuery Data Source Factory " + message.getId());
         var params = requestParamsProvider.provideSourceParams(message);
         var target = params.getTarget();
 

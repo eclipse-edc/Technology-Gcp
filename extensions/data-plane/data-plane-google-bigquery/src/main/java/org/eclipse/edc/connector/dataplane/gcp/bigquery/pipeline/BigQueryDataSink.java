@@ -21,19 +21,15 @@ import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
-import com.google.api.gax.grpc.GrpcTransportChannel;
-import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.storage.v1.AppendRowsResponse;
 import com.google.cloud.bigquery.storage.v1.BatchCommitWriteStreamsRequest;
 import com.google.cloud.bigquery.storage.v1.BigQueryWriteClient;
-import com.google.cloud.bigquery.storage.v1.BigQueryWriteSettings;
 import com.google.cloud.bigquery.storage.v1.CreateWriteStreamRequest;
 import com.google.cloud.bigquery.storage.v1.JsonStreamWriter;
 import com.google.cloud.bigquery.storage.v1.WriteStream;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Descriptors.DescriptorValidationException;
-import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamFailure;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult;
@@ -42,6 +38,7 @@ import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.BigQueryPart;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
 import org.eclipse.edc.gcp.common.GcpException;
+import org.eclipse.edc.spi.monitor.Monitor;
 import org.json.JSONArray;
 
 import java.io.IOException;
@@ -58,12 +55,21 @@ import static org.eclipse.edc.connector.dataplane.spi.pipeline.StreamResult.succ
  * Writes JSON data in a streaming fashion using the BigQuery Storage API (RPC).
  */
 public class BigQueryDataSink extends ParallelSink {
+    /**
+     * Write finalization time-out in seconds.
+     */
+    private static final int BIG_QUERY_WRITE_TIME_OUT_SEC = 2;
+    /**
+     * Max number of iterations waiting for the write finalization.
+     */
+    private static final int BIG_QUERY_WRITE_MAX_WAIT_ITERATION = 3;
     private BigQueryConfiguration configuration;
     private BigQueryTarget target;
     private GoogleCredentials credentials;
     private final Phaser inflightRequestCount = new Phaser(1);
     private BigQueryWriteClient writeClient;
     private JsonStreamWriter streamWriter;
+    private ObjectMapper objectMapper;
 
     private BigQueryDataSink() {
     }
@@ -78,15 +84,21 @@ public class BigQueryDataSink extends ParallelSink {
             return StreamResult.success();
         }
 
+        try {
+            openStreamWriter();
+        } catch (Exception exception) {
+            return failure(new StreamFailure(List.of("Error :" + exception), GENERAL_ERROR));
+        }
+
         Exception appendException = null;
         var errorWhileAppending = false;
+
         for (var part : parts) {
             try (var inputStream = part.openStream()) {
-                var mapper = new ObjectMapper();
-                var jsonParser = mapper.createParser(inputStream);
+                var jsonParser = objectMapper.createParser(inputStream);
                 var token = jsonParser.nextToken();
-                while (token != null && token == JsonToken.START_ARRAY) {
-                    var element = mapper.readTree(jsonParser);
+                while (token == JsonToken.START_ARRAY) {
+                    var element = objectMapper.readTree(jsonParser);
                     var jsonString = element.toString();
                     var page = new JSONArray(jsonString);
                     append(page);
@@ -94,12 +106,15 @@ public class BigQueryDataSink extends ParallelSink {
                 }
 
                 if (token != null && token != JsonToken.START_ARRAY) {
-                    throw new IllegalStateException("BigQuery sink JSON array expected");
+                    errorWhileAppending = true;
+                    appendException = new IllegalStateException("JSON array expected");
+                    monitor.severe("Error while appending: JSON array expected");
+                    break;
                 }
             } catch (Exception exception) {
                 errorWhileAppending = true;
                 appendException = exception;
-                monitor.severe("BigQuery Sink error while appending: ", appendException);
+                monitor.severe("Error while appending: ", appendException);
                 break;
             }
 
@@ -107,19 +122,69 @@ public class BigQueryDataSink extends ParallelSink {
                 if (bigQueryPart.getException() != null) {
                     errorWhileAppending = true;
                     appendException = bigQueryPart.getException();
-                    monitor.severe("BigQuery Sink error from source: ", appendException);
+                    monitor.severe("Error from source: ", appendException);
                     break;
                 }
             }
         }
 
         inflightRequestCount.arriveAndAwaitAdvance();
-        closeSinkStream();
+        closeStreamWriter();
 
-        monitor.debug("BigQuery Sink requests arrived, stream " + streamWriter.getStreamName() + " for table " + target.getTableName().toString() + " closed, now finalizing..");
+        monitor.debug("Requests arrived, stream " +
+                streamWriter.getStreamName() + " for table " + target.getTableName().toString() +
+                " closed, now finalizing..");
+
+        cleanupResources(errorWhileAppending);
+
+        if (errorWhileAppending) {
+            if (appendException != null) {
+                return failure(new StreamFailure(List.of("Error :" + appendException), GENERAL_ERROR));
+            }
+            return failure(new StreamFailure(List.of("Error"), GENERAL_ERROR));
+        }
+
+        return success();
+    }
+
+    private void openStreamWriter() throws DescriptorValidationException, IOException, InterruptedException {
+        if (streamWriter != null) {
+            return;
+        }
+
+        monitor.debug("Opening stream writer in pending mode for table " + target.getTableName().toString());
+        var stream = WriteStream.newBuilder()
+                .setType(WriteStream.Type.PENDING)
+                .build();
+
+        var createWriteStreamRequest = CreateWriteStreamRequest.newBuilder()
+                .setParent(target.getTableName().toString())
+                .setWriteStream(stream)
+                .build();
+
+        var writeStream = writeClient.createWriteStream(createWriteStreamRequest);
+
+        var builder = JsonStreamWriter.newBuilder(writeStream.getName(), writeClient);
+
+        if (configuration.rpcEndpoint() != null) {
+            builder.setCredentialsProvider(NoCredentialsProvider.create());
+        } else {
+            builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
+        }
+
+        streamWriter = builder.build();
+    }
+
+    private void closeStreamWriter() {
+        if (streamWriter != null && !streamWriter.isClosed()) {
+            streamWriter.close();
+        }
+    }
+
+    private void cleanupResources(boolean errorWhileAppending) {
         var finalizeResponse =
                 writeClient.finalizeWriteStream(streamWriter.getStreamName());
-        monitor.debug("BigQuery Sink rows written: " + finalizeResponse.getRowCount());
+        monitor.debug("Rows written: " + finalizeResponse.getRowCount());
 
         // Commit the data stream received only if the stream writer succeeded (transaction).
         // TODO support option to enable commit even if the stream writer failed.
@@ -132,65 +197,17 @@ public class BigQueryDataSink extends ParallelSink {
         var terminated = false;
         do {
             try {
-                terminated = writeClient.awaitTermination(2, TimeUnit.SECONDS);
+                terminated = writeClient.awaitTermination(BIG_QUERY_WRITE_TIME_OUT_SEC, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) {
-                monitor.warning("BigQuery Sink write client shut down (interrupted)");
+                monitor.warning("Write client shut down (interrupted)");
             }
             waitIterationCount++;
-        } while (!terminated && waitIterationCount < 3);
+        } while (!terminated && waitIterationCount < BIG_QUERY_WRITE_MAX_WAIT_ITERATION);
 
         if (terminated) {
-            monitor.info("BigQuery Sink write client shut down");
+            monitor.info("Write client shut down");
         } else {
-            monitor.warning("BigQuery Sink write client NOT shut down after timeout");
-        }
-
-        if (errorWhileAppending) {
-            if (appendException != null) {
-                return failure(new StreamFailure(List.of("BigQuery Sink error :" + appendException), GENERAL_ERROR));
-            }
-            return failure(new StreamFailure(List.of("BigQuery Sink error"), GENERAL_ERROR));
-        }
-
-        return success();
-    }
-
-    private void checkStreamWriter()
-        throws DescriptorValidationException, IOException, InterruptedException {
-        if (streamWriter == null) {
-            monitor.debug("BigQuery Sink creating stream writer in pending mode for table " + target.getTableName().toString());
-            var stream = WriteStream.newBuilder()
-                    .setType(WriteStream.Type.PENDING)
-                    .build();
-
-            var createWriteStreamRequest = CreateWriteStreamRequest.newBuilder()
-                    .setParent(target.getTableName().toString())
-                    .setWriteStream(stream)
-                    .build();
-
-            var writeStream = writeClient.createWriteStream(createWriteStreamRequest);
-
-            var builder = JsonStreamWriter.newBuilder(writeStream.getName(), writeClient);
-
-            if (configuration.rpcEndpoint() != null) {
-                builder.setCredentialsProvider(NoCredentialsProvider.create());
-            } else {
-                builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
-            }
-
-            streamWriter = builder.build();
-        }
-
-        if (streamWriter.isClosed()) {
-            // TODO re-create the writer for a maximum, specified number of times.
-            monitor.info("BigQuery Sink stream writer closed, recreating it for stream " + streamWriter.getStreamName());
-            var builder = JsonStreamWriter.newBuilder(streamWriter.getStreamName(), writeClient);
-            if (configuration.rpcEndpoint() != null) {
-                builder.setCredentialsProvider(NoCredentialsProvider.create());
-            } else {
-                builder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
-            }
-            streamWriter = builder.build();
+            monitor.warning("Write client NOT shut down after timeout");
         }
     }
 
@@ -199,48 +216,14 @@ public class BigQueryDataSink extends ParallelSink {
             return;
         }
 
-        var settingsBuilder = BigQueryWriteSettings.newBuilder();
-        var host = configuration.rpcEndpoint();
-        if (host != null) {
-            var index = host.indexOf("//");
-            if (index != -1) {
-                host = host.substring(index + 2);
-            }
-            settingsBuilder.setEndpoint(host);
-            settingsBuilder.setTransportChannelProvider(
-                    FixedTransportChannelProvider.create(
-                        GrpcTransportChannel.create(
-                            NettyChannelBuilder.forTarget(host).usePlaintext().build()
-                        )
-                    )
-            );
 
-            settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
-        } else {
-            settingsBuilder.setCredentialsProvider(FixedCredentialsProvider.create(credentials));
-        }
-        writeClient = BigQueryWriteClient.create(settingsBuilder.build());
     }
 
-    private void append(JSONArray page)
-        throws DescriptorValidationException, IOException, InterruptedException {
+    private void append(JSONArray page) throws DescriptorValidationException, IOException, InterruptedException {
         // TODO re-try the append operation for a maximum, specified number of times.
-        checkStreamWriter();
         ApiFuture<AppendRowsResponse> future = streamWriter.append(page);
         ApiFutures.addCallback(
                 future, new AppendCompleteCallback(), MoreExecutors.directExecutor());
-    }
-
-    private boolean closeSinkStream() {
-        try {
-            checkStreamWriter();
-            streamWriter.close();
-            return true;
-        } catch (IOException | InterruptedException | DescriptorValidationException exception) {
-            monitor.severe("BigQuery Sink error while closing the stream writer", exception);
-        }
-
-        return false;
     }
 
     private void commitData() {
@@ -255,13 +238,13 @@ public class BigQueryDataSink extends ParallelSink {
             var errorLogged = false;
             for (var err : commitResponse.getStreamErrorsList()) {
                 errorLogged = true;
-                monitor.severe("BigQuery Sink error while committing the streams " + err.getErrorMessage());
+                monitor.severe("Error while committing the streams " + err.getErrorMessage());
             }
             if (!errorLogged) {
-                monitor.severe("BigQuery Sink error while committing the streams");
+                monitor.severe("Error while committing the streams");
             }
         } else {
-            monitor.debug("BigQuery Sink records committed successfully, write client shutting down...");
+            monitor.debug("Records committed successfully, write client shutting down...");
         }
     }
 
@@ -277,7 +260,7 @@ public class BigQueryDataSink extends ParallelSink {
 
         @Override
         public void onFailure(Throwable throwable) {
-            monitor.severe("BigQuery Json writer failed", throwable);
+            monitor.severe("JSON writer failed", throwable);
             inflightRequestCount.arriveAndDeregister();
             // TODO retry the append operation for a maximum, specified number of times.
         }
@@ -308,6 +291,17 @@ public class BigQueryDataSink extends ParallelSink {
         }
 
         @Override
+        public Builder monitor(Monitor monitor) {
+            sink.monitor = monitor.withPrefix("BigQuery Sink");
+            return this;
+        }
+
+        public Builder objectMapper(ObjectMapper objectMapper) {
+            sink.objectMapper = objectMapper;
+            return this;
+        }
+
+        @Override
         public BigQueryDataSink build() {
             var sink = super.build();
             try {
@@ -322,6 +316,7 @@ public class BigQueryDataSink extends ParallelSink {
         protected void validate() {
             Objects.requireNonNull(sink.configuration, "configuration");
             Objects.requireNonNull(sink.target, "target");
+            Objects.requireNonNull(sink.writeClient, "writeClient");
         }
 
         Builder writeClient(BigQueryWriteClient writeClient) {

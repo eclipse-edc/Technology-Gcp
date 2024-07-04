@@ -21,6 +21,7 @@ dependencies {
     api(libs.edc.core.dataplane.util)
 
     implementation(project(":extensions:common:gcp:gcp-core"))
+    implementation(libs.edc.spi.validator)
 
     testImplementation(libs.edc.core.dataplane)
     testImplementation(libs.edc.junit)

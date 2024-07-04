@@ -14,6 +14,7 @@
 
 package org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -116,6 +117,8 @@ public class BigQueryDataSinkTest {
         when(googleCredentials.createScoped(any(String[].class))).thenReturn(googleCredentials);
         when(googleCredentials.getAccessToken()).thenReturn(credentialAccessToken);
 
+        when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
+
         params = BigQueryRequestParams.Builder.newInstance()
                 .project(TEST_PROJECT)
                 .dataset(TEST_DATASET)
@@ -130,6 +133,7 @@ public class BigQueryDataSinkTest {
                 .credentials(googleCredentials)
                 .executorService(executorService)
                 .bigQueryTarget(target)
+                .objectMapper(new ObjectMapper())
                 .configuration(new BigQueryConfiguration(null))
                 .build();
     }

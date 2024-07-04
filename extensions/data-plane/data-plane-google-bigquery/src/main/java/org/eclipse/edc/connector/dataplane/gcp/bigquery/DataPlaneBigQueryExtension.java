@@ -15,7 +15,6 @@
 package org.eclipse.edc.connector.dataplane.gcp.bigquery;
 
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProvider;
-import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestParamsProviderImpl;
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline.BigQueryDataSinkFactory;
 import org.eclipse.edc.connector.dataplane.gcp.bigquery.pipeline.BigQueryDataSourceFactory;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataTransferExecutorServiceContainer;
@@ -75,7 +74,7 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-        var paramsProvider = new BigQueryRequestParamsProviderImpl();
+        var paramsProvider = new BigQueryRequestParamsProvider();
         context.registerService(BigQueryRequestParamsProvider.class, paramsProvider);
         bigQueryConfiguration = getBigQueryConfiguration(gcpConfiguration, context);
 
