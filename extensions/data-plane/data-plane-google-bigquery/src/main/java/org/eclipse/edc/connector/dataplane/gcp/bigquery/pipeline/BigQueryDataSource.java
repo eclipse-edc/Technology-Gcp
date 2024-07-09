@@ -114,9 +114,9 @@ public class BigQueryDataSource implements DataSource {
             var inputStream = new PipedInputStream(outputStream);
             var part = new BigQueryPart("allRows", inputStream);
 
-            executorService.submit(() -> {
-                serializeResults(queryJob, outputStream, part);
-            });
+            executorService.submit(() ->
+                    serializeResults(queryJob, outputStream, part)
+            );
 
             return success(Stream.of(part));
         } catch (GcpException gcpException) {
