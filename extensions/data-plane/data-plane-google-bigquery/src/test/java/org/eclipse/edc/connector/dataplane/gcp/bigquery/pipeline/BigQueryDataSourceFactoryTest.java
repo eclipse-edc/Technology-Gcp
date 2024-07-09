@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 public class BigQueryDataSourceFactoryTest {
@@ -48,8 +47,6 @@ public class BigQueryDataSourceFactoryTest {
     private static final String TEST_PROCESS_ID = "process-id";
     private static final String TEST_CUSTOMER_NAME = "customer-name";
     private static final String TEST_SINK_SERVICE_ACCOUNT_NAME = "sinkAccount";
-    private static final String TEST_PARAM_NAME = "argument";
-    private static final String TEST_PARAM_VALUE = "argValue";
     private final ExecutorService executionPool = Executors.newFixedThreadPool(2);
     private GcpConfiguration gcpConfiguration = new GcpConfiguration(TEST_PROJECT, TEST_SINK_SERVICE_ACCOUNT_NAME, null, null);
     private BigQueryConfiguration configuration = new BigQueryConfiguration(gcpConfiguration, "testEndpoint", null, 0);
@@ -59,10 +56,6 @@ public class BigQueryDataSourceFactoryTest {
 
     @BeforeEach
     void setup() {
-        reset(monitor);
-        reset(typeManager);
-        reset(iamService);
-
         when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
     }
 

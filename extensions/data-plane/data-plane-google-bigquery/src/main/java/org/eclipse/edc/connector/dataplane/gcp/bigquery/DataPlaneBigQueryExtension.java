@@ -93,17 +93,19 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
         return bigQueryConfiguration;
     }
 
-    private BigQueryConfiguration getBigQueryConfiguration(GcpConfiguration gcpConfiguration,
-            ServiceExtensionContext context) {
+    private BigQueryConfiguration getBigQueryConfiguration(GcpConfiguration gcpConfiguration, ServiceExtensionContext context) {
         var restEndpoint = context.getSetting(BIGQUERY_REST_ENDPOINT, null);
+        var rpcEndpoint = context.getSetting(BIGQUERY_RPC_ENDPOINT, null);
+        var threadPoolSize = context.getSetting(BIGQUERY_THREAD_POOL, DataPlaneBigQueryExtension.DEFAULT_THREAD_POOL_SIZE);
+
         if (restEndpoint == null) {
             ConfigurationFunctions.propOrEnv(BIGQUERY_REST_ENDPOINT, null);
         }
-        var rpcEndpoint = context.getSetting(BIGQUERY_RPC_ENDPOINT, null);
+
         if (rpcEndpoint == null) {
             ConfigurationFunctions.propOrEnv(BIGQUERY_RPC_ENDPOINT, null);
         }
-        var threadPoolSize = context.getSetting(BIGQUERY_THREAD_POOL, DataPlaneBigQueryExtension.DEFAULT_THREAD_POOL_SIZE);
+
         return new BigQueryConfiguration(gcpConfiguration, restEndpoint, rpcEndpoint, threadPoolSize);
     }
 }

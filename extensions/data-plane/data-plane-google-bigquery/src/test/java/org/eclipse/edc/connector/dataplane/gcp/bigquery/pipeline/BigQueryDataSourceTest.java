@@ -59,18 +59,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class BigQueryDataSourceTest {
-    private Monitor monitor = mock();
-    private GcpConfiguration gcpConfiguration = new GcpConfiguration(TEST_PROJECT, TEST_SOURCE_SERVICE_ACCOUNT_NAME, null, null);
-    private BigQueryConfiguration configuration = new BigQueryConfiguration(gcpConfiguration, "testEndpoint", null, 0);
-    private BigQuery bigQuery = mock();
-    private Table table = mock();
-    private TypeManager typeManager = mock();
-    private GoogleCredentials credentials = mock();
+    private final Monitor monitor = mock();
+    private final GcpConfiguration gcpConfiguration = new GcpConfiguration(TEST_PROJECT, TEST_SOURCE_SERVICE_ACCOUNT_NAME, null, null);
+    private final BigQueryConfiguration configuration = new BigQueryConfiguration(gcpConfiguration, "testEndpoint", null, 0);
+    private final BigQuery bigQuery = mock();
+    private final Table table = mock();
+    private final TypeManager typeManager = mock();
+    private final GoogleCredentials credentials = mock();
     private static final String REQUEST_ID = "request-id";
     private static final String TEST_PROJECT = "test-project";
     private static final String TEST_DATASET = "test-dataset";
@@ -112,11 +111,6 @@ public class BigQueryDataSourceTest {
 
     @BeforeEach
     void setup() {
-        reset(monitor);
-        reset(bigQuery);
-        reset(table);
-        reset(typeManager);
-
         when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
 
         when(credentials.createScoped(any(String[].class))).thenReturn(credentials);

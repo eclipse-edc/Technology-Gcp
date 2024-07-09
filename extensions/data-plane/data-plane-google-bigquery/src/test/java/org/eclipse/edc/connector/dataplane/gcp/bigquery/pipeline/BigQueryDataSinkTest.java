@@ -60,7 +60,6 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -102,18 +101,12 @@ public class BigQueryDataSinkTest {
             .setTokenValue(testTokenValue)
             .setExpirationTime(new Date(testTokenExpirationTime))
             .build();
-    private BigQueryWriteClient writeClient = mock();
-    private JsonStreamWriter streamWriter = mock();
-    private GoogleCredentials googleCredentials = mock();
+    private final BigQueryWriteClient writeClient = mock();
+    private final JsonStreamWriter streamWriter = mock();
+    private final GoogleCredentials googleCredentials = mock();
 
     @BeforeEach
     void setup() {
-        reset(monitor);
-        reset(executorService);
-        reset(writeClient);
-        reset(streamWriter);
-        reset(googleCredentials);
-
         when(googleCredentials.createScoped(any(String[].class))).thenReturn(googleCredentials);
         when(googleCredentials.getAccessToken()).thenReturn(credentialAccessToken);
 

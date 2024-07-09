@@ -37,7 +37,6 @@ import org.eclipse.edc.connector.dataplane.util.sink.ParallelSink;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.BigQueryPart;
 import org.eclipse.edc.gcp.bigquery.BigQueryTarget;
-import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.json.JSONArray;
 
@@ -211,17 +210,10 @@ public class BigQueryDataSink extends ParallelSink {
         }
     }
 
-    private void initService() throws IOException {
-        if (writeClient != null) {
-            return;
-        }
-
-
-    }
-
-    private void append(JSONArray page) throws DescriptorValidationException, IOException, InterruptedException {
+    private void append(JSONArray page) throws DescriptorValidationException, IOException {
         // TODO re-try the append operation for a maximum, specified number of times.
         ApiFuture<AppendRowsResponse> future = streamWriter.append(page);
+
         ApiFutures.addCallback(
                 future, new AppendCompleteCallback(), MoreExecutors.directExecutor());
     }
@@ -299,17 +291,6 @@ public class BigQueryDataSink extends ParallelSink {
         public Builder objectMapper(ObjectMapper objectMapper) {
             sink.objectMapper = objectMapper;
             return this;
-        }
-
-        @Override
-        public BigQueryDataSink build() {
-            var sink = super.build();
-            try {
-                sink.initService();
-                return sink;
-            } catch (IOException ioException) {
-                throw new GcpException(ioException);
-            }
         }
 
         @Override
