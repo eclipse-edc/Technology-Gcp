@@ -45,8 +45,8 @@ class DataPlaneBigQueryExtensionTest {
     @BeforeEach
     void setup(EdcExtension extension) {
         var config = Map.ofEntries(
-            Map.entry("edc.transfer.proxy.token.verifier.publickey.alias", "test"),
-            Map.entry("edc.transfer.proxy.token.signer.privatekey.alias", "test")
+                Map.entry("edc.transfer.proxy.token.verifier.publickey.alias", "test"),
+                Map.entry("edc.transfer.proxy.token.signer.privatekey.alias", "test")
         );
         extension.setConfiguration(config);
         extension.registerServiceMock(TransferProcessApiClient.class, mock(TransferProcessApiClient.class));
