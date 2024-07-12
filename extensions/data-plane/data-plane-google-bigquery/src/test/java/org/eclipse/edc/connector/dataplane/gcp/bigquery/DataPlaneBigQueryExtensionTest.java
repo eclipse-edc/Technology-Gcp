@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,6 +44,11 @@ class DataPlaneBigQueryExtensionTest {
 
     @BeforeEach
     void setup(EdcExtension extension) {
+        var config = Map.ofEntries(
+            Map.entry("edc.transfer.proxy.token.verifier.publickey.alias", "test"),
+            Map.entry("edc.transfer.proxy.token.signer.privatekey.alias", "test")
+        );
+        extension.setConfiguration(config);
         extension.registerServiceMock(TransferProcessApiClient.class, mock(TransferProcessApiClient.class));
         extension.registerServiceMock(TypeManager.class, mock(TypeManager.class));
         extension.registerServiceMock(CriterionOperatorRegistry.class, mock(CriterionOperatorRegistry.class));

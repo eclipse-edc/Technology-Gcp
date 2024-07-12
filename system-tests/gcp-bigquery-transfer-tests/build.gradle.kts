@@ -19,7 +19,6 @@ dependencies {
   testFixturesApi(libs.testcontainers.gcloud)
   testFixturesApi(libs.edc.lib.util)
   testFixturesApi(libs.edc.junit)
-  testFixturesApi(libs.edc.sql.core)
   testFixturesApi(libs.junit.jupiter.api)
 
   // GCP dependencies.
