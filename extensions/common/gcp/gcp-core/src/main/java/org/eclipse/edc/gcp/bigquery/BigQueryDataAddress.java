@@ -42,6 +42,10 @@ public class BigQueryDataAddress extends DataAddress {
         return getStringProperty(BigQueryServiceSchema.TABLE);
     }
 
+    public String getDestinationTable() {
+        return getStringProperty(BigQueryServiceSchema.DESTINATION_TABLE);
+    }
+
     public String getQuery() {
         return getStringProperty(BigQueryServiceSchema.QUERY);
     }
@@ -71,6 +75,11 @@ public class BigQueryDataAddress extends DataAddress {
 
         public Builder table(String table) {
             property(BigQueryServiceSchema.TABLE, table);
+            return this;
+        }
+
+        public Builder destinationTable(String destinationTable) {
+            property(BigQueryServiceSchema.DESTINATION_TABLE, destinationTable);
             return this;
         }
 

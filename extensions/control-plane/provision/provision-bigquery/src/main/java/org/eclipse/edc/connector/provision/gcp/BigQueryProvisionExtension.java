@@ -16,6 +16,7 @@ package org.eclipse.edc.connector.provision.gcp;
 
 import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ProvisionManager;
 import org.eclipse.edc.connector.controlplane.transfer.spi.provision.ResourceManifestGenerator;
+import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
 import org.eclipse.edc.gcp.bigquery.service.BigQueryFactoryImpl;
 import org.eclipse.edc.gcp.common.GcpAccessToken;
 import org.eclipse.edc.gcp.common.GcpConfiguration;
@@ -48,7 +49,8 @@ public class BigQueryProvisionExtension implements ServiceExtension {
     @Override
     public void initialize(ServiceExtensionContext context) {
         var monitor = context.getMonitor();
-        var bqFactory = new BigQueryFactoryImpl(gcpConfiguration, iamService);
+        var bigQueryConfiguration = new BigQueryConfiguration(gcpConfiguration);
+        var bqFactory = new BigQueryFactoryImpl(bigQueryConfiguration, iamService);
         var provisioner = new BigQueryProvisioner(gcpConfiguration, bqFactory, iamService, monitor);
 
         provisionManager.register(provisioner);
