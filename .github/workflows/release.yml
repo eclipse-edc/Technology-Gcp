@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: the branch to use for release
+        required: true
+        type: string
+
+
+jobs:
+  Release:
+    uses: eclipse-edc/.github/.github/workflows/technology-release.yml
+    secrets: inherit
+    with:
+      branch: ${{ inputs.branch }}
