@@ -3,13 +3,13 @@ name: Prepare Release
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: the starting branch for the release. If left empty "main" will be used, making this a proper release, otherwise it will be a bugfix
+      ref:
+        description: the starting ref to create the release branch. If left empty "main" will be used.
         required: false
         type: string
         default: main
       version:
-        description: the version to be released. if "branch" is "main" this version number should end with 0 (e.g. 0.1.0), otherwise it must end with a number greater than 0
+        description: the version to be released. If it ends with '.0' a proper release is created, bugfix otherwise
         required: true
         type: string
 
@@ -18,5 +18,5 @@ jobs:
     uses: eclipse-edc/.github/.github/workflows/technology-prepare-release.yml
     secrets: inherit
     with:
-      branch: ${{ inputs.branch }}
+      ref: ${{ inputs.ref }}
       version: ${{ inputs.version }}
