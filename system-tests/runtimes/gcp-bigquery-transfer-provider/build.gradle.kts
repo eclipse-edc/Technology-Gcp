@@ -22,6 +22,7 @@ dependencies {
   implementation(libs.edc.control.plane.core)
   implementation(libs.edc.control.plane.api.client)
   implementation(libs.edc.dsp)
+  implementation(libs.edc.http)
   implementation(libs.edc.configuration.filesystem)
   implementation(libs.edc.iam.mock)
   implementation(libs.edc.management.api)
