@@ -10,7 +10,7 @@ googleApisIam = "v2-rev20240108-2.0.0"
 googleCloudBom = "26.38.0"
 identityhub = "0.3.1"
 junit = "5.10.1"
-restAssured = "5.3.2"
+restAssured = "5.5.0"
 testcontainers = "1.19.8"
 
 [libraries]
