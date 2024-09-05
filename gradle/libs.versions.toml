@@ -2,7 +2,7 @@
 format.version = "1.1"
 
 [versions]
-edc = "0.8.2-SNAPSHOT"
+edc = "0.9.0"
 awaitility = "4.2.0"
 failsafe = "3.3.1"
 googleApiGax = "2.48.0"
@@ -32,10 +32,8 @@ edc-core-controlplane-api = { module = "org.eclipse.edc:control-plane-api", vers
 edc-core-controlplane-apiclient = { module = "org.eclipse.edc:control-plane-api-client", version.ref = "edc" }
 edc-core-dataplane = { module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
 edc-core-dataplane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
-edc-data-plane-control-api = { module = "org.eclipse.edc:data-plane-control-api", version.ref = "edc" }
 edc-data-plane-core = { module = "org.eclipse.edc:data-plane-core", version.ref = "edc" }
 edc-data-plane-http = { module = "org.eclipse.edc:data-plane-http", version.ref = "edc" }
-edc-data-plane-public-api = { module = "org.eclipse.edc:data-plane-public-api-v2", version.ref = "edc" }
 edc-data-plane-selector-api = { module = "org.eclipse.edc:data-plane-selector-api", version.ref = "edc" }
 edc-data-plane-selector-core = { module = "org.eclipse.edc:data-plane-selector-core", version.ref = "edc" }
 edc-data-plane-util = { module = "org.eclipse.edc:data-plane-util", version.ref = "edc" }
