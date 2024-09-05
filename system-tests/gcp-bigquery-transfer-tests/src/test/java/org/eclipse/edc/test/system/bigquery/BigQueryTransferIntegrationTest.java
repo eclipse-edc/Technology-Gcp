@@ -26,7 +26,9 @@ import com.google.cloud.bigquery.TableId;
 import org.eclipse.edc.connector.controlplane.test.system.utils.Participant;
 import org.eclipse.edc.connector.controlplane.test.system.utils.PolicyFixtures;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.TransferProcessStates;
-import org.eclipse.edc.junit.extensions.EdcRuntimeExtension;
+import org.eclipse.edc.junit.extensions.EmbeddedRuntime;
+import org.eclipse.edc.junit.extensions.RuntimeExtension;
+import org.eclipse.edc.junit.extensions.RuntimePerMethodExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.BigQueryEmulatorContainer;
@@ -132,8 +134,7 @@ public class BigQueryTransferIntegrationTest  {
                     "--data-from-yaml", "/data/data.yaml");
 
     @RegisterExtension
-    private final EdcRuntimeExtension bqProvider = new EdcRuntimeExtension(
-            ":system-tests:runtimes:gcp-bigquery-transfer-provider",
+    private final RuntimeExtension bqProvider = new RuntimePerMethodExtension(new EmbeddedRuntime(
             "provider",
             Map.ofEntries(
                 Map.entry("edc.participant.id", "provider"),
@@ -156,12 +157,12 @@ public class BigQueryTransferIntegrationTest  {
                 Map.entry("web.http.control.path", "/control"),
                 Map.entry("edc.dataplane.token.validation.endpoint", "http://localhost:19192/control/token"),
                 Map.entry("edc.gcp.project.id", "edc-test-project")
-            )
-    );
+            ),
+            ":system-tests:runtimes:gcp-bigquery-transfer-provider"
+    ));
 
     @RegisterExtension
-    private final EdcRuntimeExtension bqConsumer = new EdcRuntimeExtension(
-            ":system-tests:runtimes:gcp-bigquery-transfer-consumer",
+    private final RuntimeExtension bqConsumer = new RuntimePerMethodExtension(new EmbeddedRuntime(
             "consumer",
             Map.ofEntries(
                 Map.entry("edc.participant.id", "consumer"),
@@ -184,8 +185,9 @@ public class BigQueryTransferIntegrationTest  {
                 Map.entry("web.http.control.path", "/control"),
                 Map.entry("edc.dataplane.token.validation.endpoint", "http://localhost:29192/control/token"),
                 Map.entry("edc.gcp.project.id", "edc-test-project")
-            )
-    );
+            ),
+            ":system-tests:runtimes:gcp-bigquery-transfer-consumer"
+    ));
 
     private final BigQueryTransferParticipant consumerClient = BigQueryTransferParticipant.Builder.newInstance()
             .id("consumer")
@@ -203,7 +205,7 @@ public class BigQueryTransferIntegrationTest  {
 
 
     @Test
-    void transferTable_success() throws InterruptedException {
+    void transferTable_success() {
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
@@ -263,7 +265,7 @@ SELECT * from edc-test-dataset.table_src;
     }
 
     @Test
-    void transferTable_sinkFail() throws InterruptedException {
+    void transferTable_sinkFail() {
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
@@ -298,7 +300,7 @@ SELECT * from edc-test-dataset.table_src_wrong;
     }
 
     @Test
-    void transferTable_sourceFail() throws InterruptedException {
+    void transferTable_sourceFail() {
         assertTrue(BQ_CONTAINER.isRunning());
 
         var ports = BQ_CONTAINER.getExposedPorts();
