@@ -26,6 +26,7 @@ import com.google.cloud.bigquery.TableId;
 import org.eclipse.edc.connector.controlplane.test.system.utils.Participant;
 import org.eclipse.edc.connector.controlplane.test.system.utils.PolicyFixtures;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.TransferProcessStates;
+import org.eclipse.edc.junit.annotations.ComponentTest;
 import org.eclipse.edc.junit.extensions.EmbeddedRuntime;
 import org.eclipse.edc.junit.extensions.RuntimeExtension;
 import org.eclipse.edc.junit.extensions.RuntimePerMethodExtension;
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
+@ComponentTest
 @Testcontainers
 public class BigQueryTransferIntegrationTest  {
     private static final List<FieldValueList> TEST_ROWS = Arrays.asList(FieldValueList.of(Arrays.asList(

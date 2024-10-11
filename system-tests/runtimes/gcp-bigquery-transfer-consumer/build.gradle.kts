@@ -19,6 +19,7 @@ plugins {
 }
 
 dependencies {
+  implementation(libs.edc.core.edrstore)
   implementation(libs.edc.control.plane.core)
   implementation(libs.edc.control.plane.api.client)
   implementation(libs.edc.dsp)
