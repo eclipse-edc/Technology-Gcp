@@ -40,19 +40,24 @@ maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1/2.52.
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1beta2/2.52.0, Apache-2.0, approved, #16763
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-storage-v2/2.43.2-beta, Apache-2.0, approved, #16744
 maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.46.0, Apache-2.0, approved, clearlydefined
+maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.48.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-iam-admin-v1/3.47.0, Apache-2.0, approved, #16762
 maven/mavencentral/com.google.api.grpc/proto-google-iam-v1/1.41.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api/api-common/2.38.0, BSD-3-Clause, approved, #16731
+maven/mavencentral/com.google.api/api-common/2.40.0, , restricted, clearlydefined
 maven/mavencentral/com.google.api/gax-grpc/2.55.0, BSD-3-Clause, approved, #16779
 maven/mavencentral/com.google.api/gax-httpjson/2.55.0, BSD-3-Clause, approved, #16754
 maven/mavencentral/com.google.api/gax/2.55.0, BSD-3-Clause, approved, #16722
+maven/mavencentral/com.google.api/gax/2.57.0, , restricted, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-bigquery/v2-rev20240919-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-iam/v2-rev20240108-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-storage/v1-rev20240924-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.auth/google-auth-library-credentials/1.23.0, BSD-3-Clause, approved, #13420
 maven/mavencentral/com.google.auth/google-auth-library-credentials/1.28.0, BSD-3-Clause, approved, #16724
+maven/mavencentral/com.google.auth/google-auth-library-credentials/1.29.0, BSD-3-Clause, approved, #16920
 maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.23.0, BSD-3-Clause, approved, #13437
 maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.28.0, BSD-3-Clause, approved, #16730
+maven/mavencentral/com.google.auth/google-auth-library-oauth2-http/1.29.0, BSD-3-Clause, approved, #16921
 maven/mavencentral/com.google.auto.value/auto-value-annotations/1.11.0, Apache-2.0, approved, #15058
 maven/mavencentral/com.google.auto.value/auto-value/1.11.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.cloud.opentelemetry/detector-resources-support/0.32.0, Apache-2.0, approved, #16736
@@ -82,6 +87,8 @@ maven/mavencentral/com.google.errorprone/error_prone_annotations/2.27.0, Apache-
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.28.0, Apache-2.0, approved, #15107
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.30.0, Apache-2.0, approved, #15842
 maven/mavencentral/com.google.errorprone/error_prone_annotations/2.33.0, Apache-2.0, approved, #16446
+maven/mavencentral/com.google.errorprone/error_prone_annotations/2.34.0, Apache-2.0, approved, #16811
+maven/mavencentral/com.google.errorprone/error_prone_annotations/2.35.1, Apache-2.0, approved, #16871
 maven/mavencentral/com.google.flatbuffers/flatbuffers-java/23.5.26, Apache-2.0, approved, #12857
 maven/mavencentral/com.google.guava/failureaccess/1.0.2, Apache-2.0, approved, CQ22654
 maven/mavencentral/com.google.guava/guava/29.0-android, Apache-2.0, approved, clearlydefined
@@ -107,7 +114,7 @@ maven/mavencentral/com.google.protobuf/protobuf-java/3.25.3, BSD-3-Clause, appro
 maven/mavencentral/com.google.protobuf/protobuf-java/3.25.5, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.re2j/re2j/1.7, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.nimbusds/nimbus-jose-jwt/9.41.2, Apache-2.0, approved, clearlydefined
-maven/mavencentral/com.puppycrawl.tools/checkstyle/10.19.0, , restricted, clearlydefined
+maven/mavencentral/com.puppycrawl.tools/checkstyle/10.19.0, LGPL-2.1-or-later AND (Apache-2.0 AND LGPL-2.1-or-later) AND Apache-2.0, approved, #16922
 maven/mavencentral/com.squareup.okhttp3/okhttp-dnsoverhttps/4.12.0, Apache-2.0, approved, #11159
 maven/mavencentral/com.squareup.okhttp3/okhttp/4.12.0, Apache-2.0, approved, #15227
 maven/mavencentral/com.squareup.okhttp3/okhttp/4.9.3, Apache-2.0 AND MPL-2.0, approved, #3225
