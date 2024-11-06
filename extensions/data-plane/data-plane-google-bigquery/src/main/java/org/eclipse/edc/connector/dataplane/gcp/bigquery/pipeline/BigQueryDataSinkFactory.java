@@ -53,7 +53,7 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
     private final TypeManager typeManager;
     private final BigQueryRequestParamsProvider requestParamsProvider;
     private final BigQuerySinkDataAddressValidator sinkDataAddressValidator = new BigQuerySinkDataAddressValidator();
-    private IamService iamService;
+    private final IamService iamService;
 
     public BigQueryDataSinkFactory(
             BigQueryConfiguration configuration,
@@ -70,11 +70,6 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
         this.typeManager = typeManager;
         this.requestParamsProvider = requestParamsProvider;
         this.iamService = iamService;
-    }
-
-    @Override
-    public boolean canHandle(DataFlowStartMessage message) {
-        return BIGQUERY_DATA.equals(message.getDestinationDataAddress().getType());
     }
 
     @Override
@@ -95,10 +90,6 @@ public class BigQueryDataSinkFactory implements DataSinkFactory {
 
     @Override
     public DataSink createSink(DataFlowStartMessage message) {
-        if (!canHandle(message)) {
-            throw new GcpException("BigQuery Data Sink cannot create sink for request type " + message.getSourceDataAddress().getType());
-        }
-
         monitor.info("BigQuery Data Sink Factory " + message.getId());
         var params = requestParamsProvider.provideSinkParams(message);
         var target = params.getTarget();

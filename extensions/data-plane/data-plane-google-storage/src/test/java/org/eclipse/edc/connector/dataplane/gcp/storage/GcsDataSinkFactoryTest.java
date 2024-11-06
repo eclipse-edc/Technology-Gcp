@@ -20,7 +20,6 @@ import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.gcp.storage.GcsStoreSchema;
 import org.eclipse.edc.json.JacksonTypeManager;
 import org.eclipse.edc.spi.EdcException;
-import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.security.Vault;
 import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.DataAddress;
@@ -33,7 +32,6 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,36 +45,12 @@ class GcsDataSinkFactoryTest {
     private Vault vault = mock();
     private IamService iamService = mock();
     private GcsDataSinkFactory factory = new GcsDataSinkFactory(
-            mock(ExecutorService.class),
-            mock(Monitor.class),
+            mock(),
+            mock(),
             vault,
             typeManager,
             iamService
         );
-
-    @Test
-    void canHandle_returnsTrueWhenExpectedType() {
-        var destination = DataAddress.Builder
-                .newInstance()
-                .type(GcsStoreSchema.TYPE)
-                .build();
-
-        var result = factory.canHandle(createRequest(destination));
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    void canHandle_returnsFalseWhenUnexpectedType() {
-        var destination = DataAddress.Builder
-                .newInstance()
-                .type("Not Google Storage")
-                .build();
-
-        var result = factory.canHandle(createRequest(destination));
-
-        assertThat(result).isFalse();
-    }
 
     @Test
     void validate_ShouldSucceedIfPropertiesAreValid() {

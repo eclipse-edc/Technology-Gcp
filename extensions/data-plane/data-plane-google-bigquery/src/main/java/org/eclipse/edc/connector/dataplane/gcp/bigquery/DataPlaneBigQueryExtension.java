@@ -81,7 +81,7 @@ public class DataPlaneBigQueryExtension implements ServiceExtension {
         var executorService = executorInstrumentation.instrument(
                 Executors.newFixedThreadPool(bigQueryConfiguration.threadPoolSize()), "BigQuery Source");
 
-        var sourceFactory = new BigQueryDataSourceFactory(bigQueryConfiguration, monitor, paramsProvider, typeManager, executorService, iamService);
+        var sourceFactory = new BigQueryDataSourceFactory(bigQueryConfiguration, monitor, paramsProvider, executorService, iamService);
         pipelineService.registerFactory(sourceFactory);
 
         var sinkFactory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorContainer.getExecutorService(), monitor, vault, typeManager, paramsProvider, iamService);

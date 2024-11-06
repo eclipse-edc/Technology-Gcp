@@ -59,11 +59,6 @@ public class GcsDataSinkFactory implements DataSinkFactory {
     }
 
     @Override
-    public boolean canHandle(DataFlowStartMessage request) {
-        return GcsStoreSchema.TYPE.equals(request.getDestinationDataAddress().getType());
-    }
-
-    @Override
     public @NotNull Result<Void> validateRequest(DataFlowStartMessage request) {
         var destination = request.getDestinationDataAddress();
         return validation.validate(destination).toResult();

@@ -19,13 +19,10 @@ import org.eclipse.edc.connector.dataplane.gcp.bigquery.params.BigQueryRequestPa
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSource;
 import org.eclipse.edc.connector.dataplane.spi.pipeline.DataSourceFactory;
 import org.eclipse.edc.gcp.bigquery.BigQueryConfiguration;
-import org.eclipse.edc.gcp.bigquery.service.BigQueryServiceSchema;
 import org.eclipse.edc.gcp.bigquery.validation.BigQuerySourceDataAddressValidator;
-import org.eclipse.edc.gcp.common.GcpException;
 import org.eclipse.edc.gcp.iam.IamService;
 import org.eclipse.edc.spi.monitor.Monitor;
 import org.eclipse.edc.spi.result.Result;
-import org.eclipse.edc.spi.types.TypeManager;
 import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,26 +38,19 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
     private final BigQueryConfiguration configuration;
     private final BigQueryRequestParamsProvider requestParamsProvider;
     private final Monitor monitor;
-    private final TypeManager typeManager;
     private final ExecutorService executorService;
     private final BigQuerySourceDataAddressValidator sourceDataAddressValidator = new BigQuerySourceDataAddressValidator();
-    private IamService iamService;
+    private final IamService iamService;
 
     public BigQueryDataSourceFactory(BigQueryConfiguration configuration, Monitor monitor,
                                      BigQueryRequestParamsProvider requestParamsProvider,
-                                     TypeManager typeManager, ExecutorService executorService,
+                                     ExecutorService executorService,
                                      IamService iamService) {
         this.configuration = configuration;
         this.monitor = monitor;
         this.requestParamsProvider = requestParamsProvider;
-        this.typeManager = typeManager;
         this.executorService = executorService;
         this.iamService = iamService;
-    }
-
-    @Override
-    public boolean canHandle(DataFlowStartMessage message) {
-        return BigQueryServiceSchema.BIGQUERY_DATA.equals(message.getSourceDataAddress().getType());
     }
 
     @Override
@@ -81,10 +71,6 @@ public class BigQueryDataSourceFactory implements DataSourceFactory {
 
     @Override
     public DataSource createSource(DataFlowStartMessage message) {
-        if (!canHandle(message)) {
-            throw new GcpException("BigQuery Data Source cannot create source for request type " + message.getSourceDataAddress().getType());
-        }
-
         var params = requestParamsProvider.provideSourceParams(message);
         var target = params.getTarget();
 
