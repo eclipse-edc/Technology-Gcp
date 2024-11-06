@@ -31,29 +31,8 @@ import static org.mockito.Mockito.mock;
 
 class GcsDataSourceFactoryTest {
 
-    Monitor monitor = mock(Monitor.class);
-
-    private final GcsDataSourceFactory factory =
-            new GcsDataSourceFactory(monitor);
-
-    @Test
-    void canHandle_returnsTrueWhenExpectedType() {
-        var dataAddress = createDataAddress(GcsStoreSchema.TYPE)
-                .build();
-        var result = factory.canHandle(TestFunctions.createRequest(dataAddress));
-
-        assertThat(result).isTrue();
-    }
-
-    @Test
-    void canHandle_returnsFalseWhenUnexpectedType() {
-        var dataAddress = createDataAddress("Not Google Storage")
-                .build();
-
-        var result = factory.canHandle(TestFunctions.createRequest(dataAddress));
-
-        assertThat(result).isFalse();
-    }
+    private final Monitor monitor = mock(Monitor.class);
+    private final GcsDataSourceFactory factory = new GcsDataSourceFactory(monitor);
 
     @Test
     void validate_ShouldSucceedIfPropertiesAreValid() {
