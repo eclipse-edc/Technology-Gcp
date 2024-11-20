@@ -25,10 +25,12 @@ import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.edc.junit.assertions.AbstractResultAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,6 +49,8 @@ public class BigQueryDataSourceFactoryTest {
     private final BigQueryConfiguration configuration = new BigQueryConfiguration(gcpConfiguration, "testEndpoint", null, 0);
     private final Monitor monitor = mock();
     private final IamService iamService = mock();
+    private final BigQueryDataSourceFactory factory = new BigQueryDataSourceFactory(configuration, monitor,
+            new BigQueryRequestParamsProvider(), executionPool, iamService);
 
     @BeforeEach
     void setup() {
@@ -54,9 +58,20 @@ public class BigQueryDataSourceFactoryTest {
     }
 
     @Test
+    void shouldValidateRequest() {
+        var message = DataFlowStartMessage.Builder.newInstance()
+                .processId(UUID.randomUUID().toString())
+                .sourceDataAddress(getSourceDataAddress())
+                .destinationDataAddress(getDestinationDataAddress())
+                .build();
+
+        var result = factory.validateRequest(message);
+
+        assertThat(result).isSucceeded();
+    }
+
+    @Test
     void testCreateSource() {
-        var provider = new BigQueryRequestParamsProvider();
-        var factory = new BigQueryDataSourceFactory(configuration, monitor, provider, executionPool, iamService);
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 
         var bqSource = factory.createSource(bqDataFlowRequest);
@@ -80,6 +95,22 @@ public class BigQueryDataSourceFactoryTest {
                 .processId(TEST_PROCESS_ID)
                 .sourceDataAddress(dataAddress)
                 .destinationDataAddress(dataAddress)
+                .build();
+    }
+
+
+    private DataAddress getSourceDataAddress() {
+        return DataAddress.Builder.newInstance()
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.QUERY, "select * from table;")
+                .build();
+    }
+
+    private DataAddress getDestinationDataAddress() {
+        return DataAddress.Builder.newInstance()
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
     }
 }

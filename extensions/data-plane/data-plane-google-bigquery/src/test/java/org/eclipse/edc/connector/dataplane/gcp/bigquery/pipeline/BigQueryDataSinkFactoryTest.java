@@ -26,9 +26,11 @@ import org.eclipse.edc.spi.types.domain.transfer.DataFlowStartMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.edc.junit.assertions.AbstractResultAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,15 +50,29 @@ public class BigQueryDataSinkFactoryTest {
     private final Vault vault = mock();
     private final IamService iamService = mock();
 
+    private final BigQueryDataSinkFactory factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService,
+            monitor, vault, typeManager, new BigQueryRequestParamsProvider(), iamService);
+
     @BeforeEach
     void setup() {
         when(monitor.withPrefix(any(String.class))).thenReturn(monitor);
     }
 
     @Test
+    void shouldValidateRequest() {
+        var message = DataFlowStartMessage.Builder.newInstance()
+                .processId(UUID.randomUUID().toString())
+                .sourceDataAddress(getSourceDataAddress())
+                .destinationDataAddress(getDestinationDataAddress())
+                .build();
+
+        var result = factory.validateRequest(message);
+
+        assertThat(result).isSucceeded();
+    }
+
+    @Test
     void testCreateSink() {
-        var provider = new BigQueryRequestParamsProvider();
-        var factory = new BigQueryDataSinkFactory(bigQueryConfiguration, executorService, monitor, vault, typeManager, provider, iamService);
 
         var bqDataFlowRequest = getDataFlowRequest(BigQueryServiceSchema.BIGQUERY_DATA);
 
@@ -79,6 +95,21 @@ public class BigQueryDataSinkFactoryTest {
                 .processId(TEST_PROCESS_ID)
                 .sourceDataAddress(dataAddress)
                 .destinationDataAddress(dataAddress)
+                .build();
+    }
+
+    private DataAddress getSourceDataAddress() {
+        return DataAddress.Builder.newInstance()
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.QUERY, "select * from table;")
+                .build();
+    }
+
+    private DataAddress getDestinationDataAddress() {
+        return DataAddress.Builder.newInstance()
+                .type(BigQueryServiceSchema.BIGQUERY_DATA)
+                .property(BigQueryServiceSchema.DATASET, TEST_DATASET)
+                .property(BigQueryServiceSchema.TABLE, TEST_TABLE)
                 .build();
     }
 }
