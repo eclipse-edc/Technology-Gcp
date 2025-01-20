@@ -65,7 +65,7 @@ edc-transfer-data-plane-signaling = { module = "org.eclipse.edc:transfer-data-pl
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
 
 # third-party dependencies
-assertj = { module = "org.assertj:assertj-core", version = "3.27.2" }
+assertj = { module = "org.assertj:assertj-core", version = "3.27.3" }
 edc-jsonld = { module = "org.eclipse.edc:json-ld", version.ref = "edc" }
 failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
