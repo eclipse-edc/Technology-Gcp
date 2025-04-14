@@ -3,13 +3,10 @@ format.version = "1.1"
 
 [versions]
 edc = "0.13.0-SNAPSHOT"
-awaitility = "4.2.0"
 failsafe = "3.3.1"
 googleApiGax = "2.60.0"
 googleApisIam = "v2-rev20240108-2.0.0"
 googleCloudBom = "26.59.0"
-identityhub = "0.3.1"
-junit = "5.11.3"
 restAssured = "5.5.0"
 testcontainers = "1.20.3"
 
@@ -65,11 +62,8 @@ edc-transfer-data-plane-signaling = { module = "org.eclipse.edc:transfer-data-pl
 edc-transfer-httppull-receiver-dynamic = { module = "org.eclipse.edc:transfer-pull-http-dynamic-receiver", version.ref = "edc" }
 
 # third-party dependencies
-assertj = { module = "org.assertj:assertj-core", version = "3.27.2" }
 edc-jsonld = { module = "org.eclipse.edc:json-ld", version.ref = "edc" }
 failsafe-core = { module = "dev.failsafe:failsafe", version.ref = "failsafe" }
-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
-junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 restAssured = { module = "io.rest-assured:rest-assured", version.ref = "restAssured" }
 testcontainers-gcloud = { module = "org.testcontainers:gcloud", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
