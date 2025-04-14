@@ -11,7 +11,6 @@ dependencies {
   testFixturesApi(libs.edc.lib.util)
   testFixturesApi(libs.restAssured)
   testFixturesImplementation(libs.edc.junit)
-  testFixturesImplementation(libs.assertj)
 
   api(libs.edc.controlplane.spi)
   testFixturesApi(libs.edc.spi.transaction.datasource)
@@ -19,7 +18,6 @@ dependencies {
   testFixturesApi(libs.testcontainers.gcloud)
   testFixturesApi(libs.edc.lib.util)
   testFixturesApi(libs.edc.junit)
-  testFixturesApi(libs.junit.jupiter.api)
 
   // GCP dependencies.
   testFixturesApi(platform(libs.googlecloud.bom))
