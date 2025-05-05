@@ -52,15 +52,13 @@ maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1beta1/
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-secretmanager-v1beta2/2.60.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-cloud-storage-v2/2.50.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.54.1, Apache-2.0, approved, clearlydefined
-maven/mavencentral/com.google.api.grpc/proto-google-common-protos/2.55.2, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-iam-admin-v1/3.55.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.api.grpc/proto-google-iam-v1/1.49.1, Apache-2.0, approved, #20605
 maven/mavencentral/com.google.api/api-common/2.46.1, BSD-3-Clause, approved, #20597
-maven/mavencentral/com.google.api/api-common/2.47.2, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.api/gax-grpc/2.63.1, BSD-3-Clause, approved, #20592
 maven/mavencentral/com.google.api/gax-httpjson/2.63.1, BSD-3-Clause, approved, #20567
+maven/mavencentral/com.google.api/gax/2.60.0, BSD-3-Clause, approved, #19397
 maven/mavencentral/com.google.api/gax/2.63.1, BSD-3-Clause, approved, #20589
-maven/mavencentral/com.google.api/gax/2.64.2, BSD-3-Clause, approved, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-bigquery/v2-rev20250313-2.0.0, Apache-2.0, approved, #20594
 maven/mavencentral/com.google.apis/google-api-services-iam/v2-rev20240108-2.0.0, Apache-2.0, approved, clearlydefined
 maven/mavencentral/com.google.apis/google-api-services-storage/v1-rev20250224-2.0.0, Apache-2.0, approved, #20571
