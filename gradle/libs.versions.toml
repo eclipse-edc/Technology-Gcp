@@ -7,7 +7,7 @@ failsafe = "3.3.1"
 googleApiGax = "2.64.2"
 googleApisIam = "v2-rev20240108-2.0.0"
 googleCloudBom = "26.59.0"
-restAssured = "5.5.0"
+restAssured = "5.5.2"
 testcontainers = "1.21.0"
 
 [libraries]
