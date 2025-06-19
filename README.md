@@ -7,7 +7,7 @@
 <br>
 [![build](https://img.shields.io/github/actions/workflow/status/eclipse-edc/Technology-Gcp/verify.yaml?branch=main&logo=GitHub&style=flat-square&label=ci)](https://github.com/eclipse-edc/Technology-Gcp/actions/workflows/verify.yaml?query=branch%3Amain)
 [![snapshot build](https://img.shields.io/github/actions/workflow/status/eclipse-edc/Technology-Gcp/trigger_snapshot.yml?branch=main&logo=GitHub&style=flat-square&label=snapshot-build)](https://github.com/eclipse-edc/Technology-Gcp/actions/workflows/trigger_snapshot.yml)
-[![nightly build](https://img.shields.io/github/actions/workflow/status/eclipse-edc/Technology-Gcp/nightly.yaml?branch=main&logo=GitHub&style=flat-square&label=nightly-build)](https://github.com/eclipse-edc/Technology-Gcp/actions/workflows/nightly.yaml)
+[![nightly build](https://img.shields.io/github/actions/workflow/status/eclipse-edc/Technology-Gcp/nightly.yml?branch=main&logo=GitHub&style=flat-square&label=nightly-build)](https://github.com/eclipse-edc/Technology-Gcp/actions/workflows/nightly.yml)
 
 ---
 
