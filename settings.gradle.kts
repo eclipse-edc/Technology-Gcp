@@ -36,5 +36,3 @@ include(":extensions:data-plane:data-plane-google-bigquery")
 include(":system-tests:gcp-bigquery-transfer-tests")
 include(":system-tests:runtimes:gcp-bigquery-transfer-consumer")
 include(":system-tests:runtimes:gcp-bigquery-transfer-provider")
-
-include(":version-catalog")
