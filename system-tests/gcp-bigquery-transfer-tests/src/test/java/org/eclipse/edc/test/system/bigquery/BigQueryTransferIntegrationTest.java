@@ -23,7 +23,6 @@ import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableId;
-import org.eclipse.edc.connector.controlplane.test.system.utils.Participant;
 import org.eclipse.edc.connector.controlplane.test.system.utils.PolicyFixtures;
 import org.eclipse.edc.connector.controlplane.transfer.spi.types.TransferProcessStates;
 import org.eclipse.edc.junit.annotations.ComponentTest;
@@ -37,11 +36,9 @@ import org.testcontainers.containers.BindMode;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -135,76 +132,25 @@ public class BigQueryTransferIntegrationTest  {
                     "--project", "edc-test-project",
                     "--data-from-yaml", "/data/data.yaml");
 
-    @RegisterExtension
-    private final RuntimeExtension bqProvider = new RuntimePerMethodExtension(new EmbeddedRuntime(
-            "provider",
-            Map.ofEntries(
-                Map.entry("edc.participant.id", "provider"),
-                Map.entry("edc.ids.id", "urn:connector:provider"),
-                Map.entry("edc.dsp.callback.address", "http://localhost:19194/protocol"),
-                Map.entry("web.http.port", "19191"),
-                Map.entry("web.http.path", "/api"),
-                Map.entry("web.http.management.port", "19193"),
-                Map.entry("web.http.management.path", "/management"),
-                Map.entry("web.http.protocol.port", "19194"),
-                Map.entry("web.http.protocol.path", "/protocol"),
-                Map.entry("edc.receiver.http.endpoint", "http://localhost:4000/receiver/urn:connector:provider/callback"),
-                Map.entry("edc.public.key.alias", "public-key"),
-                Map.entry("edc.transfer.dataplane.token.signer.privatekey.alias", "1"),
-                Map.entry("edc.transfer.proxy.token.signer.privatekey.alias", "1"),
-                Map.entry("edc.transfer.proxy.token.verifier.publickey.alias", "public-key"),
-                Map.entry("web.http.public.port", "19291"),
-                Map.entry("web.http.public.path", "/public"),
-                Map.entry("web.http.control.port", "19192"),
-                Map.entry("web.http.control.path", "/control"),
-                Map.entry("edc.dataplane.token.validation.endpoint", "http://localhost:19192/control/token"),
-                Map.entry("edc.gcp.project.id", "edc-test-project")
-            ),
-            ":system-tests:runtimes:gcp-bigquery-transfer-provider"
-    ));
-
-    @RegisterExtension
-    private final RuntimeExtension bqConsumer = new RuntimePerMethodExtension(new EmbeddedRuntime(
-            "consumer",
-            Map.ofEntries(
-                Map.entry("edc.participant.id", "consumer"),
-                Map.entry("edc.ids.id", "urn:connector:consumer"),
-                Map.entry("edc.dsp.callback.address", "http://localhost:29194/protocol"),
-                Map.entry("web.http.port", "29191"),
-                Map.entry("web.http.path", "/api"),
-                Map.entry("web.http.management.port", "29193"),
-                Map.entry("web.http.management.path", "/management"),
-                Map.entry("web.http.protocol.port", "29194"),
-                Map.entry("web.http.protocol.path", "/protocol"),
-                Map.entry("edc.receiver.http.endpoint", "http://localhost:4000/receiver/urn:connector:provider/callback"),
-                Map.entry("edc.public.key.alias", "public-key"),
-                Map.entry("edc.transfer.dataplane.token.signer.privatekey.alias", "1"),
-                Map.entry("edc.transfer.proxy.token.signer.privatekey.alias", "1"),
-                Map.entry("edc.transfer.proxy.token.verifier.publickey.alias", "public-key"),
-                Map.entry("web.http.public.port", "29291"),
-                Map.entry("web.http.public.path", "/public"),
-                Map.entry("web.http.control.port", "29192"),
-                Map.entry("web.http.control.path", "/control"),
-                Map.entry("edc.dataplane.token.validation.endpoint", "http://localhost:29192/control/token"),
-                Map.entry("edc.gcp.project.id", "edc-test-project")
-            ),
-            ":system-tests:runtimes:gcp-bigquery-transfer-consumer"
-    ));
-
     private final BigQueryTransferParticipant consumerClient = BigQueryTransferParticipant.Builder.newInstance()
             .id("consumer")
             .name("consumer")
-            .managementEndpoint(new Participant.Endpoint(URI.create("http://localhost:29193/management")))
-            .protocolEndpoint(new Participant.Endpoint(URI.create("http://localhost:29194/protocol")))
             .build();
 
     private final BigQueryTransferParticipant providerClient = BigQueryTransferParticipant.Builder.newInstance()
             .id("provider")
             .name("provider")
-            .managementEndpoint(new Participant.Endpoint(URI.create("http://localhost:19193/management")))
-            .protocolEndpoint(new Participant.Endpoint(URI.create("http://localhost:19194/protocol")))
             .build();
 
+    @RegisterExtension
+    private final RuntimeExtension bqProvider = new RuntimePerMethodExtension(
+            new EmbeddedRuntime("provider", ":system-tests:runtimes:gcp-bigquery-transfer-provider")
+                    .configurationProvider(providerClient::getConfig));
+
+    @RegisterExtension
+    private final RuntimeExtension bqConsumer = new RuntimePerMethodExtension(
+            new EmbeddedRuntime("consumer", ":system-tests:runtimes:gcp-bigquery-transfer-consumer")
+                    .configurationProvider(consumerClient::getConfig));
 
     @Test
     void transferTable_success() {
