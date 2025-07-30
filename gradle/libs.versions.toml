@@ -79,4 +79,4 @@ googlecloud-storage = { module = "com.google.cloud:google-cloud-storage" }
 
 [plugins]
 edc-build = { id = "org.eclipse.edc.edc-build", version = "0.1.0-alpha6" }
-shadow = { id = "com.gradleup.shadow", version = "8.3.7" }
+shadow = { id = "com.gradleup.shadow", version = "8.3.8" }
