@@ -25,6 +25,7 @@ edc-control-plane-core = { module = "org.eclipse.edc:control-plane-core", versio
 edc-controlplane-spi = { module = "org.eclipse.edc:control-plane-spi", version.ref = "edc" }
 edc-core-connector = { module = "org.eclipse.edc:connector-core", version.ref = "edc" }
 edc-core-edrstore = { module = "org.eclipse.edc:edr-store-core", version.ref = "edc" }
+edc-core-runtime = { module = "org.eclipse.edc:runtime-core", version.ref = "edc" }
 edc-core-controlplane = { module = "org.eclipse.edc:control-plane-core", version.ref = "edc" }
 edc-core-controlplane-api = { module = "org.eclipse.edc:control-plane-api", version.ref = "edc" }
 edc-core-controlplane-apiclient = { module = "org.eclipse.edc:control-plane-api-client", version.ref = "edc" }

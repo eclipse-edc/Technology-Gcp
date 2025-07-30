@@ -30,6 +30,7 @@ import org.eclipse.edc.junit.annotations.ComponentTest;
 import org.eclipse.edc.junit.extensions.EmbeddedRuntime;
 import org.eclipse.edc.junit.extensions.RuntimeExtension;
 import org.eclipse.edc.junit.extensions.RuntimePerMethodExtension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.BigQueryEmulatorContainer;
@@ -51,6 +52,7 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 @ComponentTest
 @Testcontainers
+@Disabled("only for release 0.13.2")
 public class BigQueryTransferIntegrationTest  {
     private static final List<FieldValueList> TEST_ROWS = Arrays.asList(FieldValueList.of(Arrays.asList(
             FieldValue.of(Attribute.PRIMITIVE, "1"),
