@@ -11,13 +11,7 @@ on:
 
 jobs:
 
-  Run-Tests:
-    uses: ./.github/workflows/verify.yaml
-    secrets: inherit
-
   Publish:
-    if: always()
-    needs: [ Run-Tests ]
     uses: eclipse-edc/.github/.github/workflows/technology-nightly.yml@main
     secrets: inherit
     with:
