@@ -37,7 +37,6 @@ allprojects {
         pom {
             scmUrl.set(techGcpScmUrl)
             scmConnection.set(techGcpScmConnection)
-            groupId = project.group.toString()
         }
     }
 

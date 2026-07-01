@@ -26,13 +26,3 @@ pluginManagement {
 
 include(":extensions:common:gcp:gcp-core")
 include(":extensions:common:vault:vault-gcp")
-
-include(":extensions:control-plane:provision:provision-gcs")
-include(":extensions:control-plane:provision:provision-bigquery")
-
-include(":extensions:data-plane:data-plane-google-storage")
-include(":extensions:data-plane:data-plane-google-bigquery")
-
-include(":system-tests:gcp-bigquery-transfer-tests")
-include(":system-tests:runtimes:gcp-bigquery-transfer-consumer")
-include(":system-tests:runtimes:gcp-bigquery-transfer-provider")

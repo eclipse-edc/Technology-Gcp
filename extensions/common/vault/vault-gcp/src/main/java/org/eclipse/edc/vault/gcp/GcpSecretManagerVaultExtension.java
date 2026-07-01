@@ -38,13 +38,13 @@ public class GcpSecretManagerVaultExtension implements ServiceExtension {
 
     public static final String NAME = "GCP Secret Manager";
 
-    @Setting(value = "GCP Project for Vault", required = false)
+    @Setting(description = "GCP Project for Vault", required = false)
     static final String VAULT_PROJECT = "edc.vault.gcp.project";
 
-    @Setting(value = "JSON file with Service Account credentials", required = false)
+    @Setting(description = "JSON file with Service Account credentials", required = false)
     static final String VAULT_SACCOUNT_FILE = "edc.vault.gcp.saccount_file";
 
-    @Setting(value = "GCP Region for Vault Secret replication", required = true)
+    @Setting(description = "GCP Region for Vault Secret replication")
     static final String VAULT_REGION = "edc.vault.gcp.region";
 
     @Inject
